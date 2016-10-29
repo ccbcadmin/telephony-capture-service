@@ -27,6 +27,7 @@
     "lodash": "^4.16.4",
     "moment": "^2.15.2",
     "node-dir": "^0.1.16",
+    "pg-promise": "^5.3.5",
     "promise-pg": "^0.1.1"
   },
   "devDependencies": {

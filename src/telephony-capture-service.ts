@@ -1,4 +1,4 @@
-import { CRLF, SMDR_PREAMBLE, SMDR_QUEUE } from './constants';
+import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, SMDR_QUEUE } from './constants';
 import { ServerSocket } from './share/server-socket';
 import { Queue } from './share/queue';
 
@@ -22,9 +22,16 @@ export namespace TelephonyCaptureService {
 	});
 
 	const smdrQueue = new Queue(SMDR_QUEUE, null);
+	const databaseQueue = new Queue(DATABASE_QUEUE, null);
 
-	// Wait to ensure that the queue is ready
+	// All incoming messages are send to both queues
+	const dataSink = msg => {
+		smdrQueue.sendToQueue(msg);
+		databaseQueue.sendToQueue(msg);
+	}
+
+	// Before starting message reception, wait to ensure that the queues are ready
 	setTimeout(() => {
-		new ServerSocket('Telephony Capture Service', 9001, smdrQueue.sendToQueue);
+		new ServerSocket('Telephony Capture Service', 9001, dataSink);
 	}, 1000);
 }

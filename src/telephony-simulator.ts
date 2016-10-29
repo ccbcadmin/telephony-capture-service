@@ -37,7 +37,7 @@ export namespace TelephonySimulator {
 			} else {
 				++recordCount;
 				const nextMsg = data.slice(index, next_index + 2);
-				process.stdout.write(nextMsg);
+				// process.stdout.write(nextMsg);
 
 				if (recordCount % 20 === 5)
 					process.stdout.write('\b-');

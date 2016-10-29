@@ -1,4 +1,14 @@
-export namespace LoadTelephonyFileIntoDB {
+#!/usr/bin/env node
+
+import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, SMDR_QUEUE } from './constants';
+import { ClientSocket } from './share/client-socket';
+import { Queue } from './share/queue';
+
+const moment = require('moment');
+const _ = require('lodash');
+const pgp = require('pg-promise')();
+
+export namespace LoadSmdrRecordsIntoDatabase {
 
 	interface SmdrRecord {
 		callStart: string,
@@ -22,16 +32,12 @@ export namespace LoadTelephonyFileIntoDB {
 		externalTargetedNumber: string
 	};
 
-	const moment = require('moment');
-
-	var pgp = require('pg-promise')();
-
 	let connection = {
-		host: 'localhost',
-		port: 32774, 
+		host: '192.168.99.100',
+		port: 32774,
 		database: 'postgres',
 		user: 'postgres',
-		password: 'postgres'
+		password: ''
 	};
 
 	const db = pgp(connection);
@@ -80,29 +86,26 @@ export namespace LoadTelephonyFileIntoDB {
 				smdrRecord.externalTargetedNumber
 			]);
 
-	const lr = new (require('line-by-line'))('rw160930.001');
+	const routineName = 'Load SMDR Records Into Database';
+	const HOST = '127.0.0.1';
 
-	let goodRawRecords = 0;
-	let badRawRecords = 0;
+	console.log(`${routineName}: Started`);
 
-	lr.on('error', err => {
-		console.log('error: ', err);
-		process.exit();
+	process.on('SIGTERM', (): void => {
+		console.log(`${routineName}: Terminated`);
+		process.exit(0);
 	});
 
-	lr.on('line', (line: string) => {
-		// pause emitting lines while we do an async write to the DB
-		lr.pause();
+	let badRawRecords = 0;
 
-		console.log (line);
+	const dataSink = (msg): boolean => {
+		console.log('database: ', msg.content.toString());
 
-		let raw_call = line.split(',');
+		let raw_call = msg.content.toString().split(',');
 
 		if (raw_call.length !== 30) {
 			++badRawRecords;
-			lr.resume();
-		}
-		else {
+		} else {
 			console.log('==========');
 
 			//let callStart: string = moment(raw_call[0]).format();
@@ -111,7 +114,7 @@ export namespace LoadTelephonyFileIntoDB {
 
 			// Record Connected Time in seconds
 			let temp: string[] = raw_call[1].split(':');
-			let connectedTime = String (
+			let connectedTime = String(
 				Number(temp[0]) * 60 * 60 +
 				Number(temp[1]) * 60 +
 				Number(temp[2]));
@@ -192,18 +195,12 @@ export namespace LoadTelephonyFileIntoDB {
 
 			insertCallRecords(smdrRecord)
 				// If everything OK, then move on to the next line of the file
-				.then(() => { lr.resume(); })
+				.then(() => { _.noop })
 				// Abort completely if a problem
 				.catch(err => { console.log('err: ', err); process.exit(); });
 		}
-	});
+		return true;
+	}
 
-	lr.on('end', () => {
-
-		console.log("EOF");
-		console.log('Bad Records:', badRawRecords);
-		console.log('Good Bad Records: ', goodRawRecords);
-
-		process.exit();
-	});
+	const smdrQueue = new Queue(DATABASE_QUEUE, dataSink);
 }
