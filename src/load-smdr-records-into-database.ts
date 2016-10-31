@@ -43,7 +43,7 @@ export namespace LoadSmdrRecordsIntoDatabase {
 	const db = pgp(connection);
 
 	const insertCallRecords = (smdrRecord: SmdrRecord) =>
-		db.none(`INSERT INTO RAW_CALL (
+		db.none(`INSERT INTO RAW_CALL2 (
 					CALL_TIME, 
 					CONNECTED_TIME,
 					RING_TIME,

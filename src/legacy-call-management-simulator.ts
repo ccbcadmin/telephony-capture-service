@@ -15,13 +15,24 @@ export namespace LegacyCallManagementSimulator {
 		process.exit(0);
 	});
 
-	const dataDump = (msg: string) => {
-		process.stdout.write(msg + CRLF);
+	let leftOver: string = '';
+	const dataDump = (data: string) => {
+
+		const unprocessedData = leftOver.slice(0) + data.slice(0);
+
+		const crLfIndexOf = unprocessedData.indexOf(CRLF);
+
+		const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
+
+		if (msg) {
+			// Dump the data to stdout
+			process.stdout.write(msg[1] + CRLF);
+			leftOver = unprocessedData.slice(crLfIndexOf + 2);
+
+		} else {
+			leftOver = unprocessedData.slice(0);
+		}
 	}
 
 	new ServerSocket('Legacy Call Management Simulator', 9002, dataDump);
 }
-
-
-
-

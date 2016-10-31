@@ -17,7 +17,7 @@ export class ClientSocket {
 	}
 
 	private openSocket = () => {
-		console.log(`${this.linkName}: Retrying...`);
+		//console.log(`${this.linkName}: Retrying...`);
 		this.socket = this.net.connect(this.port, this.host);
 		this.socket.setKeepAlive(true);
 		this.socket.on('connect', this.onConnect.bind({}, this.socket));

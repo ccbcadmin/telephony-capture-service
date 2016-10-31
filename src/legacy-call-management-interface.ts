@@ -8,7 +8,7 @@ export namespace LegacyCallMananagementInterface {
 
 	const routineName = 'Legacy Call Management Inteface';
 	const HOST = '127.0.0.1';
-	const CRLF = '\r\n';
+	const PORT = 9002;
 
 	console.log(`${routineName}: Started`);
 
@@ -17,10 +17,10 @@ export namespace LegacyCallMananagementInterface {
 		process.exit(0);
 	});
 
-	const clientSocket = new ClientSocket('LCMSIM<=>LCM', HOST, 9002);
+	const clientSocket = new ClientSocket('LCMSIM<=>LCM', HOST, PORT);
 
 	const dataSink = msg =>
-		clientSocket.write(SMDR_PREAMBLE + msg.content.toString() + CRLF);
+		clientSocket.write(msg.content.toString());
 
 	const smdrQueue = new Queue(SMDR_QUEUE, dataSink);
 }

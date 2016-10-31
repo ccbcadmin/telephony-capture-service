@@ -26,6 +26,7 @@ export class ServerSocket {
 		const remoteAddress = conn.remoteAddress + ':' + conn.remotePort;
 		console.log(`${this.serverName}: New client connection from ${remoteAddress}`);
 
+/*
 		let leftOver: string = '';
 		let recordCount = 0;
 
@@ -45,7 +46,7 @@ export class ServerSocket {
 				leftOver = unprocessedData.slice(0);
 			}
 		}
-
+*/
 		const onClose = () => {
 			console.log(`${this.serverName}: Connection from ${remoteAddress} closed.`);
 		}
@@ -54,7 +55,7 @@ export class ServerSocket {
 			console.log(`${this.serverName}: Connection ${remoteAddress} error: ${err.message}`);
 		}
 
-		conn.on('data', onData);
+		conn.on('data', this.dataSink);
 		conn.once('close', onClose);
 		conn.on('error', onError);
 	}
