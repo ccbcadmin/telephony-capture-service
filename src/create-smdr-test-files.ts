@@ -3,7 +3,7 @@ export namespace CreateSmdrTestFiles {
 	const fs = require('fs');
 	const dir = require('node-dir');
 
-	const regexp = /^rw[0-9]{6,}.001$/;
+	const regexp = /^rw[0-9]{6,}.00[0-9]$/;
 
 	let substitutePhoneNumberMap = new Map();
 
