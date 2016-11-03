@@ -9,7 +9,7 @@ export namespace TelephonySimulator {
 	const fs = require('fs');
 	const dir = require('node-dir');
 	const regexpSmdrFile = /rw[0-9]{6,}.001$/;
-	const eventEmitter = require('events').EventEmitter
+	const eventEmitter = require('events').EventEmitter;
 	const CRLF = '\r\n';
 	const ee = new eventEmitter;      //make an Event Emitter object
 
@@ -62,7 +62,7 @@ export namespace TelephonySimulator {
 		}, 5);
 	}
 
-	const next_file = () => {
+	const nextFile = () => {
 		if (smdrFileNo === smdrFiles.length) {
 			process.exit(0);
 		}
@@ -85,7 +85,7 @@ export namespace TelephonySimulator {
 		process.exit(0);
 	}
 
-	ee.on('next', next_file);
+	ee.on('next', nextFile);
 
 	// Search the current directory, if none specified
 	dir.files(process.argv[2] ? process.argv[2] : '.', (err, files) => {
@@ -102,6 +102,6 @@ export namespace TelephonySimulator {
 				smdrFiles.push(file);
 			}
 		}
-		next_file();
+		nextFile();
 	});
 }

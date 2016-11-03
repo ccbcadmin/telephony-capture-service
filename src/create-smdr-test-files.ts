@@ -1,9 +1,20 @@
+import { CRLF } from './constants';
+import { pathSeparator } from './share/utility';
+
 export namespace CreateSmdrTestFiles {
 
 	const fs = require('fs');
 	const dir = require('node-dir');
 
-	const regexp = /^rw[0-9]{6,}.00[0-9]$/;
+	const regexpSmdrFile = /^rw[0-9]{6,}.00[0-9]$/;
+
+	const eventEmitter = require('events').EventEmitter
+	const ee = new eventEmitter;      //make an Event Emitter object
+
+	const zeroPad = (num, places) => {
+		var zero = places - num.toString().length + 1;
+		return Array(+(zero > 0 && zero)).join("0") + num;
+	}
 
 	let substitutePhoneNumberMap = new Map();
 
@@ -32,35 +43,40 @@ export namespace CreateSmdrTestFiles {
 		}
 	}
 
-	const replicateSmdrFile = (smrdFile: string) => {
+	let smdrFiles: string[] = [];
+	let smdrFileNo = 0;
 
-		let filePart = smrdFile.split('\\');
-		filePart[filePart.length - 1] = 'test_' + filePart[filePart.length - 1];
-		let outputFilename = filePart.join('\\');
+	const replicateSmdrFile = (smdrFileName: string) => {
 
-		const lr = new (require('line-by-line'))(smrdFile);
-		const fd = fs.openSync(outputFilename, 'w');
+		let data = fs.readFileSync(smdrFileName).toString();
 
-		let smdrRecordsFound = 0;
+		// Increment the file extension by 1 to get the output file name
+		let filePart = smdrFileName.split(pathSeparator());
+		const inputFileNameParts = filePart[filePart.length - 1].split('.');
+		const outputFile = `${inputFileNameParts[0]}.${zeroPad(Number(inputFileNameParts[1]) + 1, 3)}`;
+		const outputPath = [process.argv[3], outputFile].join(pathSeparator());
+
+		process.stdout.write (`Mangling ${smdrFileName} to ${outputPath}: `);
+
+		const fd = fs.openSync(outputPath, 'w');
+
+		let recordCount = 0;
 		let unknownRecords = 0;
+		let index: number = 0;
+		let next_index: number = 0;
 
-		lr.on('error', err => {
-			console.log('error: ', err);
-			process.exit();
-		});
+		while ((next_index = data.indexOf(CRLF, index)) > 0) {
 
-		lr.on('line', (line: string) => {
-			// pause emitting lines while we do an async write to the DB
-			lr.pause();
+			const smdrMessage = data.slice(index, next_index);
+			index = next_index + 2;
 
-			let raw_call = line.split(',');
+			let raw_call = smdrMessage.split(',');
 
 			if (raw_call.length !== 30) {
 				++unknownRecords;
-				lr.resume();
 			}
 			else {
-				++smdrRecordsFound;
+				++recordCount;
 
 				// Substitute for 'Caller'
 				raw_call[3] = substituteDummyPhoneNumber(raw_call[3]);
@@ -75,30 +91,71 @@ export namespace CreateSmdrTestFiles {
 				let testSmdr = raw_call.join(',') + '\r\n';
 				fs.writeSync(fd, testSmdr);
 
-				// process.stdout.write('Replicate SMDR File: ' + smrdFile + ', SMDR Records: ' + smdrRecordsFound
-				//	+ ', Unknown Records: ' + unknownRecords + '\r');
-
-				lr.resume();
-			}
-		});
-
-		lr.on('end', () => {
-			process.stdout.write("\n");
-			fs.close(fd);
-		});
-	}
-
-	// Search the current directory, if none specified
-	dir.files(process.argv[2] ? process.argv[2] : '.', (err, files) => {
-		if (err) throw err;
-
-		for (let file of files) {
-			let path = file.split('\\');
-
-			if (path[path.length - 1].match(regexp)) {
-				console.log('Replicating: ', path[path.length - 1]);
-				replicateSmdrFile(file);
 			}
 		}
+
+		process.stdout.write ('SMDR Records: ' + recordCount + ', Unknown Records: ' + unknownRecords + CRLF);
+
+		++smdrFileNo;
+		ee.emit('next');
+	}
+
+	const nextFile = () => {
+		if (smdrFileNo === smdrFiles.length) {
+			process.exit(0);
+		}
+		else {
+			replicateSmdrFile(smdrFiles[smdrFileNo]);
+		}
+	}
+
+	// Check the number of parameters
+	if (process.argv.length !== 4) {
+		console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory`);
+		process.exit(-1);
+	}
+
+	// Check the number of parameters
+	if (process.argv[2] === process.argv[3]) {
+		console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory\nSourceDirectory and TargetDirectory cannot be the same.`);
+		process.exit(-1);
+	}
+
+	try {
+		fs.accessSync(process.argv[2]);
+		if (!fs.lstatSync(process.argv[2]).isDirectory()) {
+			console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory\n'${process.argv[2]}' must be a directory`);
+			process.exit(-1);
+		}
+	} catch (e) {
+		console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory\n'${process.argv[2]}' must be a directory`);
+		process.exit(-1);
+	}
+
+	try {
+		fs.accessSync(process.argv[3]);
+		if (!fs.lstatSync(process.argv[3]).isDirectory()) {
+			console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory\n'${process.argv[3]}' must be a directory`);
+			process.exit(-1);
+		}
+	} catch (e) {
+		console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory\n'${process.argv[3]}' must be a directory`);
+		process.exit(-1);
+	}
+
+	ee.on('next', nextFile);
+
+	// Search the current directory, if none specified
+	dir.files(process.argv[2], (err, files) => {
+		if (err) throw err;
+
+		files.sort();
+		for (let file of files) {
+			let path = file.split(pathSeparator());
+			if (path[path.length - 1].match(regexpSmdrFile)) {
+				smdrFiles.push(file);
+			}
+		}
+		nextFile();
 	});
 }
