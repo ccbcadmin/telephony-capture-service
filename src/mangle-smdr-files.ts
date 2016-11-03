@@ -1,4 +1,5 @@
 import { CRLF } from './constants';
+import { pathSeparator } from './share/utility';
 
 export namespace CreateSmdrTestFiles {
 
@@ -8,7 +9,7 @@ export namespace CreateSmdrTestFiles {
 	const regexpSmdrFile = /^rw[0-9]{6,}.00[0-9]$/;
 
 	const eventEmitter = require('events').EventEmitter
-	const ee = new eventEmitter;
+	const ee = new eventEmitter;      //make an Event Emitter object
 
 	const zeroPad = (num, places) => {
 		var zero = places - num.toString().length + 1;
@@ -50,10 +51,10 @@ export namespace CreateSmdrTestFiles {
 		let data = fs.readFileSync(smdrFileName).toString();
 
 		// Increment the file extension by 1 to get the output file name
-		let filePart = smdrFileName.split('/');
+		let filePart = smdrFileName.split(pathSeparator());
 		const inputFileNameParts = filePart[filePart.length - 1].split('.');
 		const outputFile = `${inputFileNameParts[0]}.${zeroPad(Number(inputFileNameParts[1]) + 1, 3)}`;
-		const outputPath = [process.argv[3], outputFile].join('/');
+		const outputPath = [process.argv[3], outputFile].join(pathSeparator());
 
 		process.stdout.write (`Mangling ${smdrFileName} to ${outputPath}: `);
 
@@ -87,7 +88,7 @@ export namespace CreateSmdrTestFiles {
 				raw_call[6] = substituteDummyPhoneNumber(raw_call[6]);
 
 				// Reconstitute the line
-				let testSmdr = raw_call.join(',') + CRLF;
+				let testSmdr = raw_call.join(',') + '\r\n';
 				fs.writeSync(fd, testSmdr);
 
 			}
@@ -150,7 +151,7 @@ export namespace CreateSmdrTestFiles {
 
 		files.sort();
 		for (let file of files) {
-			let path = file.split('/');
+			let path = file.split(pathSeparator());
 			if (path[path.length - 1].match(regexpSmdrFile)) {
 				smdrFiles.push(file);
 			}
