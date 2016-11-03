@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "amqplib": "^0.4.2",
+    "es6-shim": "^0.35.1",
     "line-by-line": "^0.1.5",
     "lodash": "^4.16.4",
     "moment": "^2.15.2",

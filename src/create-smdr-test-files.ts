@@ -5,13 +5,27 @@ export namespace CreateSmdrTestFiles {
 
 	const regexp = /^rw[0-9]{6,}.001$/;
 
+	let substitutePhoneNumberMap = new Map();
+
 	const substituteDummyPhoneNumber = (phoneNumber: string) => {
 
 		if (phoneNumber.length === 10) {
-			return phoneNumber.slice(0, 6) + ("" + Math.random()).substring(2, 6);
+			if (substitutePhoneNumberMap.has(phoneNumber)) {
+				return substitutePhoneNumberMap.get(phoneNumber);
+			} else {
+				const substitutePhoneNumber = phoneNumber.slice(0, 6) + ("" + Math.random()).substring(2, 6);
+				substitutePhoneNumberMap.set(phoneNumber, substitutePhoneNumber);
+				return substitutePhoneNumber;
+			}
 		}
 		else if ((phoneNumber.length === 11 && phoneNumber.slice(0, 1) === '1')) {
-			return phoneNumber.slice(0, 7) + ("" + Math.random()).substring(2, 6);
+			if (substitutePhoneNumberMap.has(phoneNumber)) {
+				return substitutePhoneNumberMap.get(phoneNumber);
+			} else {
+				const substitutePhoneNumber = phoneNumber.slice(0, 7) + ("" + Math.random()).substring(2, 6);
+				substitutePhoneNumberMap.set(phoneNumber, substitutePhoneNumber);
+				return substitutePhoneNumber;
+			}
 		}
 		else {
 			return phoneNumber;
