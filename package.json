@@ -23,8 +23,8 @@
     "watch:test": "npm run test -- --watch"
   },
   "dependencies": {
-    "amqplib": "^0.4.2",
-    "es6-shim": "^0.35.1",
+    "amqplib": ">=0.4.2",
+    "es6-shim": ">=0.35.1",
     "line-by-line": "^0.1.5",
     "lodash": "^4.16.4",
     "moment": "^2.15.2",
@@ -33,17 +33,21 @@
     "promise-pg": "^0.1.1"
   },
   "devDependencies": {
-    "@types/chai": "3.4.30",
-    "@types/mocha": "2.2.29",
-    "@types/node": "6.0.31",
+    "@types/chai": ">=3.4.30",
+    "@types/mocha": ">=2.2.29",
+    "@types/node": ">=6.0.31",
     "chai": "^3.5.0",
     "mocha": "^3.0.1",
     "rimraf": "^2.5.4",
     "ts-node": "^1.2.2",
-    "tslint": "3.15.1",
-    "typescript": "2.0.3"
+    "tslint": ">=3.15.1",
+    "typescript": ">=2.0.3"
   },
   "engines": {
     "node": ">=4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/roderickmonk/tcs.git"
   }
 }
