@@ -44,7 +44,7 @@
     "typescript": ">=2.0.3"
   },
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=6.9.1"
   },
   "repository": {
     "type": "git",
