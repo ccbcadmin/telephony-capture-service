@@ -8,7 +8,7 @@ export namespace CreateSmdrTestFiles {
 
 	const regexpSmdrFile = /^rw[0-9]{6,}.00[0-9]$/;
 
-	const eventEmitter = require('events').EventEmitter
+	const eventEmitter = require('events').EventEmitter;
 	const ee = new eventEmitter;      //make an Event Emitter object
 
 	const zeroPad = (num, places) => {
