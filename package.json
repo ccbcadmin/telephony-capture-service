@@ -1,17 +1,17 @@
 {
-  "name": "source-msgs",
+  "name": "telephony-capture-service",
   "version": "0.0.0",
   "description": "source-msgs",
   "license": "MIT",
   "repository": "",
-  "author": "",
+  "author": "Rod Monk",
   "keywords": [
     ""
   ],
   "files": [
     "lib"
   ],
-  "main": "lib/index.js",
+  "main": "lib/telephony-capture-server.js",
   "typings": "lib/index.d.ts",
   "scripts": {
     "start": "node lib/telephony-capture-service.js",
