@@ -1,4 +1,4 @@
-import { SMDR_PREAMBLE } from './constants';
+import { CRLF, SMDR_PREAMBLE } from './constants';
 import { ClientSocket } from './share/client-socket';
 import { regExpSmdrFileName } from './share/utility';
 
@@ -10,8 +10,7 @@ export namespace TelephonySimulator {
 	const fs = require('fs');
 	const dir = require('node-dir');
 	const eventEmitter = require('events').EventEmitter;
-	const CRLF = '\r\n';
-	const ee = new eventEmitter;      //make an Event Emitter object
+	const ee = new eventEmitter;
 
 	let smdrFiles: string[] = [];
 	let smdrFileNo = 0;
