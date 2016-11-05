@@ -34,7 +34,7 @@ export namespace LoadSmdrRecordsIntoDatabase {
 
 	let connection = {
 		host: '192.168.99.100',
-		port: 32774,
+		port: 32787,
 		database: 'postgres',
 		user: 'postgres',
 		password: ''
@@ -87,7 +87,6 @@ export namespace LoadSmdrRecordsIntoDatabase {
 			]);
 
 	const routineName = 'Load SMDR Records Into Database';
-	const HOST = '127.0.0.1';
 
 	console.log(`${routineName}: Started`);
 

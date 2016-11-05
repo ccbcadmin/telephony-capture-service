@@ -1,5 +1,6 @@
 import { SMDR_PREAMBLE } from './constants';
 import { ClientSocket } from './share/client-socket';
+import { regExpSmdrFileName } from './share/utility';
 
 export namespace TelephonySimulator {
 
@@ -8,7 +9,6 @@ export namespace TelephonySimulator {
 	const net = require('net');
 	const fs = require('fs');
 	const dir = require('node-dir');
-	const regexpSmdrFile = /rw[0-9]{6,}.001$/;
 	const eventEmitter = require('events').EventEmitter;
 	const CRLF = '\r\n';
 	const ee = new eventEmitter;      //make an Event Emitter object
@@ -16,7 +16,20 @@ export namespace TelephonySimulator {
 	let smdrFiles: string[] = [];
 	let smdrFileNo = 0;
 
-	const tscSocket = new ClientSocket('TCSSIM<=>TCS', '127.0.0.1', 9001);
+	// Check the parameters
+	if (process.argv.length !== 5) {
+		console.log(`telephony-simulator: ${process.argv.slice(2).join(' ')}, Incorrect number of parameters`);
+		process.exit(0);
+	} else if (!net.isIP(process.argv[3])) {
+		console.log(`telephony-simulator: ${process.argv[3]}, Invalid IP Address`);
+		process.exit(0);
+	}
+	else if (!process.argv[4].match(/^\d+$/)) {
+		console.log(`telephony-simulator: ${process.argv[4]}, Invalid Port`);
+		process.exit(0);
+	}
+
+	const tscSocket = new ClientSocket('TCSSIM<=>TCS', process.argv[3], Number(process.argv[4]));
 
 	const sendSmdrRecords = (smdrFileName: string): void => {
 
@@ -72,19 +85,6 @@ export namespace TelephonySimulator {
 		}
 	}
 
-	// Check the parameters
-	if (process.argv.length !== 5) {
-		console.log(`telephony-simulator: ${process.argv.slice(2).join(' ')}, Incorrect number of parameters`);
-		process.exit(0);
-	} else if (!net.isIP(process.argv[3])) {
-		console.log(`telephony-simulator: ${process.argv[3]}, Invalid IP Address`);
-		process.exit(0);
-	}
-	else if (!process.argv[4].match(/^\d+$/)) {
-		console.log(`telephony-simulator: ${process.argv[4]}, Invalid Port`);
-		process.exit(0);
-	}
-
 	ee.on('next', nextFile);
 
 	// Search the current directory, if none specified
@@ -98,7 +98,7 @@ export namespace TelephonySimulator {
 			let path = file.split('\\');
 
 			// Only interested in SMDR files
-			if (path[path.length - 1].match(regexpSmdrFile)) {
+			if (path[path.length - 1].match(regExpSmdrFileName)) {
 				smdrFiles.push(file);
 			}
 		}

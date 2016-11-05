@@ -1,12 +1,10 @@
 import { CRLF } from './constants';
-import { pathSeparator } from './share/utility';
+import { pathSeparator, regExpSmdrFileName } from './share/utility';
 
 export namespace CreateSmdrTestFiles {
 
 	const fs = require('fs');
 	const dir = require('node-dir');
-
-	const regexpSmdrFile = /^rw[0-9]{6,}.00[0-9]$/;
 
 	const eventEmitter = require('events').EventEmitter;
 	const ee = new eventEmitter;      //make an Event Emitter object
@@ -102,6 +100,7 @@ export namespace CreateSmdrTestFiles {
 
 	const nextFile = () => {
 		if (smdrFileNo === smdrFiles.length) {
+			console.log (`That's All Folks !`);
 			process.exit(0);
 		}
 		else {
@@ -152,7 +151,7 @@ export namespace CreateSmdrTestFiles {
 		files.sort();
 		for (let file of files) {
 			let path = file.split(pathSeparator());
-			if (path[path.length - 1].match(regexpSmdrFile)) {
+			if (path[path.length - 1].match(regExpSmdrFileName)) {
 				smdrFiles.push(file);
 			}
 		}

@@ -5,48 +5,30 @@ export class ServerSocket {
 
 	private net = require('net');
 	private serverName: string;
+	private host: string;
 	private port: number;
 	private server: any;
 	private dataSink: any; // Place to direct incoming data
 
-	constructor(serverName, port, dataSink) {
+	constructor(serverName, host, port, dataSink) {
 		this.serverName = serverName;
+		this.host = host;
 		this.port = port;
 		this.dataSink = dataSink;
 
 		this.server = this.net.createServer();
 		this.server.on('connection', this.handleConnection);
 
-		this.server.listen(this.port, () => {
-			console.log(`${this.serverName}: Listening to: ${this.server.address()}`);
+		this.server.listen(this.port, this.host, () => {
+			console.log(`${this.serverName}: Listening on: ${JSON.stringify(this.server.address())}`);
 		});
 	}
+
 	private handleConnection = conn => {
 
 		const remoteAddress = conn.remoteAddress + ':' + conn.remotePort;
 		console.log(`${this.serverName}: New client connection from ${remoteAddress}`);
 
-/*
-		let leftOver: string = '';
-		let recordCount = 0;
-
-		const onData = (data: Buffer) => {
-
-			let unprocessedData = leftOver + data;
-
-			let crLfIndexOf = unprocessedData.indexOf(CRLF);
-
-			const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
-			if (msg) {
-				// Client decides what to do with the data
-				this.dataSink(msg[1]);
-
-				leftOver = unprocessedData.slice(crLfIndexOf + 2);
-			} else {
-				leftOver = unprocessedData.slice(0);
-			}
-		}
-*/
 		const onClose = () => {
 			console.log(`${this.serverName}: Connection from ${remoteAddress} closed.`);
 		}

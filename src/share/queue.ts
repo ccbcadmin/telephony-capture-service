@@ -14,9 +14,9 @@ export class Queue {
 		this.consumer = consumer;
 		this.ready = false;
 
-		this.amqp.connect('amqp://192.168.99.100:32771', (err, queueConnection) => {
+		this.amqp.connect('amqp://192.168.99.100:32791', (err, queueConnection) => {
 			if (err) {
-				console.log(err);
+				console.log('Unable to Connect to Message Broker: ', err);
 				process.exit(0);
 			}
 
@@ -26,6 +26,8 @@ export class Queue {
 					console.log(`Cannot create channel for Queue ${this.queueName}: `, err);
 					process.exit(0);
 				}
+
+				console.log (`Channel to Message Broker for Queue ${this.queueName} Created`);
 
 				channel.assertQueue(queueName, { durable: true });
 				this.channel = channel;

@@ -7,8 +7,8 @@ import { Queue } from './share/queue';
 export namespace LegacyCallMananagementInterface {
 
 	const routineName = 'Legacy Call Management Inteface';
-	const HOST = '127.0.0.1';
-	const PORT = 9002;
+	const HOST = '192.168.1.69';
+	const PORT = 6543;
 
 	console.log(`${routineName}: Started`);
 

@@ -1,5 +1,6 @@
 import { CRLF, SMDR_PREAMBLE } from './constants';
 import { ServerSocket } from './share/server-socket';
+import { networkIP } from './share/utility';
 
 export namespace LegacyCallManagementSimulator {
 
@@ -34,5 +35,5 @@ export namespace LegacyCallManagementSimulator {
 		}
 	}
 
-	new ServerSocket('Legacy Call Management Simulator', 9002, dataDump);
+	new ServerSocket('Legacy Call Management Simulator', networkIP, 6543, dataDump);
 }

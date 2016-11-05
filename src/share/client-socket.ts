@@ -6,6 +6,7 @@ export class ClientSocket {
 	private port: number;
 	private socket;
 	private active: boolean;
+	private retryCount = 0;
 
 	constructor(linkName: string, host: string, port: number) {
 		this.linkName = linkName;
@@ -17,7 +18,6 @@ export class ClientSocket {
 	}
 
 	private openSocket = () => {
-		//console.log(`${this.linkName}: Retrying...`);
 		this.socket = this.net.connect(this.port, this.host);
 		this.socket.setKeepAlive(true);
 		this.socket.on('connect', this.onConnect.bind({}, this.socket));
@@ -25,13 +25,17 @@ export class ClientSocket {
 	}
 
 	private onConnect = (socket) => {
-		console.log(`${this.linkName}: Open!`);
+		console.log(`${this.linkName}: Link open`);
+		this.retryCount = 0;
 		this.active = true;
 	}
 
 	private onError = (socket) => {
 
-		console.log(`${this.linkName}: Failure!`);
+		if (this.retryCount % 5 === 0) {
+			console.log(`${this.linkName}: Link lost...retrying`);
+		}
+		++this.retryCount;
 
 		// Kill socket
 		this.socket.destroy();

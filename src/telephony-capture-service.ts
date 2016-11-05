@@ -1,23 +1,25 @@
 import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, SMDR_QUEUE } from './constants';
 import { ServerSocket } from './share/server-socket';
 import { Queue } from './share/queue';
+import { networkIP } from './share/utility';
 
 export namespace TelephonyCaptureService {
 
-	const amqp = require('amqplib/callback_api');
 	const receive = require('child_process');
-	const child = receive.fork('./lib/legacy-call-management-interface');
-	const net = require('net');
+	const child_process1 = receive.fork('./lib/legacy-call-management-interface');
+	const child_process2 = receive.fork('./lib/load-smdr-records-into-database');
 
 	process.on('SIGTERM', () => {
 		console.log('Telephony Capture Service: Terminated');
-		child.kill('SIGTERM');
+		child_process1.kill('SIGTERM');
+		child_process2.kill('SIGTERM');
 		process.exit(0);
 	});
 
 	process.on('SIGINT', () => {
 		console.log("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
-		child.kill('SIGTERM');
+		child_process1.kill('SIGTERM');
+		child_process2.kill('SIGTERM');
 		process.exit(0);
 	});
 
@@ -42,17 +44,17 @@ export namespace TelephonyCaptureService {
 		}
 	}
 
-	// All incoming messages are send to both queues
 	const dataSink = data => {
-		// Unfiltered received data is immediately sent on to the Legacy Call Management Interface
+
+		// Unfiltered data is queued for subsequent transmission to the legacy TMS
 		smdrQueue.sendToQueue(data);
 
-		// However, only true messages are sent to be archived
+		// However, only true SMDR data is queued for databaase archiving
 		queueCompleteMessages(data);
 	}
 
 	// Before starting message reception, wait to ensure that the queues are ready
 	setTimeout(() => {
-		new ServerSocket('Telephony Capture Service', 9001, dataSink);
+		new ServerSocket('Telephony Capture Service', networkIP, 3456, dataSink);
 	}, 1000);
 }
