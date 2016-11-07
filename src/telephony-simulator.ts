@@ -4,7 +4,7 @@ import { regExpSmdrFileName } from './share/utility';
 
 export namespace TelephonySimulator {
 
-	const routineName = 'Telephony Simulator';
+	const routineName = 'telephony-simulator';
 	const _ = require('lodash');
 	const net = require('net');
 	const fs = require('fs');
@@ -17,7 +17,7 @@ export namespace TelephonySimulator {
 
 	// Check the parameters
 	if (process.argv.length !== 5) {
-		console.log(`telephony-simulator: ${process.argv.slice(2).join(' ')}, Incorrect number of parameters`);
+		console.log(`Usage: node lib/${routineName} SourceDirectory HostIpAddress Port`);
 		process.exit(0);
 	} else if (!net.isIP(process.argv[3])) {
 		console.log(`telephony-simulator: ${process.argv[3]}, Invalid IP Address`);
