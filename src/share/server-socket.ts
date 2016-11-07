@@ -1,5 +1,5 @@
 
-import { CRLF } from '../constants';
+import { CRLF } from './constants';
 
 export class ServerSocket {
 

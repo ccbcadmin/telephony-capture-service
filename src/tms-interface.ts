@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-import { CRLF, SMDR_PREAMBLE, SMDR_QUEUE } from './constants';
+import { CRLF, SMDR_PREAMBLE, SMDR_QUEUE } from './share/constants';
 import { ClientSocket } from './share/client-socket';
 import { Queue } from './share/queue';
 
 export namespace LegacyCallMananagementInterface {
 
-	const routineName = 'Legacy Call Management Inteface';
+	const routineName = 'TMS Inteface';
 	const HOST = '192.168.1.69';
 	const PORT = 6543;
 
@@ -22,5 +22,10 @@ export namespace LegacyCallMananagementInterface {
 	const dataSink = msg =>
 		clientSocket.write(msg.content.toString());
 
-	const smdrQueue = new Queue(SMDR_QUEUE, dataSink);
+	let tmsQueue;
+
+	// Prepare to startup
+	setTimeout(() => {
+		tmsQueue = new Queue(SMDR_QUEUE, dataSink);
+	}, 10000);
 }

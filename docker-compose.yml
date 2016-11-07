@@ -13,8 +13,11 @@ tcs:
 rabbitmq:
   image: rabbitmq
   ports:
-    - 5672
+    - "4369:4369"
+    - "5671:5671"
+    - "25672:25672"
+    - "5672:5672"
 postgres:
   image: postgres:latest
   ports:
-    - 5432
+    - "5432:5432"

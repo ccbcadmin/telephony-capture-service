@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, SMDR_QUEUE } from './constants';
+import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, SMDR_QUEUE } from './share/constants';
 import { ClientSocket } from './share/client-socket';
 import { Queue } from './share/queue';
 
@@ -9,6 +9,8 @@ const _ = require('lodash');
 const pgp = require('pg-promise')();
 
 export namespace LoadSmdrRecordsIntoDatabase {
+
+	let databaseQueue;
 
 	interface SmdrRecord {
 		callStart: string,
@@ -34,13 +36,13 @@ export namespace LoadSmdrRecordsIntoDatabase {
 
 	let connection = {
 		host: '192.168.99.100',
-		port: 32787,
+		port: 5672,
 		database: 'postgres',
 		user: 'postgres',
 		password: ''
 	};
 
-	const db = pgp(connection);
+	let db = pgp(connection);
 
 	const insertCallRecords = (smdrRecord: SmdrRecord) =>
 		db.none(`INSERT INTO RAW_CALL2 (
@@ -201,5 +203,9 @@ export namespace LoadSmdrRecordsIntoDatabase {
 		return true;
 	}
 
-	const smdrQueue = new Queue(DATABASE_QUEUE, dataSink);
+	// Prepare to startup
+	setTimeout(() => {
+		db = pgp(connection);
+		databaseQueue = new Queue(DATABASE_QUEUE, dataSink);
+	}, 10000);
 }

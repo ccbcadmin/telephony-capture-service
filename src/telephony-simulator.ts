@@ -1,4 +1,4 @@
-import { CRLF, SMDR_PREAMBLE } from './constants';
+import { CRLF, SMDR_PREAMBLE } from './share/constants';
 import { ClientSocket } from './share/client-socket';
 import { regExpSmdrFileName } from './share/utility';
 

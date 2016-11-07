@@ -1,18 +1,19 @@
-import { CRLF, SMDR_PREAMBLE } from './constants';
+import { CRLF, SMDR_PREAMBLE } from './share/constants';
 import { ServerSocket } from './share/server-socket';
 import { networkIP } from './share/utility';
 
-export namespace LegacyCallManagementSimulator {
+export namespace TmsSimulator {
 
+	const routineName = 'TmsSimulator';
 	const net = require('net');
 
 	process.on('SIGTERM', () => {
-		console.log('LegacyCallManagementSimulator terminated');
+		console.log(`${routineName} terminated`);
 		process.exit(0);
 	});
 
 	process.on('SIGINT', () => {
-		console.log("Ctrl-C received. LegacyCallManagementSimulator terminating");
+		console.log(`Ctrl-C received. ${routineName} terminated`);
 		process.exit(0);
 	});
 
@@ -35,5 +36,5 @@ export namespace LegacyCallManagementSimulator {
 		}
 	}
 
-	new ServerSocket('Legacy Call Management Simulator', networkIP, 6543, dataDump);
+	new ServerSocket(routineName, networkIP, 6543, dataDump);
 }

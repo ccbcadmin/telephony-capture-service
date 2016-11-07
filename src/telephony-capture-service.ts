@@ -1,4 +1,4 @@
-import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, SMDR_QUEUE } from './constants';
+import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, SMDR_QUEUE } from './share/constants';
 import { ServerSocket } from './share/server-socket';
 import { Queue } from './share/queue';
 import { networkIP } from './share/utility';
@@ -6,7 +6,7 @@ import { networkIP } from './share/utility';
 export namespace TelephonyCaptureService {
 
 	const receive = require('child_process');
-	const child_process1 = receive.fork('./lib/legacy-call-management-interface');
+	const child_process1 = receive.fork('./lib/tms-interface');
 	const child_process2 = receive.fork('./lib/load-smdr-records-into-database');
 
 	process.on('SIGTERM', () => {
@@ -23,8 +23,8 @@ export namespace TelephonyCaptureService {
 		process.exit(0);
 	});
 
-	const smdrQueue = new Queue(SMDR_QUEUE, null);
-	const databaseQueue = new Queue(DATABASE_QUEUE, null);
+	let smdrQueue;
+	let databaseQueue;
 
 	let leftOver: string = '';
 
@@ -55,6 +55,8 @@ export namespace TelephonyCaptureService {
 
 	// Before starting message reception, wait to ensure that the queues are ready
 	setTimeout(() => {
+		smdrQueue = new Queue(SMDR_QUEUE, null);
+		databaseQueue = new Queue(DATABASE_QUEUE, null);
 		new ServerSocket('Telephony Capture Service', networkIP, 3456, dataSink);
-	}, 1000);
+	}, 10000);
 }

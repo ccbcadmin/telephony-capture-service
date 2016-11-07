@@ -1,4 +1,4 @@
-import { CRLF } from './constants';
+import { CRLF } from './share/constants';
 import { pathSeparator, regExpSmdrFileName } from './share/utility';
 
 export namespace CreateSmdrTestFiles {

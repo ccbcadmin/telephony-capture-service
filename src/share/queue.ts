@@ -14,7 +14,7 @@ export class Queue {
 		this.consumer = consumer;
 		this.ready = false;
 
-		this.amqp.connect('amqp://192.168.99.100:32791', (err, queueConnection) => {
+		this.amqp.connect('amqp://192.168.99.100:5672', (err, queueConnection) => {
 			if (err) {
 				console.log('Unable to Connect to Message Broker: ', err);
 				process.exit(0);
