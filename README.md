@@ -34,24 +34,24 @@ TCS
 │   ├── TCS Software Requirements Document.docx           TCS SRD
 │   └── TCS Test Management Plan.docx                     ToDo: TCS Management Plan
 ├── lib                                                   Transpiled *.js scripts
-├── package.json
-├── src                                                   TypeScript source code
+├── package.json                                          npm package definition
+├── src                                                   TypeScript source code folder
 │   ├── database-interface.ts                             Receives messages from a queue and archives them to the DB
-│   ├── mangle-smdr-files.ts
+│   ├── mangle-smdr-files.ts                              Scrambles source telephone numbers
 │   ├── share
-│   │   ├── client-socket.ts
-│   │   ├── constants.ts
-│   │   ├── queue.ts
-│   │   ├── server-socket.ts
-│   │   └── utility.ts
-│   ├── telephony-capture-service.ts
-│   ├── telephony-simulator.ts
-│   ├── tms-interface.ts
-│   └── tms-simulator.ts
+│   │   ├── client-socket.ts                              Client-side TCP circuit management
+│   │   ├── constants.ts                                  Various constants
+│   │   ├── queue.ts                                      RabbitMQ interface
+│   │   ├── server-socket.ts                              Server-side TCP circuit manamange
+│   │   └── utility.ts                                    Various utilities
+│   ├── telephony-capture-service.ts                      The TCS itself
+│   ├── telephony-simulator.ts                            A simulator that sends SMDR messages to the TCS
+│   ├── tms-interface.ts                                  Sends data to the TMS
+│   └── tms-simulator.ts                                  A test mockup of the TMS
 ├── test
-│   └── test-cases.ts
-├── tsconfig.json
-├── tslint.json
-└── typings
+│   └── test-cases.ts                                     Todo: Mocha test code
+├── tsconfig.json                                         TypeScript configuration settings
+├── tslint.json                                           Lint configuration for TypeScript
+└── typings                                
 ```
 
