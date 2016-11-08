@@ -8,7 +8,14 @@ const moment = require('moment');
 const _ = require('lodash');
 const pgp = require('pg-promise')();
 const routineName = 'database-interface';
+
+// Get the docker machine IP and validate it
+const net = require('net');
 const dockerMachineIp = process.argv[2];
+if (!net.isIP(dockerMachineIp)) {
+	console.log(`${routineName}: Invalid Docker Machine IP: ${dockerMachineIp}...aborting`);
+	process.exit(-1);
+}
 
 export namespace LoadSmdrRecordsIntoDatabase {
 
