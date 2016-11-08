@@ -6,15 +6,15 @@ This TCS captures Station Message Detail Records (SMDR) from a telephone exchang
 <li>Each SMDR message is parsed (CSV) and then archived to the database (Postgres).</li>
 </ol>
 <br>
-<br>
 # Related Support Tools
 <br>
 Also included in the TCS deliverables are some closely aligned tools that are useful both during the test and deployment phases of the TCS.  These are:
-<ol>
+<ul>
 <li>Mangle SMDR Files: Accepts as input files containing historical SMDR data.  The output are corresponding files that are largely identical to the input files, except that all telephone numbers have been 'mangled' so as to preserve anonymity.</li>
 <li>Telephony Simulator: Mocks a stream of TCP messages to drive the TCS.  Useful for both load and function testing.</li>
 <li>TMS Simulator: During testing the TMS Simulator is used to capture SMDR messages from the TCS.</li>
-
+</ul>
+<br>
 # Technologies:
 <ul>
 <li>NodeJS</li>
