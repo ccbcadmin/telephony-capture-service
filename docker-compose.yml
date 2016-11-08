@@ -1,25 +1,28 @@
-tcs:
-  build: .
-  ports:
-    - "3456:3456"
-  links:
-    - rabbitmq
-    - postgres
-  environment:
-    - AMPQ_ADDRESS=amqp://rabbitmq:5672
-    - DATABASE_URL=postgres://postgres:mysecretpassword@postgres:5432
-  volumes:
-    - ./lib:/app
-rabbitmq:
-  image: rabbitmq
-  ports:
-    - "4369:4369"
-    - "5671:5671"
-    - "25672:25672"
-    - "5672:5672"
-    - "15671:15671"
-    - "15672:15672"
-postgres:
-  image: postgres:latest
-  ports:
-    - "5432:5432"
+version: '2'
+services:
+  tcs:
+    build:
+      context: .
+    ports:
+      - "3456:3456"
+    links:
+      - rabbitmq
+      - postgres
+    environment:
+      - AMPQ_ADDRESS=amqp://rabbitmq:5672
+      - DATABASE_URL=postgres://postgres:mysecretpassword@postgres:5432
+    volumes:
+      - ./lib:/app
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - "4369:4369"
+      - "5671:5671"
+      - "25672:25672"
+      - "5672:5672"
+      - "15671:15671"
+      - "15672:15672"
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"

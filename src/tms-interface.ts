@@ -8,14 +8,6 @@ export namespace TmsInterface {
 
 	const routineName = 'tms-interface';
 
-	// Get the docker machine IP and validate it
-	const net = require('net');
-	const dockerMachineIp = process.argv[2];
-	if (!net.isIP(dockerMachineIp)) {
-		console.log(`${routineName}: Invalid Docker Machine IP: ${dockerMachineIp}...aborting`);
-		process.exit(-1);
-	}
-
 	// ToDo: Pass TMS_HOST & TMS_PORT in as params from Docker
 	const TMS_HOST = '192.168.1.69';
 	const TMS_PORT = 6543;
@@ -27,7 +19,7 @@ export namespace TmsInterface {
 		process.exit(0);
 	});
 
-	const clientSocket = new ClientSocket('TMS/IF<=>TMS', TMS_HOST, TMS_PORT);
+	const clientSocket = new ClientSocket('TMS/IF<=>TMS', process.env.TMS_HOST, process.env.TMS_PORT);
 
 	const dataSink = msg =>
 		clientSocket.write(msg.content.toString());
@@ -36,6 +28,6 @@ export namespace TmsInterface {
 
 	// Prepare to startup
 	setTimeout(() => {
-		tmsQueue = new Queue(TMS_QUEUE, dockerMachineIp, dataSink);
-	}, 10000);
+		tmsQueue = new Queue(TMS_QUEUE, dataSink);
+	}, process.env.DELAY_STARTUP);
 }

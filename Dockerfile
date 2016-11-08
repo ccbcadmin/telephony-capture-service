@@ -10,5 +10,12 @@ RUN npm install
 # Bundle app source
 COPY ./lib/ /usr/src/tcs/lib/
 
-# Disable the TMS inteface by setting param to "false"
-CMD [ "node", "lib/telephony-capture-service.js", "192.16.99.100", "true"]
+ENV TMS_ACTIVE=true
+ENV TMS_HOST=192.168.1.69
+ENV TMS_PORT=6543
+ENV DOCKER_MACHINE_IP=192.168.99.100
+ENV DELAY_STARTUP=5000
+
+CMD [ "node", "lib/telephony-capture-service.js"]
+
+MAINTAINER Rod Monk

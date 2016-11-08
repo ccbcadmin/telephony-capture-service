@@ -9,14 +9,6 @@ const _ = require('lodash');
 const pgp = require('pg-promise')();
 const routineName = 'database-interface';
 
-// Get the docker machine IP and validate it
-const net = require('net');
-const dockerMachineIp = process.argv[2];
-if (!net.isIP(dockerMachineIp)) {
-	console.log(`${routineName}: Invalid Docker Machine IP: ${dockerMachineIp}...aborting`);
-	process.exit(-1);
-}
-
 export namespace LoadSmdrRecordsIntoDatabase {
 
 	let databaseQueue;
@@ -44,7 +36,7 @@ export namespace LoadSmdrRecordsIntoDatabase {
 	};
 
 	let connection = {
-		host: dockerMachineIp,
+		host: process.env.DOCKER_MACHINE_IP,
 		port: 5672,
 		database: 'postgres',
 		user: 'postgres',
@@ -213,6 +205,6 @@ export namespace LoadSmdrRecordsIntoDatabase {
 	// Prepare to startup
 	setTimeout(() => {
 		db = pgp(connection);
-		databaseQueue = new Queue(DATABASE_QUEUE, dockerMachineIp, dataSink);
-	}, 10000);
+		databaseQueue = new Queue(DATABASE_QUEUE, dataSink);
+	}, process.env.DELAY_STARTUP);
 }

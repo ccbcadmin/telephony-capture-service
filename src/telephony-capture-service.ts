@@ -10,24 +10,23 @@ export namespace TelephonyCaptureService {
 	// Need the docker machine IP to link together the various Microservices
 	const net = require('net');
 
-	const dockerMachineIp = process.argv[2];
-	if (!net.isIP(dockerMachineIp)) {
-		console.log(`${routineName}; Invalid Docker Machine IP: ${dockerMachineIp}.  Aborting.`);
+	if (!net.isIP(process.env.DOCKER_MACHINE_IP)) {
+		console.log(`${routineName}; Invalid Docker Machine IP: ${process.env.DOCKER_MACHINE_IP}.  Aborting.`);
 		process.exit(-1);
 	}
 
 	// Master enable/disable switch on the interface to the TMS
-	const isTmsEnabled: boolean = process.argv[3] === "true" ? true : false;
+	const isTmsEnabled: boolean = process.env.TMS_ACTIVE === "true" ? true : false;
 
 	let tmsInterfaceChildProcess;
 	let databaseChildProcess;
 
 	const receive = require('child_process');
 	if (isTmsEnabled) {
-		tmsInterfaceChildProcess = receive.fork(`./lib/tms-interface`, [dockerMachineIp]);
+		tmsInterfaceChildProcess = receive.fork(`./lib/tms-interface`);
 		console.log('tmsInterfaceChildProcess Started');
 	}
-	databaseChildProcess = receive.fork(`./lib/database-interface`, [dockerMachineIp]);
+	databaseChildProcess = receive.fork(`./lib/database-interface`);
 	console.log('databaseChildProcess Started');
 
 	process.on('SIGTERM', () => {
@@ -79,9 +78,9 @@ export namespace TelephonyCaptureService {
 	// Before starting message reception, wait to ensure that the queues are ready
 	setTimeout(() => {
 		if (isTmsEnabled) {
-			tmsQueue = new Queue(TMS_QUEUE, dockerMachineIp, null);
+			tmsQueue = new Queue(TMS_QUEUE, null);
 		}
-		databaseQueue = new Queue(DATABASE_QUEUE, dockerMachineIp, null);
+		databaseQueue = new Queue(DATABASE_QUEUE, null);
 		new ServerSocket('Telephony Capture Service', networkIP, 3456, dataSink);
-	}, 10000);
+	}, process.env.DELAY_STARTUP);
 }

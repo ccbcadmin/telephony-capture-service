@@ -10,15 +10,13 @@ export class Queue {
 	private consumer;
 	private ready: boolean;
 
-	constructor(queueName: string, dockerMachineIp: string, consumer: any) {
+	constructor(queueName: string, consumer: any) {
 
 		this.queueName = queueName;
 		this.consumer = consumer;
 		this.ready = false;
-
-		console.log ('IP Address of Queue: ', dockerMachineIp);
 		
-		this.amqp.connect(`amqp://${dockerMachineIp}:5672`, (err, queueConnection) => {
+		this.amqp.connect(`amqp://${process.env.DOCKER_MACHINE_IP}:5672`, (err, queueConnection) => {
 			if (err) {
 				console.log('Unable to Connect to Message Broker: ', err);
 				process.exit(0);
