@@ -15,7 +15,7 @@ export class Queue {
 		this.queueName = queueName;
 		this.consumer = consumer;
 		this.ready = false;
-		
+
 		this.amqp.connect(`amqp://${process.env.DOCKER_MACHINE_IP}:5672`, (err, queueConnection) => {
 			if (err) {
 				console.log('Unable to Connect to Message Broker: ', err);
@@ -29,7 +29,7 @@ export class Queue {
 					process.exit(0);
 				}
 
-				console.log (`Channel to Message Broker for Queue ${this.queueName} Created`);
+				console.log(`Channel to Message Broker for Queue ${this.queueName} Created`);
 
 				channel.assertQueue(queueName, { durable: true });
 				this.channel = channel;
@@ -38,9 +38,8 @@ export class Queue {
 
 					channel.consume(queueName, msg => {
 
-						++this.messageCounter;
-
-						//console.log(`${messageCounter}: ${msg.content.toString()}`);
+						console.log ('Message length: ', msg.content.toString().length);
+						console.log(`${++this.messageCounter}: ${msg.content.toString()}`);
 						this.consumer(msg) ? channel.ack(msg) : channel.nack(msg);
 
 					}, { noAck: false });
@@ -53,7 +52,7 @@ export class Queue {
 
 	public sendToQueue = (msg: string) => {
 		if (this.ready) {
-			this.channel.sendToQueue(this.queueName, new Buffer(msg), { persistent: true });
+			this.channel.sendToQueue(this.queueName, Buffer.from(msg), { persistent: true });
 		}
 		else {
 			console.log(`Queue ${this.queueName} not ready - Aborting`);

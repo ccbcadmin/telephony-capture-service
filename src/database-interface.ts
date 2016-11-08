@@ -195,16 +195,14 @@ export namespace LoadSmdrRecordsIntoDatabase {
 
 			insertCallRecords(smdrRecord)
 				// If everything OK, then move on to the next line of the file
-				.then(() => { _.noop })
-				// Abort completely if a problem
-				.catch(err => { console.log('err: ', err); process.exit(); });
+				.then(() => { return true; })
+				.catch(err => { console.log('err: ', err); return false;});
 		}
-		return true;
 	}
 
 	// Prepare to startup
 	setTimeout(() => {
 		db = pgp(connection);
 		databaseQueue = new Queue(DATABASE_QUEUE, dataSink);
-	}, process.env.DELAY_STARTUP);
+	}, process.env.STARTUP_DELAY);
 }

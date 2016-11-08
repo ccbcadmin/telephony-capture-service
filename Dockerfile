@@ -14,7 +14,8 @@ ENV TMS_ACTIVE=true
 ENV TMS_HOST=192.168.1.69
 ENV TMS_PORT=6543
 ENV DOCKER_MACHINE_IP=192.168.99.100
-ENV DELAY_STARTUP=5000
+# Startup delay applied waiting for RabbitMQ and Postgres to complete their startup
+ENV STARTUP_DELAY=4000
 
 CMD [ "node", "lib/telephony-capture-service.js"]
 

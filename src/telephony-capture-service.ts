@@ -50,13 +50,16 @@ export namespace TelephonyCaptureService {
 
 	const queueCompleteMessages = (data: Buffer) => {
 
-		const unprocessedData = leftOver + data;
+		const unprocessedData = leftOver + data.toString();
 
 		const crLfIndexOf = unprocessedData.indexOf(CRLF);
 
 		const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
 
+
 		if (msg) {
+			console.log('msg[0].lenght, [1].lenght: ', msg[0].length, msg[1].length);
+
 			databaseQueue.sendToQueue(msg[1]);
 			leftOver = unprocessedData.slice(crLfIndexOf + 2);
 		} else {
@@ -64,11 +67,11 @@ export namespace TelephonyCaptureService {
 		}
 	}
 
-	const dataSink = data => {
+	const dataSink = (data: Buffer) => {
 
 		// Unfiltered data is queued for subsequent transmission to the legacy TMS
 		if (isTmsEnabled) {
-			tmsQueue.sendToQueue(data);
+			tmsQueue.sendToQueue(data.toString());
 		}
 
 		// However, only true SMDR data is queued for databaase archiving
@@ -81,6 +84,6 @@ export namespace TelephonyCaptureService {
 			tmsQueue = new Queue(TMS_QUEUE, null);
 		}
 		databaseQueue = new Queue(DATABASE_QUEUE, null);
-		new ServerSocket('Telephony Capture Service', networkIP, 3456, dataSink);
-	}, process.env.DELAY_STARTUP);
+		new ServerSocket(routineName, networkIP, 3456, dataSink);
+	}, process.env.STARTUP_DELAY);
 }

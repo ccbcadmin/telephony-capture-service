@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "description": "source-msgs",
   "license": "MIT",
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roderickmonk/TCS.git"
+  },
   "author": "Rod Monk",
   "keywords": [
     ""
@@ -29,8 +32,7 @@
     "lodash": "^4.16.4",
     "moment": "^2.15.2",
     "node-dir": "^0.1.16",
-    "pg-promise": "^5.3.5",
-    "promise-pg": "^0.1.1"
+    "pg-promise": "^5.3.5"
   },
   "devDependencies": {
     "@types/chai": ">=3.4.30",
@@ -45,9 +47,5 @@
   },
   "engines": {
     "node": ">=6.9.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/roderickmonk/TCS.git"
   }
 }

@@ -29,5 +29,5 @@ export namespace TmsInterface {
 	// Prepare to startup
 	setTimeout(() => {
 		tmsQueue = new Queue(TMS_QUEUE, dataSink);
-	}, process.env.DELAY_STARTUP);
+	}, process.env.STARTUP_DELAY);
 }
