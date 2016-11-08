@@ -22,4 +22,36 @@ const Greeter = require('my-amazing-lib').Greeter;
 
 const greeter = new Greeter('World!');
 greeter.greet();
+
 ```
+TCS
+├── README.md
+├── Dockerfile
+├── docker-compose.yml
+├── docs
+│   ├── SMDR Fields IPO 9.1.4 Required Fields.docx
+│   ├── TCS Context Diagram.svg
+│   ├── TCS Software Requirements Document.docx
+│   └── TCS Test Management Plan.docx
+├── lib
+├── package.json
+├── src
+│   ├── database-interface.ts
+│   ├── mangle-smdr-files.ts
+│   ├── share
+│   │   ├── client-socket.ts
+│   │   ├── constants.ts
+│   │   ├── queue.ts
+│   │   ├── server-socket.ts
+│   │   └── utility.ts
+│   ├── telephony-capture-service.ts
+│   ├── telephony-simulator.ts
+│   ├── tms-interface.ts
+│   └── tms-simulator.ts
+├── test
+│   └── test-cases.ts
+├── tsconfig.json
+├── tslint.json
+└── typings
+```
+
