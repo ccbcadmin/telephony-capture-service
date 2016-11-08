@@ -27,16 +27,22 @@ greeter.greet();
 ```
 TCS
 ├── README.md                                             This file
+│
 ├── Dockerfile                                            TCS Dockerfile
+│
 ├── docker-compose.yml                                    TCS Composition Definition
+│
 ├── docs
 │   ├── SMDR Fields IPO 9.1.4 Required Fields.docx        SMDR record definition
 │   ├── TCS Software Requirements Document.docx           TCS SRD
 │   └── TCS Test Management Plan.docx                     ToDo: TCS Management Plan
+│
 ├── lib                                                   Transpiled *.js scripts
+│
 ├── package.json                                          npm package definition
+│
 ├── src                                                   TypeScript source code folder
-│   ├── database-interface.ts                             Receives messages from a queue and archives them to the DB
+│   ├── database-interface.ts                             Receives messages from queue and archives to DB
 │   ├── mangle-smdr-files.ts                              Scrambles source telephone numbers
 │   ├── share
 │   │   ├── client-socket.ts                              Client-side TCP circuit management
@@ -48,10 +54,14 @@ TCS
 │   ├── telephony-simulator.ts                            A simulator that sends SMDR messages to the TCS
 │   ├── tms-interface.ts                                  Sends data to the TMS
 │   └── tms-simulator.ts                                  A test mockup of the TMS
+│
 ├── test
 │   └── test-cases.ts                                     Todo: Mocha test code
+│
 ├── tsconfig.json                                         TypeScript configuration settings
+│
 ├── tslint.json                                           Lint configuration for TypeScript
+│
 └── typings                                
 ```
 
