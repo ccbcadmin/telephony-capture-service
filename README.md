@@ -26,18 +26,17 @@ greeter.greet();
 ```
 ```
 TCS
-├── README.md
-├── Dockerfile
-├── docker-compose.yml
+├── README.md                                             This file
+├── Dockerfile                                            TCS Dockerfile
+├── docker-compose.yml                                    TCS Composition Definition
 ├── docs
-│   ├── SMDR Fields IPO 9.1.4 Required Fields.docx
-│   ├── TCS Context Diagram.svg
-│   ├── TCS Software Requirements Document.docx
-│   └── TCS Test Management Plan.docx
-├── lib
+│   ├── SMDR Fields IPO 9.1.4 Required Fields.docx        SMDR record definition
+│   ├── TCS Software Requirements Document.docx           TCS SRD
+│   └── TCS Test Management Plan.docx                     ToDo: TCS Management Plan
+├── lib                                                   Transpiled *.js scripts
 ├── package.json
-├── src
-│   ├── database-interface.ts
+├── src                                                   TypeScript source code
+│   ├── database-interface.ts                             Receives messages from a queue and archives them to the DB
 │   ├── mangle-smdr-files.ts
 │   ├── share
 │   │   ├── client-socket.ts
