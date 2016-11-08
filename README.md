@@ -1,29 +1,20 @@
-# Using this module in other modules
+# Telephony Capture Service (TCS)
 
-Here is a quick example of how this module can be used in other modules. The [TypeScript Module Resolution Logic](https://www.typescriptlang.org/docs/handbook/module-resolution.html) makes it quite easy. The file `src/index.ts` acts as an aggregator of all the functionality in this module. It imports from other files and re-exports to provide a unified interface for this module. The _package.json_ file contains `main` attribute that points to the generated `lib/index.js` file and `typings` attribute that points to the generated `lib/index.d.ts` file.
+This TCS consists of a number of routines to capture SMDR records from a telephone exchange and then pass the data on to 2 different parties:
+<ol>
+<li>A Telecom Management System (TMS).</li>
+<li>After parsing the SMDR messages, they are then archived to the database (Postgres).</li>
+</ol>
+<br>
+Technologies:
+<ul>
+<li>NodeJS</li>
+<li>RabbitMQ: In order to ensure no data loss, in both cases, the data passes through persist queues supported by RabbitMQ en route to the recipients mentioned in bullets 1 and 2 above.</li>
+<li>Docker and Docker Compose</li>
+</ul>
 
-> If you are planning to have code in multiple files (which is quite natural for a NodeJS module) that users can import, make sure you update `src/index.ts` file appropriately.
+Formal Documentation can be found in the folder 'docs'.  
 
-Now assuming you have published this amazing module to _npm_ with the name `my-amazing-lib`, and installed it in the module in which you need it -
-
-- To use the `Greeter` class in a TypeScript file -
-
-```ts
-import { Greeter } from "my-amazing-lib";
-
-const greeter = new Greeter("World!");
-greeter.greet();
-```
-
-- To use the `Greeter` class in a JavaScript file -
-
-```js
-const Greeter = require('my-amazing-lib').Greeter;
-
-const greeter = new Greeter('World!');
-greeter.greet();
-
-```
 ```
 TCS
 ├── README.md                                             This file
