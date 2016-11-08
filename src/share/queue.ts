@@ -1,4 +1,6 @@
 
+import { networkIP } from './utility';
+
 export class Queue {
 
 	private amqp = require('amqplib/callback_api');
@@ -8,13 +10,15 @@ export class Queue {
 	private consumer;
 	private ready: boolean;
 
-	constructor(queueName: string, consumer: any) {
+	constructor(queueName: string, dockerMachineIp: string, consumer: any) {
 
 		this.queueName = queueName;
 		this.consumer = consumer;
 		this.ready = false;
 
-		this.amqp.connect('amqp://192.168.99.100:5672', (err, queueConnection) => {
+		console.log ('IP Address of Queue: ', dockerMachineIp);
+		
+		this.amqp.connect(`amqp://${dockerMachineIp}:5672`, (err, queueConnection) => {
 			if (err) {
 				console.log('Unable to Connect to Message Broker: ', err);
 				process.exit(0);

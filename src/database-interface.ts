@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
-import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, SMDR_QUEUE } from './share/constants';
+import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, TMS_QUEUE } from './share/constants';
 import { ClientSocket } from './share/client-socket';
 import { Queue } from './share/queue';
 
 const moment = require('moment');
 const _ = require('lodash');
 const pgp = require('pg-promise')();
+const routineName = 'database-interface';
+const dockerMachineIp = process.argv[2];
 
 export namespace LoadSmdrRecordsIntoDatabase {
 
@@ -35,14 +37,14 @@ export namespace LoadSmdrRecordsIntoDatabase {
 	};
 
 	let connection = {
-		host: '192.168.99.100',
+		host: dockerMachineIp,
 		port: 5672,
 		database: 'postgres',
 		user: 'postgres',
 		password: ''
 	};
 
-	let db = pgp(connection);
+	let db;
 
 	const insertCallRecords = (smdrRecord: SmdrRecord) =>
 		db.none(`INSERT INTO RAW_CALL2 (
@@ -88,8 +90,6 @@ export namespace LoadSmdrRecordsIntoDatabase {
 				smdrRecord.externalTargetedNumber
 			]);
 
-	const routineName = 'Load SMDR Records Into Database';
-
 	console.log(`${routineName}: Started`);
 
 	process.on('SIGTERM', (): void => {
@@ -100,7 +100,7 @@ export namespace LoadSmdrRecordsIntoDatabase {
 	let badRawRecords = 0;
 
 	const dataSink = (msg): boolean => {
-		console.log('database: ', msg.content.toString());
+		// console.log('database: ', msg.content.toString());
 
 		let raw_call = msg.content.toString().split(',');
 
@@ -111,7 +111,7 @@ export namespace LoadSmdrRecordsIntoDatabase {
 
 			//let callStart: string = moment(raw_call[0]).format();
 			let callStart = raw_call[0];
-			console.log('Call Start: ', callStart);
+			// console.log('Call Start: ', callStart);
 
 			// Record Connected Time in seconds
 			let temp: string[] = raw_call[1].split(':');
@@ -119,13 +119,13 @@ export namespace LoadSmdrRecordsIntoDatabase {
 				Number(temp[0]) * 60 * 60 +
 				Number(temp[1]) * 60 +
 				Number(temp[2]));
-			console.log('Connected Time (seconds): ', connectedTime);
+			// console.log('Connected Time (seconds): ', connectedTime);
 
 			// Ring Time in seconds
 			let ringTime = raw_call[2];
 
 			let caller = raw_call[3];
-			console.log('Caller: ', caller);
+			// console.log('Caller: ', caller);
 
 			let direction = raw_call[4];
 			console.log('Direction: ', direction);
@@ -134,43 +134,43 @@ export namespace LoadSmdrRecordsIntoDatabase {
 			console.log('Called Number: ', calledNumber);
 
 			let dialedNumber = raw_call[6];
-			console.log('Dialed Number: ', dialedNumber);
+			// console.log('Dialed Number: ', dialedNumber);
 
 			let isInternal = raw_call[8];
-			console.log('Is Internal: ', isInternal);
+			// console.log('Is Internal: ', isInternal);
 
 			let callId = raw_call[9];
-			console.log('Call ID: ', callId);
+			// console.log('Call ID: ', callId);
 
 			let continuation = raw_call[10];
-			console.log('Continuation: ', continuation);
+			// console.log('Continuation: ', continuation);
 
 			let party1Device = raw_call[11];
-			console.log('Party 1 Device: ', party1Device);
+			// console.log('Party 1 Device: ', party1Device);
 
 			let party1Name = raw_call[12];
-			console.log('Party 1 Name: ', party1Name);
+			// console.log('Party 1 Name: ', party1Name);
 
 			let party2Device = raw_call[13];
-			console.log('Party 2 Device: ', party2Device);
+			// console.log('Party 2 Device: ', party2Device);
 
 			let party2Name = raw_call[14];
-			console.log('Party 2 Name: ', party2Name);
+			// console.log('Party 2 Name: ', party2Name);
 
 			let holdTime = raw_call[15];
-			console.log('Hold Time: ', holdTime);
+			// console.log('Hold Time: ', holdTime);
 
 			let parkTime = raw_call[16];
-			console.log('Park Time: ', parkTime);
+			// console.log('Park Time: ', parkTime);
 
 			let externalTargetingCause = raw_call[27];
-			console.log('External Targetting Cause: ', externalTargetingCause);
+			// console.log('External Targetting Cause: ', externalTargetingCause);
 
 			let externalTargeterId = raw_call[28];
-			console.log('External TargeterId: ', externalTargeterId);
+			// console.log('External TargeterId: ', externalTargeterId);
 
 			let externalTargetedNumber = raw_call[29];
-			console.log('External Targeted Number: ', externalTargetedNumber);
+			// console.log('External Targeted Number: ', externalTargetedNumber);
 
 			let smdrRecord: SmdrRecord = {
 				callStart: callStart,
@@ -206,6 +206,6 @@ export namespace LoadSmdrRecordsIntoDatabase {
 	// Prepare to startup
 	setTimeout(() => {
 		db = pgp(connection);
-		databaseQueue = new Queue(DATABASE_QUEUE, dataSink);
+		databaseQueue = new Queue(DATABASE_QUEUE, dockerMachineIp, dataSink);
 	}, 10000);
 }
