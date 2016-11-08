@@ -1,19 +1,29 @@
 # Telephony Capture Service (TCS)
 
-This TCS consists of a number of routines to capture SMDR records from a telephone exchange and then pass the data on to 2 different parties:
+This TCS captures Station Message Detail Records (SMDR) from a telephone exchange and passes the data on to 2 external parties:
 <ol>
-<li>A Telecom Management System (TMS).</li>
-<li>After parsing the SMDR messages, they are then archived to the database (Postgres).</li>
+<li>A Telecom Management System (TMS).  Note: the TMS is 3rd party software that aggregates call information and produces various reports.</li>
+<li>Each SMDR message is parsed (CSV) and then archived to the database (Postgres).</li>
 </ol>
 <br>
-Technologies:
+<br>
+# Related Support Tools
+<br>
+Also included in the TCS deliverables are some closely aligned tools that are useful both during the test and deployment phases of the TCS.  These are:
+<ol>
+<li>Mangle SMDR Files: Accepts as input files containing historical SMDR data.  The output are corresponding files that are largely identical to the input files, except that all telephone numbers have been 'mangled' so as to preserve anonymity.</li>
+<li>Telephony Simulator: Mocks a stream of TCP messages to drive the TCS.  Useful for both load and function testing.</li>
+<li>TMS Simulator: During testing the TMS Simulator is used to capture SMDR messages from the TCS.</li>
+
+# Technologies:
 <ul>
 <li>NodeJS</li>
 <li>RabbitMQ: In order to ensure no data loss, in both cases, the data passes through persist queues supported by RabbitMQ en route to the recipients mentioned in bullets 1 and 2 above.</li>
 <li>Docker and Docker Compose</li>
+<li>PostgreSQL</li>
 </ul>
 
-Formal Documentation can be found in the folder 'docs'.  
+A formal set of software requirements can be found in the folder 'docs'. 
 
 ```
 TCS
