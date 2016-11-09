@@ -9,7 +9,7 @@ A formal set of software requirements can be found in the folder 'docs'.
 <ul>
 <li>NodeJS</li>
 <li>RabbitMQ: In order to ensure no data loss, in both cases, the data passes through persistant queues supported by RabbitMQ en route to the recipients mentioned in bullets 1 and 2 above.</li>
-<li>Docker and Docker Compose</li>
+<li>Docker / Docker Compose</li>
 <li>PostgreSQL</li>
 </ul>
 # Related Support Tools

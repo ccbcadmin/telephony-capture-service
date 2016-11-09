@@ -8,6 +8,16 @@ export namespace TmsInterface {
 
 	const routineName = 'tms-interface';
 
+	// Ensure the presence of required environment variables
+	const envalid = require('envalid');
+	const { str, num} = envalid;
+
+	const env = envalid.cleanEnv(process.env, {
+		TMS_HOST: str(),
+		TMS_PORT: num(),
+		STARTUP_DELAY: num()
+	});
+
 	// ToDo: Pass TMS_HOST & TMS_PORT in as params from Docker
 	const TMS_HOST = '192.168.1.69';
 	const TMS_PORT = 6543;
@@ -19,7 +29,7 @@ export namespace TmsInterface {
 		process.exit(0);
 	});
 
-	const clientSocket = new ClientSocket('TMS/IF<=>TMS', process.env.TMS_HOST, process.env.TMS_PORT);
+	const clientSocket = new ClientSocket('TMS/IF<=>TMS', env.TMS_HOST, env.TMS_PORT);
 
 	const dataSink = msg =>
 		clientSocket.write(msg.content.toString());
@@ -29,5 +39,5 @@ export namespace TmsInterface {
 	// Prepare to startup
 	setTimeout(() => {
 		tmsQueue = new Queue(TMS_QUEUE, dataSink);
-	}, process.env.STARTUP_DELAY);
+	}, env.STARTUP_DELAY);
 }

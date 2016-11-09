@@ -32,7 +32,10 @@ export class ClientSocket {
 
 	private onError = (socket) => {
 
-		if (this.retryCount % 5 === 0) {
+		console.log ('Link Closed');
+		process.exit(-1);
+		
+		if (this.retryCount % 20 === 0) {
 			console.log(`${this.linkName}: Link lost...retrying`);
 		}
 		++this.retryCount;
@@ -46,6 +49,7 @@ export class ClientSocket {
 	}
 
 	public write = (msg: string): boolean => {
+
 		if (this.active) {
 			return this.active = this.socket.write(msg);
 		}

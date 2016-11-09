@@ -7,16 +7,25 @@ export namespace TelephonyCaptureService {
 
 	const routineName = 'telephony-capture-service';
 
+	// Ensure the presence of required environment variables
+	const envalid = require('envalid');
+	const { str, num } = envalid;
+	const env = envalid.cleanEnv(process.env, {
+		DOCKER_MACHINE_IP: str(),
+		TMS_ACTIVE: str(),
+		STARTUP_DELAY: num()
+	});
+
 	// Need the docker machine IP to link together the various Microservices
 	const net = require('net');
 
-	if (!net.isIP(process.env.DOCKER_MACHINE_IP)) {
-		console.log(`${routineName}; Invalid Docker Machine IP: ${process.env.DOCKER_MACHINE_IP}.  Aborting.`);
+	if (!net.isIP(env.DOCKER_MACHINE_IP)) {
+		console.log(`${routineName}; Invalid Docker Machine IP: ${env.DOCKER_MACHINE_IP}.  Aborting.`);
 		process.exit(-1);
 	}
 
 	// Master enable/disable switch on the interface to the TMS
-	const isTmsEnabled: boolean = process.env.TMS_ACTIVE === "true" ? true : false;
+	const isTmsEnabled: boolean = env.TMS_ACTIVE === "true" ? true : false;
 
 	let tmsInterfaceChildProcess;
 	let databaseChildProcess;
@@ -85,5 +94,5 @@ export namespace TelephonyCaptureService {
 		}
 		databaseQueue = new Queue(DATABASE_QUEUE, null);
 		new ServerSocket(routineName, networkIP, 3456, dataSink);
-	}, process.env.STARTUP_DELAY);
+	}, env.STARTUP_DELAY);
 }

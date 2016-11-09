@@ -18,7 +18,7 @@
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."raw_call2";
 CREATE TABLE "public"."raw_call2" (
-	"id" int4 NOT NULL DEFAULT nextval('raw_call2_id_seq'::regclass),
+	"id" serial,
 	"call_time" timestamp(6) NOT NULL,
 	"connected_time" interval(6) NOT NULL,
 	"ring_time" interval(6) NOT NULL DEFAULT '00:00:00'::interval second,

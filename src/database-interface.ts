@@ -4,12 +4,21 @@ import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, TMS_QUEUE } from './share/constant
 import { ClientSocket } from './share/client-socket';
 import { Queue } from './share/queue';
 
-const moment = require('moment');
-const _ = require('lodash');
-const pgp = require('pg-promise')();
-const routineName = 'database-interface';
-
 export namespace LoadSmdrRecordsIntoDatabase {
+
+	const moment = require('moment');
+	const _ = require('lodash');
+	const pgp = require('pg-promise')();
+
+	// Ensure the presence of required environment variables
+	const envalid = require('envalid');
+	const { str, num } = envalid;
+	const env = envalid.cleanEnv(process.env, {
+		DOCKER_MACHINE_IP: str(),
+		STARTUP_DELAY: num()
+	});
+
+	const routineName = 'database-interface';
 
 	let databaseQueue;
 
@@ -36,7 +45,7 @@ export namespace LoadSmdrRecordsIntoDatabase {
 	};
 
 	let connection = {
-		host: process.env.DOCKER_MACHINE_IP,
+		host: env.DOCKER_MACHINE_IP,
 		port: 5672,
 		database: 'postgres',
 		user: 'postgres',
@@ -127,10 +136,10 @@ export namespace LoadSmdrRecordsIntoDatabase {
 			// console.log('Caller: ', caller);
 
 			let direction = raw_call[4];
-			console.log('Direction: ', direction);
+			// console.log('Direction: ', direction);
 
 			let calledNumber = raw_call[5];
-			console.log('Called Number: ', calledNumber);
+			// console.log('Called Number: ', calledNumber);
 
 			let dialedNumber = raw_call[6];
 			// console.log('Dialed Number: ', dialedNumber);
@@ -195,14 +204,21 @@ export namespace LoadSmdrRecordsIntoDatabase {
 
 			insertCallRecords(smdrRecord)
 				// If everything OK, then move on to the next line of the file
-				.then(() => { return true; })
-				.catch(err => { console.log('err: ', err); return false;});
+				.then(() => {
+					console.log('stored to database success');
+					return true;
+				})
+				.catch(err => {
+					console.log('err: ', err);
+					return false;
+				});
 		}
+		return true;
 	}
 
 	// Prepare to startup
 	setTimeout(() => {
 		db = pgp(connection);
 		databaseQueue = new Queue(DATABASE_QUEUE, dataSink);
-	}, process.env.STARTUP_DELAY);
+	}, env.STARTUP_DELAY);
 }

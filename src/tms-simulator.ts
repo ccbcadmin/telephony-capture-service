@@ -4,6 +4,14 @@ import { networkIP } from './share/utility';
 
 export namespace TmsSimulator {
 
+	// Ensure the presence of required environment variables
+	const envalid = require('envalid');
+	const { str } = envalid;
+
+	const env = envalid.cleanEnv(process.env, {
+		TMS_PORT: str()
+	});
+
 	const routineName = 'TmsSimulator';
 	const net = require('net');
 
@@ -17,6 +25,7 @@ export namespace TmsSimulator {
 		process.exit(0);
 	});
 
+	// The simulator just sucks up all data and presents it nicely to the console
 	let leftOver: string = '';
 	const dataDump = (data: string) => {
 
@@ -36,5 +45,5 @@ export namespace TmsSimulator {
 		}
 	}
 
-	new ServerSocket(routineName, networkIP, 6543, dataDump);
+	new ServerSocket(routineName, networkIP, env.TMS_PORT, dataDump);
 }

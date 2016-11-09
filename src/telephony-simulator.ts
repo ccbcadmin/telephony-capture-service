@@ -67,9 +67,10 @@ export namespace TelephonySimulator {
 				const firstPart = nextMsg.slice(0, partition);
 				const secondPart = nextMsg.slice(partition);
 
-				tscSocket.write(SMDR_PREAMBLE);
-				tscSocket.write(firstPart);
-				tscSocket.write(secondPart);
+				if (!tscSocket.write(SMDR_PREAMBLE) || !tscSocket.write(firstPart) || !tscSocket.write(secondPart)) {
+					console.log('Link to TCS Shutdown');
+					process.exit(-1);
+				}
 			}
 		}, 5);
 	}
