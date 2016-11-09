@@ -4,3 +4,4 @@ node_modules/
 npm-debug.log
 smdr-data-*/
 SQL/
+.env

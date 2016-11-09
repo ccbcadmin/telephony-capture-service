@@ -11,6 +11,6 @@ RUN npm install
 # Bundle app source
 COPY ./lib/ /usr/src/service/lib/
 
-CMD [ "node", "lib/tms-simulator.js"]
+CMD [ "node", "lib/telephony-simulator.js"]
 
 MAINTAINER Rod Monk

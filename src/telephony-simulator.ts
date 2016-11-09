@@ -12,23 +12,28 @@ export namespace TelephonySimulator {
 	const eventEmitter = require('events').EventEmitter;
 	const ee = new eventEmitter;
 
+	// Ensure the presence of required environment variables
+	const envalid = require('envalid');
+	const { str, num} = envalid;
+
+	const env = envalid.cleanEnv(process.env, {
+		DOCKER_MACHINE_IP: str(),
+		TCS_PORT: num()
+	});
+
 	let smdrFiles: string[] = [];
 	let smdrFileNo = 0;
 
 	// Check the parameters
-	if (process.argv.length !== 5) {
-		console.log(`Usage: node lib/${routineName} SourceDirectory HostIpAddress Port`);
-		process.exit(0);
-	} else if (!net.isIP(process.argv[3])) {
-		console.log(`telephony-simulator: ${process.argv[3]}, Invalid IP Address`);
-		process.exit(0);
-	}
-	else if (!process.argv[4].match(/^\d+$/)) {
-		console.log(`telephony-simulator: ${process.argv[4]}, Invalid Port`);
-		process.exit(0);
+	if (process.argv.length !== 3) {
+		console.log(`Usage: node lib/${routineName} SourceDirectory`);
+		process.exit(-1);
+	} else if (!net.isIP(env.DOCKER_MACHINE_IP)) {
+		console.log(`${routineName}: ${env.DOCKER_MACHINE_IP}, Invalid IP Address`);
+		process.exit(-1);
 	}
 
-	const tscSocket = new ClientSocket('TCSSIM<=>TCS', process.argv[3], Number(process.argv[4]));
+	const tscSocket = new ClientSocket('TCSSIM<=>TCS', env.DOCKER_MACHINE_IP, env.TCS_PORT);
 
 	const sendSmdrRecords = (smdrFileName: string): void => {
 
@@ -72,7 +77,7 @@ export namespace TelephonySimulator {
 					process.exit(-1);
 				}
 			}
-		}, 5);
+		}, 200);
 	}
 
 	const nextFile = () => {

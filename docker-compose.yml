@@ -32,6 +32,13 @@ services:
     image: postgres:latest
     ports:
       - "5432:5432"
+  telephony-simulator:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/telephony-simulator
+    environment:
+      - DOCKER_MACHINE_IP=192.168.99.100
+      - TCS_PORT=3456
   tms-simulator:
     build:
       context: .
