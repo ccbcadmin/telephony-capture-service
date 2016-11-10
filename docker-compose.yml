@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: ./dockerfiles/tcs
     env_file:
-      - docker.env
+      - docker-compose.env
     ports:
       - "3456:3456"
     links:
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: ./dockerfiles/tms-interface
     env_file:
-      - docker.env
+      - docker-compose.env
     links:
       - rabbitmq
     volumes:
@@ -30,7 +30,7 @@ services:
       context: .
       dockerfile: ./dockerfiles/database-interface
     env_file:
-      - docker.env
+      - docker-compose.env
     links:
       - rabbitmq
       - postgres
@@ -52,12 +52,12 @@ services:
       context: .
       dockerfile: ./dockerfiles/telephony-simulator
     env_file:
-      - docker.env
+      - docker-compose.env
   tms-simulator:
     build:
       context: .
       dockerfile: ./dockerfiles/tms-simulator
     env_file:
-      - docker.env
+      - docker-compose.env
     ports:
       - "6543:6543"
