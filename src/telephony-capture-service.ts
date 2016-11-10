@@ -11,16 +11,15 @@ export namespace TelephonyCaptureService {
 	const envalid = require('envalid');
 	const { str, num } = envalid;
 	const env = envalid.cleanEnv(process.env, {
+		// Need the docker machine IP to link together the various Microservices
 		DOCKER_MACHINE_IP: str(),
 		STARTUP_DELAY: num(),
 		TMS_ACTIVE: num()
 	});
 
-	// Need the docker machine IP to link together the various Microservices
 	const net = require('net');
-
 	if (!net.isIP(env.DOCKER_MACHINE_IP)) {
-		console.log(`${routineName}; Invalid Docker Machine IP: ${env.DOCKER_MACHINE_IP}.  Aborting.`);
+		console.log(`${routineName}; Invalid Docker Machine IP: ${env.DOCKER_MACHINE_IP}...aborting.`);
 		process.exit(-1);
 	}
 
@@ -47,10 +46,8 @@ export namespace TelephonyCaptureService {
 
 		const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
 
-
 		if (msg) {
-			console.log('msg[0].lenght, [1].lenght: ', msg[0].length, msg[1].length);
-
+			console.log(`msg[0].length: ${msg[0].length} msg[1].length: ${msg[1].length}`);
 			databaseQueue.sendToQueue(msg[1]);
 			leftOver = unprocessedData.slice(crLfIndexOf + 2);
 		} else {

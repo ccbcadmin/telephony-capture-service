@@ -18,10 +18,6 @@ export namespace TmsInterface {
 		STARTUP_DELAY: num()
 	});
 
-	// ToDo: Pass TMS_HOST & TMS_PORT in as params from Docker
-	const TMS_HOST = '192.168.1.69';
-	const TMS_PORT = 6543;
-
 	console.log(`${routineName}: Started`);
 
 	process.on('SIGTERM', () => {
