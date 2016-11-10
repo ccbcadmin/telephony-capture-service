@@ -4,7 +4,7 @@ import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, TMS_QUEUE } from './share/constant
 import { ClientSocket } from './share/client-socket';
 import { Queue } from './share/queue';
 
-export namespace LoadSmdrRecordsIntoDatabase {
+export namespace DatabaseInterface {
 
 	const moment = require('moment');
 	const _ = require('lodash');

@@ -1,10 +1,18 @@
 import { CRLF } from './share/constants';
 import { pathSeparator, regExpSmdrFileName } from './share/utility';
 
-export namespace CreateSmdrTestFiles {
+export namespace Mangle {
 
 	const fs = require('fs');
 	const dir = require('node-dir');
+
+	// Ensure the presence of required environment variables
+	const envalid = require('envalid');
+	const { str, num } = envalid;
+	const env = envalid.cleanEnv(process.env, {
+		MANGLE_SOURCE: str(),
+		MANGLE_TARGET: str()
+	});
 
 	const eventEmitter = require('events').EventEmitter;
 	const ee = new eventEmitter;      //make an Event Emitter object
@@ -52,7 +60,7 @@ export namespace CreateSmdrTestFiles {
 		let filePart = smdrFileName.split(pathSeparator());
 		const inputFileNameParts = filePart[filePart.length - 1].split('.');
 		const outputFile = `${inputFileNameParts[0]}.${zeroPad(Number(inputFileNameParts[1]) + 1, 3)}`;
-		const outputPath = [process.argv[3], outputFile].join(pathSeparator());
+		const outputPath = [env.MANGLE_TARGET, outputFile].join(pathSeparator());
 
 		process.stdout.write (`Mangling ${smdrFileName} to ${outputPath}: `);
 
@@ -108,44 +116,10 @@ export namespace CreateSmdrTestFiles {
 		}
 	}
 
-	// Check the number of parameters
-	if (process.argv.length !== 4) {
-		console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory`);
-		process.exit(-1);
-	}
-
-	// Check the number of parameters
-	if (process.argv[2] === process.argv[3]) {
-		console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory\nSourceDirectory and TargetDirectory cannot be the same.`);
-		process.exit(-1);
-	}
-
-	try {
-		fs.accessSync(process.argv[2]);
-		if (!fs.lstatSync(process.argv[2]).isDirectory()) {
-			console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory\n'${process.argv[2]}' must be a directory`);
-			process.exit(-1);
-		}
-	} catch (e) {
-		console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory\n'${process.argv[2]}' must be a directory`);
-		process.exit(-1);
-	}
-
-	try {
-		fs.accessSync(process.argv[3]);
-		if (!fs.lstatSync(process.argv[3]).isDirectory()) {
-			console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory\n'${process.argv[3]}' must be a directory`);
-			process.exit(-1);
-		}
-	} catch (e) {
-		console.log(`Usage: node ${__filename} SourceDirectory TargetDirectory\n'${process.argv[3]}' must be a directory`);
-		process.exit(-1);
-	}
-
 	ee.on('next', nextFile);
 
 	// Search the current directory, if none specified
-	dir.files(process.argv[2], (err, files) => {
+	dir.files(env.MANGLE_SOURCE, (err, files) => {
 		if (err) throw err;
 
 		files.sort();
