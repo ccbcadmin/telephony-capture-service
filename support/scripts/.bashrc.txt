@@ -1,0 +1,11 @@
+alias build-tcs='docker-compose build tcs'
+alias run-tcs='docker-compose run -d --rm --service-ports tcs'
+alias build-tmssim='docker-compose build tms-simulator'
+alias run-tmssim='docker-compose run -d --rm --service-ports tms-simulator'
+alias ..='cd ..'
+alias rm-dock='docker rm $(docker ps -q)'
+alias rm-images='docker rmi $(docker images -q)'
+alias tcs-down='docker-compose down'
+alias build-mangle='docker-compose build mangle'
+alias run-mangle='docker-compose run mangle'
+
