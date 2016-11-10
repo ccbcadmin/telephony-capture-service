@@ -13,7 +13,7 @@ export namespace TmsInterface {
 	const { str, num} = envalid;
 
 	const env = envalid.cleanEnv(process.env, {
-		TMS_HOST: str(),
+		DOCKER_MACHINE_IP: str(),
 		TMS_PORT: num(),
 		STARTUP_DELAY: num()
 	});
@@ -29,7 +29,7 @@ export namespace TmsInterface {
 		process.exit(0);
 	});
 
-	const clientSocket = new ClientSocket('TMS/IF<=>TMS', env.TMS_HOST, env.TMS_PORT);
+	const clientSocket = new ClientSocket('TMS/IF<=>TMS', env.DOCKER_MACHINE_IP, env.TMS_PORT);
 
 	const dataSink = msg =>
 		clientSocket.write(msg.content.toString());

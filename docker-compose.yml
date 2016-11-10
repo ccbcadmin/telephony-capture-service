@@ -5,20 +5,43 @@ services:
       context: .
       dockerfile: ./dockerfiles/tcs
     environment:
-      - TMS_ACTIVE=true
-      - TMS_HOST=192.168.1.69
-      # - TMS_HOST=10.0.9.90
-      - TMS_PORT=6543
       - DOCKER_MACHINE_IP=192.168.99.100
       # Startup delay applied waiting for RabbitMQ and Postgres
+      - TMS_ACTIVE=1 # 1 if active, 0 if not active
       - STARTUP_DELAY=6000
     ports:
       - "3456:3456"
     links:
       - rabbitmq
       - postgres
+      - tms-interface
+      - database-interface
     volumes:
       - ./lib:/app
+  tms-interface:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/tms-interface
+    environment:
+      - DOCKER_MACHINE_IP=192.168.99.100
+      # - TMS_HOST=192.168.1.69
+      # - TMS_HOST=10.0.9.90
+      - TMS_PORT=6543
+      - STARTUP_DELAY=6000
+    links:
+      - rabbitmq
+    volumes:
+      - ./lib:/app
+  database-interface:
+    build:
+      context: .
+      dockerfile: ./dockerfiles/database-interface
+    environment:
+      - DOCKER_MACHINE_IP=192.168.99.100
+      - STARTUP_DELAY=6000
+    links:
+      - rabbitmq
+      - postgres
   rabbitmq:
     image: letsxo/rabbitmq:latest
     ports:
@@ -45,3 +68,5 @@ services:
       dockerfile: ./dockerfiles/tms-simulator
     environment:
       - TMS_PORT=6543
+    ports:
+      - "6543:6543"

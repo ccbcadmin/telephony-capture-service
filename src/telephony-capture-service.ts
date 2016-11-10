@@ -12,8 +12,8 @@ export namespace TelephonyCaptureService {
 	const { str, num } = envalid;
 	const env = envalid.cleanEnv(process.env, {
 		DOCKER_MACHINE_IP: str(),
-		TMS_ACTIVE: str(),
-		STARTUP_DELAY: num()
+		STARTUP_DELAY: num(),
+		TMS_ACTIVE: num()
 	});
 
 	// Need the docker machine IP to link together the various Microservices
@@ -24,31 +24,13 @@ export namespace TelephonyCaptureService {
 		process.exit(-1);
 	}
 
-	// Master enable/disable switch on the interface to the TMS
-	const isTmsEnabled: boolean = env.TMS_ACTIVE === "true" ? true : false;
-
-	let tmsInterfaceChildProcess;
-	let databaseChildProcess;
-
-	const receive = require('child_process');
-	if (isTmsEnabled) {
-		tmsInterfaceChildProcess = receive.fork(`./lib/tms-interface`);
-		console.log('tmsInterfaceChildProcess Started');
-	}
-	databaseChildProcess = receive.fork(`./lib/database-interface`);
-	console.log('databaseChildProcess Started');
-
 	process.on('SIGTERM', () => {
 		console.log('Telephony Capture Service: Terminated');
-		tmsInterfaceChildProcess.kill('SIGTERM');
-		databaseChildProcess.kill('SIGTERM');
 		process.exit(0);
 	});
 
 	process.on('SIGINT', () => {
 		console.log("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
-		tmsInterfaceChildProcess.kill('SIGTERM');
-		databaseChildProcess.kill('SIGTERM');
 		process.exit(0);
 	});
 
@@ -79,7 +61,7 @@ export namespace TelephonyCaptureService {
 	const dataSink = (data: Buffer) => {
 
 		// Unfiltered data is queued for subsequent transmission to the legacy TMS
-		if (isTmsEnabled) {
+		if (env.TMS_ACTIVE) {
 			tmsQueue.sendToQueue(data.toString());
 		}
 
@@ -89,7 +71,7 @@ export namespace TelephonyCaptureService {
 
 	// Before starting message reception, wait to ensure that the queues are ready
 	setTimeout(() => {
-		if (isTmsEnabled) {
+		if (env.TMS_ACTIVE) {
 			tmsQueue = new Queue(TMS_QUEUE, null);
 		}
 		databaseQueue = new Queue(DATABASE_QUEUE, null);

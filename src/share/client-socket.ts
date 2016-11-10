@@ -32,7 +32,7 @@ export class ClientSocket {
 
 	private onError = (socket) => {
 
-		console.log ('Link Closed');
+		console.log (`${this.linkName} link unavailable`);
 		process.exit(-1);
 		
 		if (this.retryCount % 20 === 0) {
