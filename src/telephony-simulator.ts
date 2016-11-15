@@ -22,20 +22,12 @@ export namespace TelephonySimulator {
 
 	const env = envalid.cleanEnv(process.env, {
 		DOCKER_MACHINE_IP: str(),
-		TCS_PORT: num()
+		TCS_PORT: num(),
+		TELEPHONY_SIMULATOR_SOURCE_DIRECTORY: str()
 	});
 
 	let smdrFiles: string[] = [];
 	let smdrFileNo = 0;
-
-	// Check the parameters
-	if (process.argv.length !== 3) {
-		console.log(`Usage: node lib/${routineName} SourceDirectory`);
-		process.exit(-1);
-	} else if (!net.isIP(env.DOCKER_MACHINE_IP)) {
-		console.log(`${routineName}: ${env.DOCKER_MACHINE_IP}, Invalid IP Address`);
-		process.exit(-1);
-	}
 
 	const tscSocket = new ClientSocket('TCSSIM<=>TCS', env.DOCKER_MACHINE_IP, env.TCS_PORT);
 
@@ -97,7 +89,7 @@ export namespace TelephonySimulator {
 	ee.on('next', nextFile);
 
 	// Search the current directory, if none specified
-	dir.files(process.argv[2] ? process.argv[2] : '.', (err, files) => {
+	dir.files(env.TELEPHONY_SIMULATOR_SOURCE_DIRECTORY, (err, files) => {
 		if (err) throw err;
 
 		// Deliver the data in chronological order

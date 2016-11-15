@@ -12,8 +12,8 @@ export namespace Mangle {
 	const envalid = require('envalid');
 	const { str, num } = envalid;
 	const env = envalid.cleanEnv(process.env, {
-		MANGLE_SOURCE: str(),
-		MANGLE_TARGET: str()
+		MANGLE_SOURCE_DIRECTORY: str(),
+		MANGLE_TARGET_DIRECTORY: str()
 	});
 
 	const eventEmitter = require('events').EventEmitter;
@@ -62,7 +62,7 @@ export namespace Mangle {
 		let filePart = smdrFileName.split(pathSeparator());
 		const inputFileNameParts = filePart[filePart.length - 1].split('.');
 		const outputFile = `${inputFileNameParts[0]}.${zeroPad(Number(inputFileNameParts[1]) + 1, 3)}`;
-		const outputPath = [env.MANGLE_TARGET, outputFile].join(pathSeparator());
+		const outputPath = [env.MANGLE_TARGET_DIRECTORY, outputFile].join(pathSeparator());
 
 		process.stdout.write (`Mangling ${smdrFileName} to ${outputPath}: `);
 
@@ -121,7 +121,7 @@ export namespace Mangle {
 	ee.on('next', nextFile);
 
 	// Search the current directory, if none specified
-	dir.files(env.MANGLE_SOURCE, (err, files) => {
+	dir.files(env.MANGLE_SOURCE_DIRECTORY, (err, files) => {
 		if (err) throw err;
 
 		files.sort();
