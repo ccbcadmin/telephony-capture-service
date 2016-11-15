@@ -3,7 +3,7 @@ services:
   tcs:
     build:
       context: .
-      dockerfile: ./dockerfiles/tcs
+      dockerfile: ./dockerfiles/telephony-capture-service
     env_file:
       - docker-compose.env
     ports:
