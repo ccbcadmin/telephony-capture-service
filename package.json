@@ -27,13 +27,15 @@
   },
   "dependencies": {
     "amqplib": ">=0.4.2",
+    "co": "^4.6.0",
     "envalid": "^2.4.1",
     "es6-shim": ">=0.35.1",
     "line-by-line": "^0.1.5",
-    "lodash": "^4.16.4",
+    "lodash": "^4.17.1",
     "moment": "^2.15.2",
     "node-dir": "^0.1.16",
-    "pg-promise": "^5.3.5"
+    "pg-promise": "^5.3.5",
+    "rxjs": "^5.0.0-rc.2"
   },
   "devDependencies": {
     "@types/chai": ">=3.4.30",

@@ -7,14 +7,16 @@ export namespace TelephonyCaptureService {
 
 	const routineName = 'telephony-capture-service';
 
+	const _ = require('lodash');
+
 	// Ensure the presence of required environment variables
 	const envalid = require('envalid');
 	const { str, num } = envalid;
 	const env = envalid.cleanEnv(process.env, {
 		// Need the docker machine IP to link together the various Microservices
 		DOCKER_MACHINE_IP: str(),
-		STARTUP_DELAY: num(),
-		TMS_ACTIVE: num()
+		TMS_ACTIVE: num(),
+		TCS_PORT: num()
 	});
 
 	const net = require('net');
@@ -47,7 +49,6 @@ export namespace TelephonyCaptureService {
 		const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
 
 		if (msg) {
-			console.log(`msg[0].length: ${msg[0].length} msg[1].length: ${msg[1].length}`);
 			databaseQueue.sendToQueue(msg[1]);
 			leftOver = unprocessedData.slice(crLfIndexOf + 2);
 		} else {
@@ -58,20 +59,18 @@ export namespace TelephonyCaptureService {
 	const dataSink = (data: Buffer) => {
 
 		// Unfiltered data is queued for subsequent transmission to the legacy TMS
-		if (env.TMS_ACTIVE) {
-			tmsQueue.sendToQueue(data.toString());
-		}
+		env.TMS_ACTIVE ? tmsQueue.sendToQueue(data.toString()) : _.noop;
 
 		// However, only true SMDR data is queued for databaase archiving
 		queueCompleteMessages(data);
 	}
 
-	// Before starting message reception, wait to ensure that the queues are ready
-	setTimeout(() => {
-		if (env.TMS_ACTIVE) {
-			tmsQueue = new Queue(TMS_QUEUE, null);
-		}
-		databaseQueue = new Queue(DATABASE_QUEUE, null);
-		new ServerSocket(routineName, networkIP, 3456, dataSink);
-	}, env.STARTUP_DELAY);
+	// Setup the queue to the TMS if needed
+	tmsQueue = env.TMS_ACTIVE ? new Queue(TMS_QUEUE) : null;
+
+	// Always need the database queue
+	databaseQueue = new Queue(DATABASE_QUEUE);
+
+	// Start listening for incoming messages
+	new ServerSocket(routineName, networkIP, env.TCS_PORT, dataSink);
 }

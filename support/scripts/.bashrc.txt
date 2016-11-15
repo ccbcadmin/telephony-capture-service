@@ -8,4 +8,3 @@ alias rm-images='docker rmi $(docker images -q)'
 alias tcs-down='docker-compose down'
 alias build-mangle='docker-compose build mangle'
 alias run-mangle='docker-compose run mangle'
-

@@ -4,6 +4,8 @@ import { networkIP } from './share/utility';
 
 export namespace TmsSimulator {
 
+	const routineName = 'tms-simulator';
+
 	// Ensure the presence of required environment variables
 	const envalid = require('envalid');
 	const { str } = envalid;
@@ -12,7 +14,6 @@ export namespace TmsSimulator {
 		TMS_PORT: str()
 	});
 
-	const routineName = 'TmsSimulator';
 	const net = require('net');
 
 	process.on('SIGTERM', () => {
@@ -25,6 +26,8 @@ export namespace TmsSimulator {
 		process.exit(0);
 	});
 
+	let recordCount = 0;
+
 	// The simulator just sucks up all data and presents it nicely to the console
 	let leftOver: string = '';
 	const dataDump = (data: string) => {
@@ -36,10 +39,14 @@ export namespace TmsSimulator {
 		const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
 
 		if (msg) {
-			// Dump the data to stdout
-			process.stdout.write(msg[1] + CRLF);
-			leftOver = unprocessedData.slice(crLfIndexOf + 2);
-
+			if (++recordCount % 20 === 5)
+				process.stdout.write('\b-');
+			else if (recordCount % 20 === 10)
+				process.stdout.write('\b\\');
+			else if (recordCount % 20 === 15)
+				process.stdout.write('\b|');
+			else if (recordCount % 20 === 0)
+				process.stdout.write('\b/'); leftOver = unprocessedData.slice(crLfIndexOf + 2);
 		} else {
 			leftOver = unprocessedData.slice(0);
 		}

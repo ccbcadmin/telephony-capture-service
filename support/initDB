@@ -1,0 +1,7 @@
+su - postgres
+psql
+CREATE SCHEMA CC;
+CREATE USER docker PASSWORD 'docker';
+GRANT ALL ON SCHEMA CC TO docker;
+GRANT ALL ON ALL TABLES IN SCHEMA CC TO docker;
+\q

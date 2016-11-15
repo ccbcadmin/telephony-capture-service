@@ -6,6 +6,8 @@ import { Queue } from './share/queue';
 
 export namespace DatabaseInterface {
 
+	const routineName = 'database-interface';
+
 	const moment = require('moment');
 	const _ = require('lodash');
 	const pgp = require('pg-promise')();
@@ -15,12 +17,8 @@ export namespace DatabaseInterface {
 	const { str, num } = envalid;
 	const env = envalid.cleanEnv(process.env, {
 		DOCKER_MACHINE_IP: str(),
-		STARTUP_DELAY: num()
+		POSTGRES_PORT: num()
 	});
-
-	const routineName = 'database-interface';
-
-	let databaseQueue;
 
 	interface SmdrRecord {
 		callStart: string,
@@ -46,13 +44,13 @@ export namespace DatabaseInterface {
 
 	let connection = {
 		host: env.DOCKER_MACHINE_IP,
-		port: 5672,
+		port: env.POSTGRES_PORT,
 		database: 'postgres',
 		user: 'postgres',
 		password: ''
 	};
 
-	let db;
+	const db = pgp(connection);
 
 	const insertCallRecords = (smdrRecord: SmdrRecord) =>
 		db.none(`INSERT INTO RAW_CALL2 (
@@ -108,14 +106,12 @@ export namespace DatabaseInterface {
 	let badRawRecords = 0;
 
 	const dataSink = (msg): boolean => {
-		// console.log('database: ', msg.content.toString());
 
 		let raw_call = msg.content.toString().split(',');
 
 		if (raw_call.length !== 30) {
 			++badRawRecords;
 		} else {
-			console.log('==========');
 
 			//let callStart: string = moment(raw_call[0]).format();
 			let callStart = raw_call[0];
@@ -205,20 +201,17 @@ export namespace DatabaseInterface {
 			insertCallRecords(smdrRecord)
 				// If everything OK, then move on to the next line of the file
 				.then(() => {
-					console.log('stored to database success');
+					// console.log('stored to database success');
 					return true;
 				})
 				.catch(err => {
-					console.log('err: ', err);
+					console.log('Database Insert Failure: ', err);
 					return false;
 				});
+
 		}
 		return true;
 	}
 
-	// Prepare to startup
-	setTimeout(() => {
-		db = pgp(connection);
-		databaseQueue = new Queue(DATABASE_QUEUE, dataSink);
-	}, env.STARTUP_DELAY);
+	const databaseQueue = new Queue(DATABASE_QUEUE, dataSink);
 }

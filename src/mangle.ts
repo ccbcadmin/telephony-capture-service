@@ -3,6 +3,8 @@ import { pathSeparator, regExpSmdrFileName } from './share/utility';
 
 export namespace Mangle {
 
+	const routineName = 'mangle';
+	
 	const fs = require('fs');
 	const dir = require('node-dir');
 

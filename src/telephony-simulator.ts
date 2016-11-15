@@ -1,3 +1,6 @@
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/map';
+
 import { CRLF, SMDR_PREAMBLE } from './share/constants';
 import { ClientSocket } from './share/client-socket';
 import { regExpSmdrFileName } from './share/utility';
@@ -5,6 +8,7 @@ import { regExpSmdrFileName } from './share/utility';
 export namespace TelephonySimulator {
 
 	const routineName = 'telephony-simulator';
+	
 	const _ = require('lodash');
 	const net = require('net');
 	const fs = require('fs');
@@ -77,7 +81,7 @@ export namespace TelephonySimulator {
 					process.exit(-1);
 				}
 			}
-		}, 200);
+		}, 5);
 	}
 
 	const nextFile = () => {
