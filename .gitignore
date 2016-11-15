@@ -5,4 +5,4 @@ npm-debug.log
 smdr-data-*/
 SQL/
 lib/
-.env
+docker-compose.env
