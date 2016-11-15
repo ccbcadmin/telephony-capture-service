@@ -1,7 +1,7 @@
-import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, TMS_QUEUE } from './share/constants';
-import { ServerSocket } from './share/server-socket';
-import { Queue } from './share/queue';
-import { networkIP } from './share/utility';
+import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, TMS_QUEUE } from '../share/constants';
+import { ServerSocket } from '../share/server-socket';
+import { Queue } from '../share/queue';
+import { networkIP } from '../share/utility';
 
 export namespace TelephonyCaptureService {
 

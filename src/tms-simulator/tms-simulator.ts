@@ -1,6 +1,6 @@
-import { CRLF, SMDR_PREAMBLE } from './share/constants';
-import { ServerSocket } from './share/server-socket';
-import { networkIP } from './share/utility';
+import { CRLF, SMDR_PREAMBLE } from '../share/constants';
+import { ServerSocket } from '../share/server-socket';
+import { networkIP } from '../share/utility';
 
 export namespace TmsSimulator {
 

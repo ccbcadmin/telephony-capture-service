@@ -8,6 +8,6 @@ WORKDIR /service
 COPY package.json /service
 RUN npm install
 
-CMD [ "node", "lib/tms-simulator.js"]
+CMD [ "node", "lib/mangle/mangle.js"]
 
 MAINTAINER Rod Monk

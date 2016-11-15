@@ -1,9 +1,9 @@
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
-import { CRLF, SMDR_PREAMBLE } from './share/constants';
-import { ClientSocket } from './share/client-socket';
-import { regExpSmdrFileName } from './share/utility';
+import { CRLF, SMDR_PREAMBLE } from '../share/constants';
+import { ClientSocket } from '../share/client-socket';
+import { regExpSmdrFileName } from '../share/utility';
 
 export namespace TelephonySimulator {
 

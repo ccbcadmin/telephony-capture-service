@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, TMS_QUEUE } from './share/constants';
-import { ClientSocket } from './share/client-socket';
-import { Queue } from './share/queue';
+import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, TMS_QUEUE } from '../share/constants';
+import { ClientSocket } from '../share/client-socket';
+import { Queue } from '../share/queue';
 
 export namespace DatabaseInterface {
 

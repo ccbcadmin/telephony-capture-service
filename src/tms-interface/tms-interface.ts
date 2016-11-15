@@ -1,6 +1,6 @@
-import { CRLF, SMDR_PREAMBLE, TMS_QUEUE } from './share/constants';
-import { ClientSocket } from './share/client-socket';
-import { Queue } from './share/queue';
+import { CRLF, SMDR_PREAMBLE, TMS_QUEUE } from '../share/constants';
+import { ClientSocket } from '../share/client-socket';
+import { Queue } from '../share/queue';
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
 

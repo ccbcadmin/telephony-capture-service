@@ -8,6 +8,6 @@ WORKDIR /service
 COPY package.json /service
 RUN npm install
 
-CMD [ "node", "lib/mangle.js"]
+CMD [ "node", "lib/database-interface/database-interface.js"]
 
 MAINTAINER Rod Monk

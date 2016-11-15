@@ -8,6 +8,6 @@ WORKDIR /service
 COPY package.json /service
 RUN npm install
 
-CMD [ "node", "lib/telephony-capture-service.js"]
+CMD [ "node", "lib/tms-simulator/tms-simulator.js"]
 
 MAINTAINER Rod Monk

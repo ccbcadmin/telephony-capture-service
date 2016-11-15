@@ -8,6 +8,6 @@ WORKDIR /service
 COPY package.json /service
 RUN npm install
 
-CMD [ "node", "lib/database-interface.js"]
+CMD [ "node", "lib/telephony-capture-service/telephony-capture-service.js"]
 
 MAINTAINER Rod Monk

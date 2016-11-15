@@ -36,19 +36,31 @@ TCS
 │
 ├── package.json                                          npm package definition
 │
-├── src                                                   TypeScript source code folder
-│   ├── database-interface.ts                             Receives messages from queue and archives to DB
-│   ├── mangle-smdr-files.ts                              Scrambles source telephone numbers
+├── src                                                   
+│   ├── database-interface                                Inserts SMDR records into the database
+│   │   ├── Dockerfile                                    
+│   │   └── database-interface.ts                         
+│   ├── mangle                              			  Scrambles source telephone numbers
+│   │   ├── Dockerfile                                    
+│   │   └── mangle.ts                         
 │   ├── share
 │   │   ├── client-socket.ts                              Client-side TCP circuit management
-│   │   ├── constants.ts                                  Various constants
+│   │   ├── constants.ts                                  
 │   │   ├── queue.ts                                      RabbitMQ interface
-│   │   ├── server-socket.ts                              Server-side TCP circuit manamange
+│   │   ├── server-socket.ts                              Server-side TCP circuit management
 │   │   └── utility.ts                                    Various utilities
-│   ├── telephony-capture-service.ts                      The TCS itself
-│   ├── telephony-simulator.ts                            A simulator that sends SMDR messages to the TCS
-│   ├── tms-interface.ts                                  Sends data to the TMS
-│   └── tms-simulator.ts                                  A test mockup of the TMS
+│   ├── telephony-capture-service                      	  The TCS itself
+│   │   ├── Dockerfile                                    
+│   │   └── telephony-capture-service.ts                         
+│   ├── telephony-simulator                               A simulator that sends SMDR messages to the TCS
+│   │   ├── Dockerfile                                    
+│   │   └── telephony-simulator.ts                         
+│   ├── tms-interface                                     Sends data to the TMS
+│   │   ├── Dockerfile                                    
+│   │   └── tms-interface.ts                         
+│   └── tms-simulator                                     A test mockup of the TMS
+│       ├── Dockerfile                                    
+│       └── tms-simulator.ts                         
 │
 ├── test
 │   └── test-cases.ts                                     Todo: Mocha test code

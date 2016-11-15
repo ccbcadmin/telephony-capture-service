@@ -8,6 +8,6 @@ WORKDIR /service
 COPY package.json /service
 RUN npm install
 
-CMD ["node","lib/tms-interface.js"]
+CMD ["node","lib/tms-interface/tms-interface.js"]
 
 MAINTAINER Rod Monk
