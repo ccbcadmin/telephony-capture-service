@@ -25,6 +25,8 @@ TCS
 │
 ├── Dockerfile                                            TCS Dockerfile
 │
+├── docker-compose.env                                    Project environment variables
+│
 ├── docker-compose.yml                                    TCS Composition Definition
 │
 ├── docs
@@ -40,7 +42,7 @@ TCS
 │   ├── database-interface                                Inserts SMDR records into the database
 │   │   ├── Dockerfile                                    
 │   │   └── database-interface.ts                         
-│   ├── mangle                              			  Scrambles source telephone numbers
+│   ├── mangle                                            Scrambles source telephone numbers
 │   │   ├── Dockerfile                                    
 │   │   └── mangle.ts                         
 │   ├── share
@@ -49,13 +51,13 @@ TCS
 │   │   ├── queue.ts                                      RabbitMQ interface
 │   │   ├── server-socket.ts                              Server-side TCP circuit management
 │   │   └── utility.ts                                    Various utilities
-│   ├── telephony-capture-service                      	  The TCS itself
+│   ├── telephony-capture-service                         The TCS itself
 │   │   ├── Dockerfile                                    
 │   │   └── telephony-capture-service.ts                         
 │   ├── telephony-simulator                               A simulator that sends SMDR messages to the TCS
 │   │   ├── Dockerfile                                    
 │   │   └── telephony-simulator.ts                         
-│   ├── tms-interface                                     Sends data to the TMS
+│   ├── tms-interface                                     Forwards on raw data bytes to the TMS
 │   │   ├── Dockerfile                                    
 │   │   └── tms-interface.ts                         
 │   └── tms-simulator                                     A test mockup of the TMS
