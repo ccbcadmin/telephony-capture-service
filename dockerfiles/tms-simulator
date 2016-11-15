@@ -1,15 +1,12 @@
 FROM node:latest
 
 # Create app directory
-RUN mkdir -p /usr/src/service
-WORKDIR /usr/src/service
+RUN mkdir -p /service
+WORKDIR /service
 
 # Install app dependencies
-COPY package.json /usr/src/service
+COPY package.json /service
 RUN npm install
-
-# Bundle app source
-COPY ./lib/ /usr/src/service/lib/
 
 CMD [ "node", "lib/tms-simulator.js"]
 

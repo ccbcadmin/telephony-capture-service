@@ -13,6 +13,8 @@ services:
       - postgres
       - tms-interface
       - database-interface
+    volumes:
+      - ./lib:/service/lib
   tms-interface:
     build:
       context: .
@@ -21,6 +23,8 @@ services:
       - docker-compose.env
     links:
       - rabbitmq
+    volumes:
+      - ./lib:/service/lib
   database-interface:
     build:
       context: .
@@ -30,6 +34,8 @@ services:
     links:
       - rabbitmq
       - postgres
+    volumes:
+      - ./lib:/service/lib  
   rabbitmq:
     image: letsxo/rabbitmq:latest
     ports:
@@ -49,6 +55,8 @@ services:
       dockerfile: ./dockerfiles/telephony-simulator
     env_file:
       - docker-compose.env
+    volumes:
+      - ./lib:/service/lib  
   tms-simulator:
     build:
       context: .
@@ -57,6 +65,8 @@ services:
       - docker-compose.env
     ports:
       - "6543:6543"
+    volumes:
+      - ./lib:/service/lib  
   mangle:
     build:
       context: .
@@ -65,3 +75,4 @@ services:
       - docker-compose.env
     volumes:
       - /Users/Rod/smdr-data:/smdr-data
+      - ./lib:/service/lib  

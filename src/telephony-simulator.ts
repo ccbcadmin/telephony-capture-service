@@ -8,7 +8,7 @@ import { regExpSmdrFileName } from './share/utility';
 export namespace TelephonySimulator {
 
 	const routineName = 'telephony-simulator';
-	
+		
 	const _ = require('lodash');
 	const net = require('net');
 	const fs = require('fs');

@@ -4,6 +4,7 @@ import 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
 
 const moment = require('moment');
+const _ = require('lodash');
 
 export class Queue {
 
@@ -80,6 +81,6 @@ export class Queue {
 
 	public close = () => {
 		console.log('Close queue connection');
-		this.connection.close();
+		this.connection ? this.connection.close() : _.noop;
 	}
 }
