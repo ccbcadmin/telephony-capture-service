@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: ./src/telephony-capture-service/Dockerfile
+    image: telephony-capture-service
     env_file:
       - docker-compose.env
     ports:
@@ -19,6 +20,7 @@ services:
     build:
       context: .
       dockerfile: ./src/tms-interface/Dockerfile
+    image: tms-interface
     env_file:
       - docker-compose.env
     links:
@@ -29,6 +31,7 @@ services:
     build:
       context: .
       dockerfile: ./src/database-interface/Dockerfile
+    image: database-interface
     env_file:
       - docker-compose.env
     links:
@@ -53,14 +56,16 @@ services:
     build:
       context: .
       dockerfile: ./src/telephony-simulator/Dockerfile
+    image: telephony-simulator
     env_file:
       - docker-compose.env
     volumes:
-      - ./lib:/service/lib  
+      - ./lib:/service/lib
   tms-simulator:
     build:
       context: .
       dockerfile: ./src/tms-simulator/Dockerfile
+    image: tms-simulator
     env_file:
       - docker-compose.env
     ports:
@@ -71,6 +76,7 @@ services:
     build:
       context: .
       dockerfile: ./src/mangle/Dockerfile
+    image: mangle
     env_file:
       - docker-compose.env
     volumes:
