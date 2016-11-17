@@ -1,4 +1,8 @@
 version: '2'
+
+volumes:
+  data: {}
+
 services:
   tcs:
     build:
@@ -11,7 +15,6 @@ services:
       - "3456:3456"
     links:
       - rabbitmq
-      - postgres
       - tms-interface
       - database-interface
     volumes:
@@ -49,9 +52,14 @@ services:
       - "15671:15671"
       - "15672:15672"
   postgres:
-    image: postgres:latest
+    build: 
+      context: .
+      dockerfile: ./src/postgres/Dockerfile
+    image: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - data:/var/lib/postgresql/data
   telephony-simulator:
     build:
       context: .
