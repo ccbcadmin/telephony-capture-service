@@ -1,23 +1,11 @@
-/*
- Navicat PostgreSQL Data Transfer
-
- Source Server         : DockerPG
- Source Server Version : 90600
- Source Host           : 192.168.99.100
- Source Database       : postgres
- Source Schema         : public
-
- Target Server Version : 90600
- File Encoding         : utf-8
-
- Date: 11/07/2016 09:23:14 AM
-*/
+-- System configuration
+ALTER SYSTEM SET wal_level TO 'replica';
 
 -- ----------------------------
---  Table structure for raw_call2
+--  Table structure for SMDR
 -- ----------------------------
-DROP TABLE IF EXISTS "public"."raw_call2";
-CREATE TABLE "public"."raw_call2" (
+DROP TABLE IF EXISTS "public"."SMDR";
+CREATE TABLE "public"."SMDR" (
 	"id" serial,
 	"call_time" timestamp(6) NOT NULL,
 	"connected_time" interval(6) NOT NULL,
@@ -40,5 +28,6 @@ CREATE TABLE "public"."raw_call2" (
 	"external_targeted_number" varchar(40) DEFAULT NULL::character varying COLLATE "default"
 )
 WITH (OIDS=FALSE);
-ALTER TABLE "public"."raw_call2" OWNER TO "postgres";
+ALTER TABLE "public"."SMDR" OWNER TO "postgres";
+
 
