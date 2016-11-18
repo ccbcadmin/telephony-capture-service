@@ -19,7 +19,6 @@ export namespace TmsInterface {
 	const { str, num } = envalid;
 
 	const env = envalid.cleanEnv(process.env, {
-		DOCKER_MACHINE_IP: str(),
 		TMS_HOST: str(),
 		TMS_PORT: num()
 	});

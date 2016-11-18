@@ -52,7 +52,7 @@ export namespace DatabaseInterface {
 	const db = pgp(connection);
 
 	const insertCallRecords = (smdrRecord: SmdrRecord) =>
-		db.none(`INSERT SMDR (
+		db.none(`INSERT INTO SMDR (
 					CALL_TIME, 
 					CONNECTED_TIME,
 					RING_TIME,

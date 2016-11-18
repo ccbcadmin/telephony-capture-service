@@ -1,11 +1,13 @@
 -- System configuration
 ALTER SYSTEM SET wal_level TO 'replica';
+ALTER SYSTEM SET archive_mode TO on;
+ALTER SYSTEM SET archive_command TO 'test ! -f /postgres_wal_directory/%f && cp /var/lib/postgresql/data/pg_xlog/%f /postgres_wal_directory/%f';
 
 -- ----------------------------
 --  Table structure for SMDR
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."SMDR";
-CREATE TABLE "public"."SMDR" (
+CREATE TABLE "public"."smdr" (
 	"id" serial,
 	"call_time" timestamp(6) NOT NULL,
 	"connected_time" interval(6) NOT NULL,
@@ -28,6 +30,4 @@ CREATE TABLE "public"."SMDR" (
 	"external_targeted_number" varchar(40) DEFAULT NULL::character varying COLLATE "default"
 )
 WITH (OIDS=FALSE);
-ALTER TABLE "public"."SMDR" OWNER TO "postgres";
-
-
+ALTER TABLE "public"."smdr" OWNER TO "postgres";
