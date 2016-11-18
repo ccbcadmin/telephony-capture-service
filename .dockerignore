@@ -7,3 +7,6 @@ SQL
 Archive
 smdr*
 docs
+postgres_data
+postgres_backup
+backup
