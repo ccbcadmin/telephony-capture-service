@@ -16,7 +16,8 @@ export namespace DatabaseInterface {
 	const envalid = require('envalid');
 	const { str, num } = envalid;
 	const env = envalid.cleanEnv(process.env, {
-		DOCKER_MACHINE_IP: str()
+		DOCKER_MACHINE_IP: str(),
+		POSTGRES_PASSWORD: str()
 	});
 
 	interface SmdrRecord {
@@ -46,7 +47,7 @@ export namespace DatabaseInterface {
 		port: 5432,
 		database: 'postgres',
 		user: 'postgres',
-		password: ''
+		password: env.POSTGRES_PASSWORD
 	};
 
 	const db = pgp(connection);
