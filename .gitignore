@@ -7,4 +7,4 @@ SQL/
 lib/
 docker-compose.env
 postgres_data/
-backup/
+backup*/

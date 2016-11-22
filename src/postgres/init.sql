@@ -2,7 +2,8 @@
 ALTER SYSTEM SET wal_level TO 'replica';
 ALTER SYSTEM SET archive_mode TO on;
 ALTER SYSTEM SET archive_command TO 'test ! -f /postgres_wal_directory/%f && cp /var/lib/postgresql/data/pg_xlog/%f /postgres_wal_directory/%f';
-
+ALTER SYSTEM SET max_wal_senders = 20;
+ALTER USER postgres PASSWORD 'Dsbhottf4$';
 -- ----------------------------
 --  Table structure for SMDR
 -- ----------------------------

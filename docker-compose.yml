@@ -4,6 +4,19 @@ volumes:
   data: {}
 
 services:
+
+  backup-scheduler:
+    build:
+      context: .
+      dockerfile: ./src/backup-scheduler/Dockerfile
+    image: backup-scheduler
+    env_file:
+      - docker-compose.env
+    links:
+      - postgres
+    volumes:
+      - /Users/Rod/postgres_backups:/postgres_backups
+      - ./lib:/service/lib
   tcs:
     build:
       context: .
