@@ -15,6 +15,7 @@ services:
     links:
       - postgres
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - /Users/Rod/postgres_backups:/postgres_backups
       - ./lib:/service/lib
   tcs:

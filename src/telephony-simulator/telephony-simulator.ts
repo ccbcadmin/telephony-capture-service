@@ -88,7 +88,7 @@ export namespace TelephonySimulator {
 
 	ee.on('next', nextFile);
 
-	// Search the current directory, if none specified
+	// Search the source directory looking for raw SMDR files
 	dir.files(env.TELEPHONY_SIMULATOR_SOURCE_DIRECTORY, (err, files) => {
 		if (err) throw err;
 
