@@ -38,4 +38,3 @@ export BACKUP_PURGE_AGE_LIMIT=5
 
 # Remove containers created before a specific container
 # docker ps --before a1bz3768ez7g -q | xargs docker rm
-

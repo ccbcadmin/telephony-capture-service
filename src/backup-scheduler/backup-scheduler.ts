@@ -54,7 +54,9 @@ export namespace BackupScheduler {
 	const triggerBackupPurging = setInterval(() => {
 		// Purge backups after a configurable time period
 		dir.subdirs(env.BACKUP_DIRECTORY, (err, subdirs) => {
-			if (err) throw err;
+			if (err) {
+				throw err;
+			}
 
 			for (let subdir of subdirs) {
 				fs.stat(subdir, (err, stats) => {
