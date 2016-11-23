@@ -19,8 +19,8 @@ export namespace BackupScheduler {
 		DOCKER_MACHINE_IP: str(),
 		BACKUP_DIRECTORY: str(),
 		BACKUP_SCHEDULE: str(),
-		BACKUP_PURGE_EPOCH: str(),
-		BACKUP_PURGE_AGE_LIMIT: str()
+		BACKUP_PURGE_PERIOD_UNITS: str(),
+		BACKUP_PURGE_PERIOD_LIMIT: str()
 	});
 
 	// Ensure a properly formed Docker Machine IP
@@ -60,8 +60,8 @@ export namespace BackupScheduler {
 
 			for (let subdir of subdirs) {
 				fs.stat(subdir, (err, stats) => {
-					// console.log(`${subdir}: ${stats.mtime}, ${moment().subtract (env.BACKUP_PURGE_AGE_LIMIT, env.BACKUP_PURGE_EPOCH).format ('YYYY-MM-DDTHH-mm-ss')}`);
-					if (moment(stats.mtime) < moment().subtract(env.BACKUP_PURGE_AGE_LIMIT, env.BACKUP_PURGE_EPOCH)) {
+					// console.log(`${subdir}: ${stats.mtime}, ${moment().subtract (env.BACKUP_PURGE_PERIOD_LIMIT, env.BACKUP_PURGE_PERIOD_UNITS).format ('YYYY-MM-DDTHH-mm-ss')}`);
+					if (moment(stats.mtime) < moment().subtract(env.BACKUP_PURGE_PERIOD_LIMIT, env.BACKUP_PURGE_PERIOD_UNITS)) {
 						fs.remove(subdir, function (err) {
 							if (err) return console.error(err)
 							console.log(`Backup ${subdir} deleted.`);
