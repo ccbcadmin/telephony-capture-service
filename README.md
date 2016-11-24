@@ -22,7 +22,7 @@ Also included in the TCS deliverables are some closely aligned tools that are us
 ```
 TCS
 ├── README.md                                             This file
-││
+│
 ├── docker-compose.env                                    Project environment variables
 │
 ├── docker-compose.yml                                    TCS Composition Definition
