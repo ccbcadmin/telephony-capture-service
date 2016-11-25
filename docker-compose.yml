@@ -4,7 +4,6 @@ volumes:
   data: {}
 
 services:
-
   backup-scheduler:
     build:
       context: .
@@ -75,15 +74,6 @@ services:
     volumes:
       - ../postgres_data:/var/lib/postgresql/data
       - ../postgres_wal_directory:/postgres_wal_directory
-  pbx-simulator:
-    build:
-      context: .
-      dockerfile: ./src/pbx-simulator/Dockerfile
-    image: pbx-simulator
-    env_file:
-      - docker-compose.env
-    volumes:
-      - ./lib:/service/lib
   tms-simulator:
     build:
       context: .
@@ -95,13 +85,13 @@ services:
       - "6543:6543"
     volumes:
       - ./lib:/service/lib  
-  mangle:
+  command-line:
     build:
       context: .
-      dockerfile: ./src/mangle/Dockerfile
-    image: mangle
+      dockerfile: ./src/command-line/Dockerfile
+    image: command-line
     env_file:
       - docker-compose.env
     volumes:
       - /Users/Rod/smdr-data:/smdr-data
-      - ./lib:/service/lib  
+      - ./lib:/app/lib

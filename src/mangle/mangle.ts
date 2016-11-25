@@ -49,6 +49,16 @@ const substituteDummyPhoneNumber = (phoneNumber: string) => {
 	}
 }
 
+process.on('SIGTERM', () => {
+	console.log('Telephony Capture Service: Terminated');
+	process.exit(0);
+});
+
+process.on('SIGINT', () => {
+	console.log("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
+	process.exit(0);
+});
+
 let smdrFiles: string[] = [];
 let smdrFileNo = 0;
 
@@ -120,8 +130,10 @@ ee.on('next', nextFile);
 
 // Search the current directory, if none specified
 dir.files(env.MANGLE_SOURCE_DIRECTORY, (err, files) => {
-	if (err) throw err;
-
+	if (err) {
+		console.log(`Source ${env.MANGLE_SOURCE_DIRECTORY} is not a directory...aborting.`);
+		process.exit(-1);
+	}
 	files.sort();
 	for (let file of files) {
 		let path = file.split(pathSeparator());

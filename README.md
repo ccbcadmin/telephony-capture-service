@@ -40,12 +40,13 @@ TCS
 │   ├── backup-scheduler                                  Schedules new backups and purges old
 │   │   ├── Dockerfile                                    
 │   │   └── backup-scheduler.ts                         
+│   ├── command-line                                      The command line container
+│   │   └── Dockerfile                         
 │   ├── database-interface                                Inserts SMDR records into the database
 │   │   ├── Dockerfile                                    
 │   │   └── database-interface.ts                         
 │   ├── mangle                                            Scrambles source telephone numbers
-│   │   ├── Dockerfile                                    
-│   │   └── mangle.ts                         
+│   │   └── mangle.ts                                     (a command line tool)
 │   ├── share
 │   │   ├── client-socket.ts                              Client-side TCP circuit management
 │   │   ├── constants.ts                                  
@@ -56,8 +57,7 @@ TCS
 │   │   ├── Dockerfile                                    
 │   │   └── telephony-capture-service.ts                         
 │   ├── pbx-simulator                                     A simulator that sends SMDR messages to the TCS
-│   │   ├── Dockerfile                                    
-│   │   └── pbx-simulator.ts                         
+│   │   └── pbx-simulator.ts                              (a command line tool)
 │   ├── tms-interface                                     Forwards on raw data bytes to the TMS
 │   │   ├── Dockerfile                                    
 │   │   └── tms-interface.ts                         

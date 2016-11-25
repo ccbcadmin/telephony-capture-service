@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:6.9.1
 
 # Create app directory
 RUN mkdir -p /service

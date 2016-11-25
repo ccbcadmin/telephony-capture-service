@@ -66,7 +66,7 @@ import { ClientSocket } from '../share/client-socket';
 				const secondPart = nextMsg.slice(partition);
 
 				if (!tscSocket.write($.SMDR_PREAMBLE) || !tscSocket.write(firstPart) || !tscSocket.write(secondPart)) {
-					console.log('Link to TCS Shutdown');
+					console.log('Link to TCS unavailable...aborting.');
 					process.exit(-1);
 				}
 			}
