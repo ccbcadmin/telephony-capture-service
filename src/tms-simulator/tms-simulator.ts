@@ -1,8 +1,6 @@
-import { CRLF, SMDR_PREAMBLE } from '../share/constants';
+import * as $ from '../share/constants';
 import { ServerSocket } from '../share/server-socket';
-import { networkIP } from '../share/utility';
-
-export namespace TmsSimulator {
+import { networkIP } from '../share/util';
 
 	const routineName = 'tms-simulator';
 
@@ -34,7 +32,7 @@ export namespace TmsSimulator {
 
 		const unprocessedData = leftOver.slice(0) + data.slice(0);
 
-		const crLfIndexOf = unprocessedData.indexOf(CRLF);
+		const crLfIndexOf = unprocessedData.indexOf($.CRLF);
 
 		const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
 
@@ -53,4 +51,3 @@ export namespace TmsSimulator {
 	}
 
 	new ServerSocket(routineName, networkIP, env.TMS_PORT, dataDump);
-}

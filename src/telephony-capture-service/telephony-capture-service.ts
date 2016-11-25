@@ -1,7 +1,7 @@
-import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, TMS_QUEUE } from '../share/constants';
+import * as $ from '../share/constants';
 import { ServerSocket } from '../share/server-socket';
 import { Queue } from '../share/queue';
-import { networkIP } from '../share/utility';
+import { networkIP } from '../share/util';
 
 export namespace TelephonyCaptureService {
 
@@ -39,12 +39,11 @@ export namespace TelephonyCaptureService {
 	let databaseQueue;
 
 	let leftOver: string = '';
-
 	const queueCompleteMessages = (data: Buffer) => {
 
 		const unprocessedData = leftOver + data.toString();
 
-		const crLfIndexOf = unprocessedData.indexOf(CRLF);
+		const crLfIndexOf = unprocessedData.indexOf($.CRLF);
 
 		const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
 
@@ -66,10 +65,10 @@ export namespace TelephonyCaptureService {
 	}
 
 	// Setup the queue to the TMS if needed
-	tmsQueue = env.TMS_ACTIVE ? new Queue(TMS_QUEUE) : null;
+	tmsQueue = env.TMS_ACTIVE ? new Queue($.TMS_QUEUE) : null;
 
 	// Always need the database queue
-	databaseQueue = new Queue(DATABASE_QUEUE);
+	databaseQueue = new Queue($.DATABASE_QUEUE);
 
 	// Start listening for incoming messages
 	new ServerSocket(routineName, networkIP, env.TCS_PORT, dataSink);

@@ -1,13 +1,10 @@
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
-import { CRLF, SMDR_PREAMBLE } from '../share/constants';
+import * as $ from '../share/constants';
 import { ClientSocket } from '../share/client-socket';
-import { regExpSmdrFileName } from '../share/utility';
 
-export namespace TelephonySimulator {
-
-	const routineName = 'telephony-simulator';
+	const routineName = 'pbx-simulator';
 
 	const _ = require('lodash');
 	const net = require('net');
@@ -23,7 +20,7 @@ export namespace TelephonySimulator {
 	const env = envalid.cleanEnv(process.env, {
 		DOCKER_MACHINE_IP: str(),
 		TCS_PORT: num(),
-		TELEPHONY_SIMULATOR_SOURCE_DIRECTORY: str()
+		PBX_SIMULATOR_SOURCE_DIRECTORY: str()
 	});
 
 	let smdrFiles: string[] = [];
@@ -43,7 +40,7 @@ export namespace TelephonySimulator {
 
 		const intervalId = setInterval(() => {
 			// Look for SMDR record boundaries until there are no more
-			if ((next_index = data.indexOf(CRLF, index)) < 0) {
+			if ((next_index = data.indexOf($.CRLF, index)) < 0) {
 				process.stdout.write(`\bis complete.  ${recordCount} SMDR records sent.\r\n`);
 				clearInterval(intervalId);
 				ee.emit('next');
@@ -68,7 +65,7 @@ export namespace TelephonySimulator {
 				const firstPart = nextMsg.slice(0, partition);
 				const secondPart = nextMsg.slice(partition);
 
-				if (!tscSocket.write(SMDR_PREAMBLE) || !tscSocket.write(firstPart) || !tscSocket.write(secondPart)) {
+				if (!tscSocket.write($.SMDR_PREAMBLE) || !tscSocket.write(firstPart) || !tscSocket.write(secondPart)) {
 					console.log('Link to TCS Shutdown');
 					process.exit(-1);
 				}
@@ -89,7 +86,7 @@ export namespace TelephonySimulator {
 	ee.on('next', nextFile);
 
 	// Search the source directory looking for raw SMDR files
-	dir.files(env.TELEPHONY_SIMULATOR_SOURCE_DIRECTORY, (err, files) => {
+	dir.files(env.PBX_SIMULATOR_SOURCE_DIRECTORY, (err, files) => {
 		if (err) throw err;
 
 		// Deliver the data in chronological order
@@ -99,10 +96,9 @@ export namespace TelephonySimulator {
 			let path = file.split('\\');
 
 			// Only interested in SMDR files
-			if (path[path.length - 1].match(regExpSmdrFileName)) {
+			if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
 				smdrFiles.push(file);
 			}
 		}
 		nextFile();
 	});
-}

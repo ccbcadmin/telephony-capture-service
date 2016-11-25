@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { CRLF, DATABASE_QUEUE, SMDR_PREAMBLE, TMS_QUEUE } from '../share/constants';
+import * as $ from '../share/constants';
 import { ClientSocket } from '../share/client-socket';
 import { Queue } from '../share/queue';
 
@@ -213,5 +213,5 @@ export namespace DatabaseInterface {
 		return true;
 	}
 
-	const databaseQueue = new Queue(DATABASE_QUEUE, dataSink);
+	const databaseQueue = new Queue($.DATABASE_QUEUE, dataSink);
 }

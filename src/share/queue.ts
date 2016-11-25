@@ -1,5 +1,5 @@
 
-import { networkIP } from './utility';
+import { networkIP } from './util';
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
 

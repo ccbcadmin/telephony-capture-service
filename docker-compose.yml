@@ -75,11 +75,11 @@ services:
     volumes:
       - ../postgres_data:/var/lib/postgresql/data
       - ../postgres_wal_directory:/postgres_wal_directory
-  telephony-simulator:
+  pbx-simulator:
     build:
       context: .
-      dockerfile: ./src/telephony-simulator/Dockerfile
-    image: telephony-simulator
+      dockerfile: ./src/pbx-simulator/Dockerfile
+    image: pbx-simulator
     env_file:
       - docker-compose.env
     volumes:

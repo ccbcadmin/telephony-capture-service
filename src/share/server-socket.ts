@@ -1,6 +1,3 @@
-
-import { CRLF } from './constants';
-
 export class ServerSocket {
 
 	private net = require('net');

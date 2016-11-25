@@ -55,9 +55,9 @@ TCS
 │   ├── telephony-capture-service                         The TCS itself
 │   │   ├── Dockerfile                                    
 │   │   └── telephony-capture-service.ts                         
-│   ├── telephony-simulator                               A simulator that sends SMDR messages to the TCS
+│   ├── pbx-simulator                                     A simulator that sends SMDR messages to the TCS
 │   │   ├── Dockerfile                                    
-│   │   └── telephony-simulator.ts                         
+│   │   └── pbx-simulator.ts                         
 │   ├── tms-interface                                     Forwards on raw data bytes to the TMS
 │   │   ├── Dockerfile                                    
 │   │   └── tms-interface.ts                         
