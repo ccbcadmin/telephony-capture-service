@@ -1,4 +1,3 @@
-
 import { networkIP } from './util';
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
@@ -29,9 +28,11 @@ export class Queue {
 			},
 			error => {
 				console.log(`${this.queueName} error: ${JSON.stringify(error)}`);
+				process.exit(1);
 			},
 			() => {
 				console.log(`${this.queueName} not available...aborting.`);
+				process.exit(1);
 			});
 	}
 
@@ -42,16 +43,28 @@ export class Queue {
 				return;
 			}
 
+			queueConnection.on("error", (err) => {
+				if (err.message !== "Connection closing") {
+					console.error("[AMQP] conn error", err.message);
+					process.exit(1);
+				}
+				});
+
+			queueConnection.on("close", () => {
+				console.error("[AMQP] reconnecting");
+				process.exit(1);
+				});
+ 
 			this.connection = queueConnection;
 
-			// Sometime the retrys - we are connected
+			// Stop the retrys - we are connected
 			this.retryConnectSubscription.unsubscribe();
 
 			this.connection.createChannel((err, channel) => {
 
 				if (err) {
 					console.log(`Cannot create channel for ${this.queueName}: `, err);
-					process.exit(0);
+					process.exit(1);
 				}
 
 				console.log(`Channel to Message Broker for ${this.queueName} Created`);
@@ -63,7 +76,13 @@ export class Queue {
 
 					channel.consume(this.queueName, msg => {
 
-						this.consumer(msg) ? this.channel.ack(msg) : this.channel.nack(msg);
+						if (this.consumer(msg)) {
+							this.channel.ack(msg);
+						} else {
+							this.channel.nack(msg);
+							// Can't consume, kill the process and wait for the restart
+							process.exit(1);
+						}
 
 					}, { noAck: false });
 				}
@@ -75,7 +94,7 @@ export class Queue {
 		// Any hiccups from RabbitMQ and the process exits
 		if (!this.channel.sendToQueue(this.queueName, Buffer.from(msg), { persistent: true })) {
 			console.log(`${this.queueName} not available...aborting`);
-			process.exit(-1);
+			process.exit(1);
 		}
 	}
 

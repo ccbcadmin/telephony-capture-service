@@ -1,14 +1,16 @@
 version: '2'
 
 volumes:
-  data: {}
+  postgres_data: {}
 
 services:
   backup-scheduler:
     build:
       context: .
       dockerfile: ./src/backup-scheduler/Dockerfile
+    restart: unless-stopped
     image: backup-scheduler
+    privileged: true
     env_file:
       - docker-compose.env
     links:
@@ -22,6 +24,8 @@ services:
       context: .
       dockerfile: ./src/telephony-capture-service/Dockerfile
     image: telephony-capture-service
+    restart: unless-stopped
+    privileged: true
     env_file:
       - docker-compose.env
     ports:
@@ -37,6 +41,8 @@ services:
       context: .
       dockerfile: ./src/tms-interface/Dockerfile
     image: tms-interface
+    restart: unless-stopped
+    privileged: true
     env_file:
       - docker-compose.env
     links:
@@ -48,6 +54,8 @@ services:
       context: .
       dockerfile: ./src/database-interface/Dockerfile
     image: database-interface
+    restart: unless-stopped
+    privileged: true
     env_file:
       - docker-compose.env
     links:
@@ -64,21 +72,27 @@ services:
       - "5672:5672"
       - "15671:15671"
       - "15672:15672"
+    restart: unless-stopped
+    privileged: true
   postgres:
     build: 
       context: .
       dockerfile: ./src/postgres/Dockerfile
     image: postgres
+    restart: unless-stopped
+    privileged: true
     ports:
       - "5432:5432"
     volumes:
-      - ../postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
       - ../postgres_wal_directory:/postgres_wal_directory
   tms-simulator:
     build:
       context: .
       dockerfile: ./src/tms-simulator/Dockerfile
     image: tms-simulator
+    restart: unless-stopped
+    privileged: true
     env_file:
       - docker-compose.env
     ports:
@@ -90,6 +104,8 @@ services:
       context: .
       dockerfile: ./src/command-line/Dockerfile
     image: command-line
+    restart: unless-stopped
+    privileged: true
     env_file:
       - docker-compose.env
     volumes:

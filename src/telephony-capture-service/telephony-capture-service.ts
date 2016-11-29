@@ -6,6 +6,7 @@ import { networkIP } from '../share/util';
 export namespace TelephonyCaptureService {
 
 	const routineName = 'telephony-capture-service';
+	console.log (`Restarting ${routineName}`);
 
 	const _ = require('lodash');
 
@@ -25,11 +26,12 @@ export namespace TelephonyCaptureService {
 		process.exit(-1);
 	}
 
+/*
 	process.on('SIGTERM', () => {
 		console.log('Telephony Capture Service: Terminated');
-		process.exit(0);
+		process.exit(-1);
 	});
-
+*/
 	process.on('SIGINT', () => {
 		console.log("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
 		process.exit(0);
@@ -71,5 +73,7 @@ export namespace TelephonyCaptureService {
 	databaseQueue = new Queue($.DATABASE_QUEUE);
 
 	// Start listening for incoming messages
+
+	console.log ('networdIP: ', networkIP );
 	new ServerSocket(routineName, networkIP, env.TCS_PORT, dataSink);
 }

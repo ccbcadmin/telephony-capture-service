@@ -34,10 +34,9 @@
     "line-by-line": "^0.1.5",
     "lodash": "^4.17.2",
     "moment": "^2.15.2",
-    "node": "0.0.0",
     "node-dir": "^0.1.16",
     "node-schedule": "^1.2.0",
-    "pg-promise": "^5.4.3",
+    "pg-promise": "^5.4.4",
     "rxjs": "^5.0.0-rc.2"
   },
   "devDependencies": {
@@ -45,13 +44,12 @@
     "@types/mocha": ">=2.2.29",
     "@types/node": ">=6.0.31",
     "chai": "^3.5.0",
-    "mocha": "^3.0.1",
+    "mocha": "^3.2.0",
     "rimraf": "^2.5.4",
     "ts-node": "^1.7.0",
-    "tslint": "^4.0.2",
-    "typescript": ">=2.0.3"
+    "tslint": "^4.0.2"
   },
   "engines": {
-    "node": ">=6.9.1"
+    "node": "6.9.1"
   }
 }
