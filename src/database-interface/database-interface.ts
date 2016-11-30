@@ -42,12 +42,11 @@ export namespace DatabaseInterface {
 		externalTargetedNumber: string
 	};
 
-	let connection = {
+	const connection = {
 		host: env.DOCKER_MACHINE_IP,
 		port: 5432,
 		database: 'postgres',
-		user: 'postgres',
-		password: env.POSTGRES_PASSWORD
+		user: 'postgres'
 	};
 
 	const db = pgp(connection);

@@ -1,6 +1,7 @@
 # Image provided to execute the command line tools
 FROM node:6.9.1
 
+RUN mkdir -p /smdr-data
 # Create app directory
 RUN mkdir -p /app
 WORKDIR /app

@@ -86,6 +86,7 @@ import { ClientSocket } from '../share/client-socket';
 	ee.on('next', nextFile);
 
 	// Search the source directory looking for raw SMDR files
+	console.log ('source: ', env.PBX_SIMULATOR_SOURCE_DIRECTORY);
 	dir.files(env.PBX_SIMULATOR_SOURCE_DIRECTORY, (err, files) => {
 		if (err) throw err;
 
