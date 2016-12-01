@@ -25,7 +25,7 @@ if (!net.isIP(env.DOCKER_MACHINE_IP)) {
 }
 
 // Ensure the backup Epoch is recognized
-if (['minutes', 'hours', 'days', 'weeks', 'months', 'years'].indexOf(env.BACKUP_PURGE_EPOCH) < 0) {
+if (['minutes', 'hours', 'days', 'weeks', 'months', 'years'].indexOf(env.BACKUP_PURGE_PERIOD_UNITS) < 0) {
 	console.log("BACKUP_PURGE_EPOCH must be one of 'minutes', 'hours', 'days', 'weeks', 'months', or 'years'.  Aborting...");
 	process.exit(-1);
 }

@@ -2,7 +2,6 @@ version: '2'
 
 volumes:
   postgres_data: {}
-  rabbitmq_data: {}
 
 services:
   backup-scheduler:
@@ -80,8 +79,6 @@ services:
       - "15672:15672"
     restart: unless-stopped
     privileged: true
-    volumes:
-    - rabbitmq_data:/var/lib/rabbitmq
   postgres:
     build: 
       context: .

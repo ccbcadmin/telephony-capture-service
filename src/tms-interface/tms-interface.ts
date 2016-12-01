@@ -3,6 +3,7 @@ import { ClientSocket } from '../share/client-socket';
 import { Queue } from '../share/queue';
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
+import { networkIP } from '../share/util';
 
 const routineName = 'tms-interface';
 
@@ -17,9 +18,11 @@ const envalid = require('envalid');
 const { str, num } = envalid;
 
 const env = envalid.cleanEnv(process.env, {
-	TMS_HOST: str(),
-	TMS_PORT: num()
+	TMS_PORT: num(),
+	TMS_HOST: str()
 });
+
+console.log ('networkIP: ', networkIP);
 
 console.log(`${routineName}: Started`);
 
