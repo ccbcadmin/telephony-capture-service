@@ -15,14 +15,14 @@ export namespace TelephonyCaptureService {
 	const { str, num } = envalid;
 	const env = envalid.cleanEnv(process.env, {
 		// Need the docker machine IP to link together the various Microservices
-		DOCKER_MACHINE_IP: str(),
+		DOCKER_HOST_IP: str(),
 		TMS_ACTIVE: num(),
 		TCS_PORT: num()
 	});
 
 	const net = require('net');
-	if (!net.isIP(env.DOCKER_MACHINE_IP)) {
-		console.log(`${routineName}; Invalid Docker Machine IP: ${env.DOCKER_MACHINE_IP}...aborting.`);
+	if (!net.isIP(env.DOCKER_HOST_IP)) {
+		console.log(`${routineName}; Invalid Docker Machine IP: ${env.DOCKER_HOST_IP}...aborting.`);
 		process.exit(-1);
 	}
 

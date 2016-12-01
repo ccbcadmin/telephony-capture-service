@@ -9,13 +9,13 @@ const envalid = require('envalid');
 const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
 	// Need the docker machine IP to link together the various Microservices
-	DOCKER_MACHINE_IP: str(),
+	DOCKER_HOST_IP: str(),
 	BACKUP_DIRECTORY: str()
 });
 
 export const backupDatabase = () => {
 	console.log('Database Backup Starting...');
-	exec(`pg_basebackup -D ${env.BACKUP_DIRECTORY}${moment().format('YYYY-MM-DDTHH-mm-ss')} -h ${env.DOCKER_MACHINE_IP} -U postgres  -F tar -P`, (error, stdout, stderr) => {
+	exec(`pg_basebackup -D ${env.BACKUP_DIRECTORY}${moment().format('YYYY-MM-DDTHH-mm-ss')} -h ${env.DOCKER_HOST_IP} -U postgres  -F tar -P`, (error, stdout, stderr) => {
 		console.log('stdout: ' + stdout);
 		console.log('stderr: ' + stderr);
 		if (error !== null) {

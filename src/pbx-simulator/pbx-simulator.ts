@@ -18,7 +18,7 @@ import { ClientSocket } from '../share/client-socket';
 	const { str, num} = envalid;
 
 	const env = envalid.cleanEnv(process.env, {
-		DOCKER_MACHINE_IP: str(),
+		DOCKER_HOST_IP: str(),
 		TCS_PORT: num(),
 		PBX_SIMULATOR_SOURCE_DIRECTORY: str()
 	});
@@ -26,7 +26,7 @@ import { ClientSocket } from '../share/client-socket';
 	let smdrFiles: string[] = [];
 	let smdrFileNo = 0;
 
-	const tscSocket = new ClientSocket('TCSSIM<=>TCS', env.DOCKER_MACHINE_IP, env.TCS_PORT);
+	const tscSocket = new ClientSocket('TCSSIM<=>TCS', env.DOCKER_HOST_IP, env.TCS_PORT);
 
 	const sendSmdrRecords = (smdrFileName: string): void => {
 
