@@ -17,7 +17,6 @@ alias run-postgres='docker-compose run -d --service-ports postgres'
 alias pgbackup='pg_basebackup -P -D backup -h $DOCKER_HOST_IP -U postgres -F tar'
 alias pg='docker exec -it postgres psql --username postgres'
 alias tcs-up='docker-compose up --build -d'
-# export DOCKER_HOST_IP=$(hostname -I | cut -d' ' -f 1)
 export DOCKER_HOST_IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | grep -v '172.')
 export TCS_PORT=3456
 export TMS_HOST=$DOCKER_HOST_IP
