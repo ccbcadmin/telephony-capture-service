@@ -15,8 +15,6 @@ services:
     network_mode: "host"
     env_file:
       - docker-compose.env
-#    links:
-#      - postgres
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/postgres/backups:/postgres_backups
