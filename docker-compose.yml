@@ -9,7 +9,7 @@ services:
       context: .
       dockerfile: ./src/backup-scheduler/Dockerfile
     restart: unless-stopped
-    image: ccbcadmin/tcs-backup-scheduler
+    image: ccbcadmin/tcs-backup-scheduler${TCS_VERSION}
     container_name: backup-scheduler
     privileged: true
     network_mode: "host"
@@ -25,7 +25,7 @@ services:
     build:
       context: .
       dockerfile: ./src/telephony-capture-service/Dockerfile
-    image: ccbcadmin/tcs-telephony-capture-service
+    image: ccbcadmin/tcs-telephony-capture-service${TCS_VERSION}
     container_name: telephony-capture-service
     restart: unless-stopped
     privileged: true
@@ -44,7 +44,7 @@ services:
     build:
       context: .
       dockerfile: ./src/tms-interface/Dockerfile
-    image: ccbcadmin/tcs-tms-interface
+    image: ccbcadmin/tcs-tms-interface${TCS_VERSION}
     container_name: tms-interface
     restart: unless-stopped
     privileged: true
@@ -59,7 +59,7 @@ services:
     build:
       context: .
       dockerfile: ./src/database-interface/Dockerfile
-    image: ccbcadmin/tcs-database-interface
+    image: ccbcadmin/tcs-database-interface${TCS_VERSION}
     container_name: database-interface
     restart: unless-stopped
     privileged: true
@@ -88,7 +88,7 @@ services:
     build: 
       context: .
       dockerfile: ./src/postgres/Dockerfile
-    image: ccbcadmin/tcs-postgres
+    image: ccbcadmin/tcs-postgres${TCS_VERSION}
     container_name: postgres
     restart: unless-stopped
     privileged: true
@@ -102,7 +102,7 @@ services:
     build:
       context: .
       dockerfile: ./src/tms-simulator/Dockerfile
-    image: ccbcadmin/tcs-tms-simulator
+    image: ccbcadmin/tcs-tms-simulator${TCS_VERSION}
     container_name: tms-simulator
     restart: unless-stopped
     privileged: true
@@ -117,7 +117,7 @@ services:
     build:
       context: .
       dockerfile: ./src/command-line/Dockerfile
-    image: ccbcadmin/tcs-command-line
+    image: ccbcadmin/tcs-command-line${TCS_VERSION}
     container_name: command-line
     restart: unless-stopped
     privileged: true
