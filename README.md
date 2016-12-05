@@ -43,6 +43,8 @@ TCS
 │   │   └── backup-scheduler.ts                         
 │   ├── tcs-node                                          A NodeJS image builder
 │   │   └── Dockerfile                         
+│   ├── tcs-postgres                                      Postgres image specialized for the TCS.
+|   │   └── Dockerfile                         
 │   ├── database-interface                                Inserts SMDR records into the database
 │   │   └── database-interface.ts                         
 │   ├── mangle                                            Scrambles source telephone numbers
