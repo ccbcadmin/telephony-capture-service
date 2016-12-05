@@ -8,7 +8,7 @@ services:
   tcs-node:
     build:
       context: .
-      dockerfile: ./src/node/Dockerfile
+      dockerfile: ./src/tcs-node/Dockerfile
     image: ccbcadmin/tcs-node
     container_name: tcs-node
     restart: unless-stopped
