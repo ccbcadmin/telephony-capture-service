@@ -13,5 +13,3 @@ RUN npm install
 
 # scoop up all the NodeJS code
 COPY ./lib /app/lib
-
-# ENTRYPOINT ["node"]
