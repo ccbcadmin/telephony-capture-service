@@ -1,0 +1,7 @@
+version: '2'
+
+services:
+
+  tcs-node:
+    volumes:
+      - ./lib:/app/lib

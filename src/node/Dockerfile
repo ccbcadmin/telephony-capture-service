@@ -1,6 +1,8 @@
 # Image provided to execute the command line tools
 FROM node:6.9.1
 
+MAINTAINER Rod Monk
+
 # Create app directory
 RUN mkdir -p /app
 WORKDIR /app
@@ -9,6 +11,7 @@ WORKDIR /app
 COPY package.json /app
 RUN npm install
 
-ENTRYPOINT ["node"]
+# scoop up all the NodeJS code
+COPY ./lib /app/lib
 
-MAINTAINER Rod Monk
+# ENTRYPOINT ["node"]

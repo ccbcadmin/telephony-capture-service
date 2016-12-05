@@ -5,7 +5,8 @@ alias run-tmssim='docker-compose run -d --rm --service-ports tms-simulator'
 alias ..='cd ..'
 alias rm-container='docker rm $(docker ps -q)'
 alias rm-images='docker rmi $(docker images -q)'
-alias rm-exited='docker ps -aq --no-trunc | xargs docker rm'
+alias rm-exited='docker rm $(docker ps -a -f status=exited -q)'
+alias rm-dangling-volumes='docker volume rm $(docker volume ls -f dangling=true -q)'
 alias ls-exited='docker ps -aq -f status=exited'
 alias tcs-down='docker-compose down'
 alias build-mangle='docker-compose build mangle'
@@ -34,11 +35,11 @@ export COMPOSE_PROJECT_NAME=tcs
 
 mangle () 
 { 
-    docker-compose run --rm -e MANGLE_SOURCE_DIRECTRY="$1" -e MANGLE_TARGET_DIRECTORY="$2" --entrypoint="node lib/mangle/mangle.js" command-line
+    docker-compose run --rm -e MANGLE_SOURCE_DIRECTRY="$1" -e MANGLE_TARGET_DIRECTORY="$2" --entrypoint="node lib/mangle/mangle.js" tcs_node
 }
 pbx-simulator ()
 {
-    docker-compose run --rm -e PBX_SIMULATOR_SOURCE_DIRECTORY="$1" --entrypoint="node lib/pbx-simulator/pbx-simulator.js" command-line
+    docker-compose run --rm -e PBX_SIMULATOR_SOURCE_DIRECTORY="$1" --entrypoint="node lib/pbx-simulator/pbx-simulator.js" tcs_node
 }
 
 # Remove dangling/untagged images

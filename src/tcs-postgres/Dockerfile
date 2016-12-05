@@ -51,9 +51,9 @@ ENV PATH /usr/lib/postgresql/$PG_MAJOR/bin:$PATH
 ENV PGDATA /var/lib/postgresql/data
 VOLUME /var/lib/postgresql/data
 
-COPY ./src/postgres/docker-entrypoint.sh /
-COPY ./src/postgres/init_pg_hba.sh /docker-entrypoint-initdb.d/
-COPY ./src/postgres/init.sql /docker-entrypoint-initdb.d/
+COPY ./src/tcs-postgres/docker-entrypoint.sh /
+COPY ./src/tcs-postgres/init_pg_hba.sh /docker-entrypoint-initdb.d/
+COPY ./src/tcs-postgres/init.sql /docker-entrypoint-initdb.d/
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

@@ -5,7 +5,7 @@ import { networkIP } from '../share/util';
 
 export namespace TelephonyCaptureService {
 
-	const routineName = 'telephony-capture-service';
+	const routineName = 'pbx-interface';
 	console.log (`Restarting ${routineName}`);
 
 	const _ = require('lodash');
