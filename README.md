@@ -27,6 +27,8 @@ TCS
 │
 ├── docker-compose.yml                                    TCS Composition Definition
 │
+├── docker-compose.override.yml                           Development build specialization
+│
 ├── docs
 │   ├── SMDR Fields IPO 9.1.4 Required Fields.docx        SMDR record definition
 │   ├── TCS Software Requirements Document.docx           TCS SRD
@@ -38,12 +40,10 @@ TCS
 │
 ├── src                                                   
 │   ├── backup-scheduler                                  Schedules new backups and purges old
-│   │   ├── Dockerfile                                    
 │   │   └── backup-scheduler.ts                         
-│   ├── command-line                                      The command line container
+│   ├── tcs-node                                          A NodeJS image builder
 │   │   └── Dockerfile                         
 │   ├── database-interface                                Inserts SMDR records into the database
-│   │   ├── Dockerfile                                    
 │   │   └── database-interface.ts                         
 │   ├── mangle                                            Scrambles source telephone numbers
 │   │   └── mangle.ts                                     (a command line tool)
@@ -53,16 +53,13 @@ TCS
 │   │   ├── queue.ts                                      RabbitMQ interface
 │   │   ├── server-socket.ts                              Server-side TCP circuit management
 │   │   └── utility.ts                                    Various utilities
-│   ├── telephony-capture-service                         The TCS itself
-│   │   ├── Dockerfile                                    
-│   │   └── telephony-capture-service.ts                         
-│   ├── pbx-simulator                                     A simulator that sends SMDR messages to the TCS
-│   │   └── pbx-simulator.ts                              (a command line tool)
+│   ├── pbx-interface                                     Receives messages from the PBX
+│   │   └── pbx-interface.ts                         
+│   ├── pbx-simulator                                     A simulator that sends SMDR messages to the 
+│   │   └── pbx-simulator.ts                              pbx-interface.
 │   ├── tms-interface                                     Forwards on raw data bytes to the TMS
-│   │   ├── Dockerfile                                    
 │   │   └── tms-interface.ts                         
 │   └── tms-simulator                                     A test mockup of the TMS
-│       ├── Dockerfile                                    
 │       └── tms-simulator.ts                         
 │
 ├── test
