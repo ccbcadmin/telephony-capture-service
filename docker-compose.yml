@@ -11,7 +11,11 @@ services:
       dockerfile: ./src/tcs-node/Dockerfile
     image: ccbcadmin/tcs-node${TCS_VERSION}
     container_name: tcs-node
+    env_file:
+      - docker-compose.env
     restart: unless-stopped
+    volumes:
+      - /home/smdr-data:/smdr-data
 
   backup-scheduler:
     image: ccbcadmin/tcs-postgres${TCS_VERSION}
@@ -25,8 +29,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/postgres/backups:/postgres_backups
     command: ["node", "lib/backup-scheduler/backup-scheduler.js"]
-    depends_on:
-      - tcs-postgres
 
   pbx-interface:
     image: ccbcadmin/tcs-node${TCS_VERSION}
@@ -39,6 +41,8 @@ services:
     command: ["node", "lib/pbx-interface/pbx-interface.js"]
     depends_on:
       - tcs-node
+      - tms-interface
+      - database-interface
 
   tms-interface:
     image: ccbcadmin/tcs-node${TCS_VERSION}
@@ -85,6 +89,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - /home/postgres/backup_xlogs:/postgres_backup_xlogs
+    depends_on:
+      - backup-scheduler
 
   tms-simulator:
     image: ccbcadmin/tcs-node${TCS_VERSION}
@@ -95,5 +101,4 @@ services:
     privileged: true
     network_mode: "host"
     command: ["node", "lib/tms-simulator/tms-simulator.js"]
-    depends_on:
-      - tcs-node
+
