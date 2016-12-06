@@ -9,12 +9,12 @@ services:
     build:
       context: .
       dockerfile: ./src/tcs-node/Dockerfile
-    image: ccbcadmin/tcs-node
+    image: ccbcadmin/tcs-node${TCS_VERSION}
     container_name: tcs-node
     restart: unless-stopped
 
   backup-scheduler:
-    image: ccbcadmin/tcs-node
+    image: ccbcadmin/tcs-postgres${TCS_VERSION}
     restart: unless-stopped
     container_name: backup-scheduler
     privileged: true
@@ -25,9 +25,11 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/postgres/backups:/postgres_backups
     command: ["node", "lib/backup-scheduler/backup-scheduler.js"]
+    depends_on:
+      - tcs-postgres
 
   pbx-interface:
-    image: ccbcadmin/tcs-node
+    image: ccbcadmin/tcs-node${TCS_VERSION}
     container_name: pbx-interface
     restart: unless-stopped
     privileged: true
@@ -35,9 +37,11 @@ services:
     env_file:
       - docker-compose.env
     command: ["node", "lib/pbx-interface/pbx-interface.js"]
+    depends_on:
+      - tcs-node
 
   tms-interface:
-    image: ccbcadmin/tcs-node
+    image: ccbcadmin/tcs-node${TCS_VERSION}
     env_file:
       - docker-compose.env    
     command: ["node", "lib/tms-interface/tms-interface.js"]
@@ -45,9 +49,11 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: "host"
+    depends_on:
+      - tcs-node
 
   database-interface:
-    image: ccbcadmin/tcs-node
+    image: ccbcadmin/tcs-node${TCS_VERSION}
     env_file:
       - docker-compose.env
     command: ["node", "lib/database-interface/database-interface.js"]
@@ -58,9 +64,10 @@ services:
     depends_on: 
       - tcs-postgres
       - rabbitmq
+      - tcs-node
 
   rabbitmq:
-    image: letsxo/rabbitmq:latest
+    image: letsxo/rabbitmq
     container_name: rabbitmq
     restart: unless-stopped
     privileged: true
@@ -80,7 +87,7 @@ services:
       - /home/postgres/backup_xlogs:/postgres_backup_xlogs
 
   tms-simulator:
-    image: ccbcadmin/tcs-node
+    image: ccbcadmin/tcs-node${TCS_VERSION}
     container_name: tms-simulator
     env_file:
       - docker-compose.env
@@ -88,5 +95,5 @@ services:
     privileged: true
     network_mode: "host"
     command: ["node", "lib/tms-simulator/tms-simulator.js"]
-
- 
+    depends_on:
+      - tcs-node

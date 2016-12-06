@@ -55,6 +55,22 @@ COPY ./src/tcs-postgres/docker-entrypoint.sh /
 COPY ./src/tcs-postgres/init_pg_hba.sh /docker-entrypoint-initdb.d/
 COPY ./src/tcs-postgres/init.sql /docker-entrypoint-initdb.d/
 
+RUN apt-get update
+RUN apt-get install curl -y
+
+RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
+RUN apt-get install -y nodejs
+
+# Install app dependencies
+RUN mkdir -p /app
+WORKDIR /app
+
+COPY package.json /app
+RUN npm install
+
+# scoop up all the NodeJS code
+COPY ./lib /app/lib
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 5432
