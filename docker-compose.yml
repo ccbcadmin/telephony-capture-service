@@ -5,20 +5,8 @@ volumes:
 
 services:
 
-  tcs-node:
-    build:
-      context: .
-      dockerfile: ./src/tcs-node/Dockerfile
-    image: ccbcadmin/tcs-node${TCS_VERSION}
-    container_name: tcs-node
-    env_file:
-      - docker-compose.env
-    restart: unless-stopped
-    volumes:
-      - /home/smdr-data:/smdr-data
-
   backup-scheduler:
-    image: ccbcadmin/tcs-postgres${TCS_VERSION}
+    image: ccbcadmin/tcs-image${TCS_VERSION}
     restart: unless-stopped
     container_name: backup-scheduler
     privileged: true
@@ -31,7 +19,7 @@ services:
     command: ["node", "lib/backup-scheduler/backup-scheduler.js"]
 
   pbx-interface:
-    image: ccbcadmin/tcs-node${TCS_VERSION}
+    image: ccbcadmin/tcs-image${TCS_VERSION}
     container_name: pbx-interface
     restart: unless-stopped
     privileged: true
@@ -40,24 +28,22 @@ services:
       - docker-compose.env
     command: ["node", "lib/pbx-interface/pbx-interface.js"]
     depends_on:
-      - tcs-node
+      - tcs-postgres
       - tms-interface
       - database-interface
 
   tms-interface:
-    image: ccbcadmin/tcs-node${TCS_VERSION}
-    env_file:
-      - docker-compose.env    
+    image: ccbcadmin/tcs-image${TCS_VERSION}
     command: ["node", "lib/tms-interface/tms-interface.js"]
     container_name: tms-interface
     restart: unless-stopped
     privileged: true
     network_mode: "host"
-    depends_on:
-      - tcs-node
-
+    env_file:
+      - docker-compose.env
+   
   database-interface:
-    image: ccbcadmin/tcs-node${TCS_VERSION}
+    image: ccbcadmin/tcs-image${TCS_VERSION}
     env_file:
       - docker-compose.env
     command: ["node", "lib/database-interface/database-interface.js"]
@@ -68,7 +54,6 @@ services:
     depends_on: 
       - tcs-postgres
       - rabbitmq
-      - tcs-node
 
   rabbitmq:
     image: letsxo/rabbitmq
@@ -78,22 +63,30 @@ services:
     network_mode: "host"
 
   tcs-postgres:
-    build: 
-      context: .
-      dockerfile: ./src/tcs-postgres/Dockerfile
-    image: ccbcadmin/tcs-postgres${TCS_VERSION}
+    image: ccbcadmin/tcs-image${TCS_VERSION}
     container_name: tcs-postgres
     restart: unless-stopped
     privileged: true
     network_mode: "host"
+    env_file:
+      - docker-compose.env    
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - /home/postgres/backup_xlogs:/postgres_backup_xlogs
+    entrypoint: /docker-entrypoint.sh
+    command: ["postgres"]
     depends_on:
       - backup-scheduler
 
+  tcs-image:
+    build: 
+      context: .
+      dockerfile: ./src/tcs-image/Dockerfile
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: tcs-image
+
   tms-simulator:
-    image: ccbcadmin/tcs-node${TCS_VERSION}
+    image: ccbcadmin/tcs-image${TCS_VERSION}
     container_name: tms-simulator
     env_file:
       - docker-compose.env
@@ -102,3 +95,23 @@ services:
     network_mode: "host"
     command: ["node", "lib/tms-simulator/tms-simulator.js"]
 
+  mangle:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    env_file:
+      - docker-compose.env
+    command: ["node", "lib/mangle/mangle.js"]
+    container_name: mangle
+    privileged: false
+    volumes:
+      - /home/smdr-data:/smdr-data
+
+  pbx-simulator:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    env_file:
+      - docker-compose.env
+    command: ["node", "lib/pbx-simulator/pbx-simulator.js"]
+    container_name: pbx-simulator
+    privileged: false
+    network_mode: "host"
+    volumes:
+      - /home/smdr-data:/smdr-data

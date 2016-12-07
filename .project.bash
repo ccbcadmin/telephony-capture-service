@@ -18,7 +18,8 @@ alias run-postgres='docker-compose run -d --service-ports tcs-postgres'
 alias pgbackup='pg_basebackup -P -D backup -h $DOCKER_HOST_IP -U postgres -F tar'
 alias pg='docker exec -it tcs-postgres psql --username postgres'
 alias tcs-up='docker-compose up --build -d'
-export DOCKER_HOST_IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | grep -v '172.')
+# export DOCKER_HOST_IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | grep -v '172.')
+export DOCKER_HOST_IP=10.211.55.7
 export TCS_PORT=3456
 export TMS_HOST=$DOCKER_HOST_IP
 export TMS_PORT=6543
@@ -35,22 +36,16 @@ export COMPOSE_PROJECT_NAME=tcs
 
 mangle () 
 { 
-    docker-compose run --rm -e MANGLE_SOURCE_DIRECTRY="$1" -e MANGLE_TARGET_DIRECTORY="$2" --entrypoint="node lib/mangle/mangle.js" tcs-node
+    docker-compose run --rm --name mangle -e MANGLE_SOURCE_DIRECTRY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
 }
 pbx-simulator ()
 {
-    docker-compose run --rm -e PBX_SIMULATOR_SOURCE_DIRECTORY="$1" --entrypoint="node lib/pbx-simulator/pbx-simulator.js" tcs-node
+    docker-compose run --rm --name pbx-simulator -e PBX_SIMULATOR_SOURCE_DIRECTORY="$1" pbx-simulator
 }
 
 function tcsup
 {
-    export TCS_VERSION=:$1;
-    if docker pull ccbcadmin/tcs-node$TCS_VERSION; then
-        : 
-    else
-        return 1;
-    fi
-    if docker pull ccbcadmin/tcs-postgres$TCS_VERSION; then
+    if docker pull ccbcadmin/tcs-image$TCS_VERSION; then
         : 
     else
         return 1;

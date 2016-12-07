@@ -2,6 +2,30 @@ version: '2'
 
 services:
 
-  tcs-node:
+  backup-scheduler:
+    volumes:
+      - ./lib:/app/lib
+
+  database-interface:
+    volumes:
+      - ./lib:/app/lib
+
+  mangle:
+    volumes:
+      - ./lib:/app/lib
+
+  pbx-interface:
+    volumes:
+      - ./lib:/app/lib
+
+  pbx-simulator:
+    volumes:
+      - ./lib:/app/lib
+
+  tms-interface:
+    volumes:
+      - ./lib:/app/lib
+
+  tms-simulator:
     volumes:
       - ./lib:/app/lib

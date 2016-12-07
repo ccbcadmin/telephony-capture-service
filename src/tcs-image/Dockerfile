@@ -49,11 +49,10 @@ RUN mkdir -p /var/run/postgresql && chown -R postgres /var/run/postgresql
 
 ENV PATH /usr/lib/postgresql/$PG_MAJOR/bin:$PATH
 ENV PGDATA /var/lib/postgresql/data
-VOLUME /var/lib/postgresql/data
 
-COPY ./src/tcs-postgres/docker-entrypoint.sh /
-COPY ./src/tcs-postgres/init_pg_hba.sh /docker-entrypoint-initdb.d/
-COPY ./src/tcs-postgres/init.sql /docker-entrypoint-initdb.d/
+COPY ./src/tcs-image/docker-entrypoint.sh /
+COPY ./src/tcs-image/init_pg_hba.sh /docker-entrypoint-initdb.d/
+COPY ./src/tcs-image/init.sql /docker-entrypoint-initdb.d/
 
 RUN apt-get update
 RUN apt-get install curl -y
@@ -71,7 +70,4 @@ RUN npm install
 # scoop up all the NodeJS code
 COPY ./lib /app/lib
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
 EXPOSE 5432
-CMD ["postgres"]
