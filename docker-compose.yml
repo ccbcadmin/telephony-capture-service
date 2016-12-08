@@ -11,42 +11,18 @@ services:
     container_name: backup-scheduler
     privileged: true
     network_mode: "host"
-    env_file:
-      - docker-compose.env
+    environment:
+      - DOCKER_HOST_IP
+      - BACKUP_PURGE_PERIOD_UNITS
+      - BACKUP_PURGE_PERIOD_LIMIT
+      - BACKUP_SCHEDULE
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/postgres/backups:/postgres_backups
     command: ["node", "lib/backup-scheduler/backup-scheduler.js"]
 
-  pbx-interface:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: pbx-interface
-    restart: unless-stopped
-    privileged: true
-    network_mode: "host"
-    env_file:
-      - docker-compose.env
-    command: ["node", "lib/pbx-interface/pbx-interface.js"]
-    depends_on:
-      - tcs-postgres
-      - tms-interface
-      - database-interface
-
-  tms-interface:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    command: ["node", "lib/tms-interface/tms-interface.js"]
-    container_name: tms-interface
-    restart: unless-stopped
-    privileged: true
-    network_mode: "host"
-    env_file:
-      - docker-compose.env
-   
   database-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}
-    env_file:
-      - docker-compose.env
-    command: ["node", "lib/database-interface/database-interface.js"]
     container_name: database-interface
     restart: unless-stopped
     privileged: true
@@ -54,6 +30,47 @@ services:
     depends_on: 
       - tcs-postgres
       - rabbitmq
+    environment:
+      - DOCKER_HOST_IP
+      - POSTGRES_PASSWORD
+    command: ["node", "lib/database-interface/database-interface.js"]
+  
+  mangle:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: mangle
+    privileged: false
+    volumes:
+      - /home/smdr-data:/smdr-data
+    command: ["node", "lib/mangle/mangle.js"]
+
+  pbx-interface:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: pbx-interface
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"
+    environment:
+      - DOCKER_HOST_IP
+      - TCS_PORT=3456
+      - TMS_ACTIVE=1    
+    depends_on:
+      - tcs-postgres
+      - tms-interface
+      - database-interface
+    command: ["node", "lib/pbx-interface/pbx-interface.js"]
+
+  pbx-simulator:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: pbx-simulator
+    privileged: false
+    network_mode: "host"
+    volumes:
+      - /home/smdr-data:/smdr-data
+    environment:
+      - DOCKER_HOST_IP
+      - PBX_SIMULATOR_SOURCE_DIRECTORY
+      - TCS_PORT
+    command: ["node", "lib/pbx-simulator/pbx-simulator.js"]
 
   rabbitmq:
     image: letsxo/rabbitmq
@@ -62,22 +79,6 @@ services:
     privileged: true
     network_mode: "host"
 
-  tcs-postgres:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: tcs-postgres
-    restart: unless-stopped
-    privileged: true
-    network_mode: "host"
-    env_file:
-      - docker-compose.env    
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - /home/postgres/backup_xlogs:/postgres_backup_xlogs
-    entrypoint: /docker-entrypoint.sh
-    command: ["postgres"]
-    depends_on:
-      - backup-scheduler
-
   tcs-image:
     build: 
       context: .
@@ -85,33 +86,38 @@ services:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     container_name: tcs-image
 
-  tms-simulator:
+  tcs-postgres:
     image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: tms-simulator
-    env_file:
-      - docker-compose.env
+    container_name: tcs-postgres
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"  
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - /home/postgres/backup_xlogs:/postgres_backup_xlogs
+    entrypoint: /docker-entrypoint.sh
+    depends_on:
+      - backup-scheduler
+    command: ["postgres"]
+
+  tms-interface:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: tms-interface
     restart: unless-stopped
     privileged: true
     network_mode: "host"
-    command: ["node", "lib/tms-simulator/tms-simulator.js"]
-
-  mangle:
+    environment:
+      - DOCKER_HOST_IP
+      - TMS_HOST
+      - TMS_PORT
+    command: ["node", "lib/tms-interface/tms-interface.js"]
+   
+  tms-simulator:
     image: ccbcadmin/tcs-image${TCS_VERSION}
-    env_file:
-      - docker-compose.env
-    command: ["node", "lib/mangle/mangle.js"]
-    container_name: mangle
-    privileged: false
-    volumes:
-      - /home/smdr-data:/smdr-data
-
-  pbx-simulator:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    env_file:
-      - docker-compose.env
-    command: ["node", "lib/pbx-simulator/pbx-simulator.js"]
-    container_name: pbx-simulator
-    privileged: false
+    container_name: tms-simulator
+    restart: unless-stopped
+    privileged: true
     network_mode: "host"
-    volumes:
-      - /home/smdr-data:/smdr-data
+    environment:
+      - TMS_PORT
+    command: ["node", "lib/tms-simulator/tms-simulator.js"]

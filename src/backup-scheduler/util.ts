@@ -1,21 +1,13 @@
+import { networkIP } from '../share/util';
 
 const dir = require('node-dir');
 const exec = require('child_process').exec;
 const moment = require('moment');
 const fs = require('fs-extra');
 
-// Ensure the presence of required environment variables
-const envalid = require('envalid');
-const { str, num } = envalid;
-const env = envalid.cleanEnv(process.env, {
-	// Need the docker machine IP to link together the various Microservices
-	DOCKER_HOST_IP: str(),
-	BACKUP_DIRECTORY: str()
-});
-
 export const backupDatabase = () => {
 	console.log('Database Backup Starting...');
-	exec(`pg_basebackup -D ${env.BACKUP_DIRECTORY}${moment().format('YYYY-MM-DDTHH-mm-ss')} -h ${env.DOCKER_HOST_IP} -U postgres  -F tar -P`, (error, stdout, stderr) => {
+	exec(`pg_basebackup -D /postgres_backups/${moment().format('YYYY-MM-DDTHH-mm-ss')} -h ${networkIP} -U postgres  -F tar`, (error, stdout, stderr) => {
 		console.log('stdout: ' + stdout);
 		console.log('stderr: ' + stderr);
 		if (error !== null) {
