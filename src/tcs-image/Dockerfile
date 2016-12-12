@@ -55,7 +55,8 @@ COPY ./src/tcs-image/init_pg_hba.sh /docker-entrypoint-initdb.d/
 COPY ./src/tcs-image/init.sql /docker-entrypoint-initdb.d/
 
 RUN apt-get update
-RUN apt-get install curl -y
+RUN apt-get -qq update
+RUN apt-get -qq install curl -y
 
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 RUN apt-get install -y nodejs
