@@ -58,6 +58,9 @@ RUN apt-get update
 RUN apt-get -qq update
 RUN apt-get -qq install curl -y
 
+# barman
+RUN apt-get install barman
+
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 RUN apt-get install -y nodejs
 

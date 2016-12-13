@@ -98,6 +98,8 @@ services:
     entrypoint: /docker-entrypoint.sh
     depends_on:
       - backup-scheduler
+    environment:
+      - POSTGRES_PASSWORD
     command: ["postgres"]
 
   tms-interface:

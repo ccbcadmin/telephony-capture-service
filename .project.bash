@@ -6,7 +6,7 @@ fi
 
 # Aliases to aid Docker usage
 alias build-tcs='docker-compose build'
-alias run-tcs='docker-compose run -d --rm --service-ports pbx-interface'
+alias run-tcs='docker-compose run -d --rm --service-ports --name pbx-interface pbx-interface'
 alias build-tmssim='docker-compose build tms-simulator'
 alias run-tmssim='docker-compose up -d tms-simulator'
 alias rm-containers='docker rm $(docker ps -q)'
@@ -20,6 +20,7 @@ alias build-postgres='docker-compose build --no-cache tcs-postgres'
 alias run-postgres='docker-compose run -d --service-ports tcs-postgres'
 alias pgbackup='pg_basebackup -P -D backup -h $DOCKER_HOST_IP -U postgres -F tar'
 alias pg='docker exec -it tcs-postgres psql --username postgres'
+alias pg-exec='docker exec -it tcs-postgres /bin/sh'
 alias tcsup='docker-compose up --build -d'
 
 export BACKUP_SCHEDULE='42 * * * * *'
