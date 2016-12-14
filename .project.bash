@@ -22,6 +22,7 @@ alias pgbackup='pg_basebackup -P -D backup -h $DOCKER_HOST_IP -U postgres -F tar
 alias pg='docker exec -it tcs-postgres psql --username postgres'
 alias pg-exec='docker exec -it tcs-postgres /bin/sh'
 alias tcsup='docker-compose up --build -d'
+alias barman='docker exec -it barman /bin/bash'
 
 export BACKUP_SCHEDULE='42 * * * * *'
 export BACKUP_PURGE_PERIOD_UNITS=minutes

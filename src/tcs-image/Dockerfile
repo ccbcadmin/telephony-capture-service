@@ -1,4 +1,3 @@
-# vim:set ft=dockerfile:
 FROM debian:jessie
 
 # explicitly set user/group IDs
@@ -28,7 +27,7 @@ RUN mkdir /docker-entrypoint-initdb.d
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
 
 ENV PG_MAJOR 9.6
-ENV PG_VERSION 9.6.1-1.pgdg80+1
+ENV PG_VERSION 9.6.1-2.pgdg80+1
 
 RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main' $PG_MAJOR > /etc/apt/sources.list.d/pgdg.list
 
@@ -59,7 +58,7 @@ RUN apt-get -qq update
 RUN apt-get -qq install curl -y
 
 # barman
-RUN apt-get install barman
+RUN apt-get install -y barman
 
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 RUN apt-get install -y nodejs
@@ -74,4 +73,8 @@ RUN npm install
 # scoop up all the NodeJS code
 COPY ./lib /app/lib
 
-EXPOSE 5432
+# Prep for barman
+COPY ./src/tcs-image/barman.conf /etc/
+RUN mkdir -p /etc/barman.d
+COPY ./src/tcs-image/pg.conf /etc/barman.d/
+

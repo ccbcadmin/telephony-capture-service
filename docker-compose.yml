@@ -21,6 +21,14 @@ services:
       - /home/postgres/backups:/postgres_backups
     command: ["node", "lib/backup-scheduler/backup-scheduler.js"]
 
+  barman:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    restart: unless-stopped
+    container_name: barman
+    privileged: true
+    network_mode: "host"
+    command: ["node", "lib/share/forever.js"]
+
   database-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     container_name: database-interface
@@ -97,7 +105,8 @@ services:
       - /home/postgres/backup_xlogs:/postgres_backup_xlogs
     entrypoint: /docker-entrypoint.sh
     depends_on:
-      - backup-scheduler
+#      - backup-scheduler
+      - barman
     environment:
       - POSTGRES_PASSWORD
     command: ["postgres"]

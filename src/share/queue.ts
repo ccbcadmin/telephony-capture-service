@@ -38,7 +38,7 @@ export class Queue {
 
 	private connect = () => {
 
-		this.amqp.connect(`amqp://${process.env.DOCKER_HOST_IP}:5672`, (err, queueConnection) => {
+		this.amqp.connect(`amqp://localhost:5672`, (err, queueConnection) => {
 			if (err) {
 				return;
 			}

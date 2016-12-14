@@ -1,7 +1,6 @@
 import * as $ from '../share/constants';
 import { ServerSocket } from '../share/server-socket';
 import { Queue } from '../share/queue';
-import { networkIP } from '../share/util';
 
 export namespace TelephonyCaptureService {
 
@@ -15,23 +14,15 @@ export namespace TelephonyCaptureService {
 	const { str, num } = envalid;
 	const env = envalid.cleanEnv(process.env, {
 		// Need the docker machine IP to link together the various Microservices
-		DOCKER_HOST_IP: str(),
 		TMS_ACTIVE: num(),
 		TCS_PORT: num()
 	});
 
-	const net = require('net');
-	if (!net.isIP(env.DOCKER_HOST_IP)) {
-		console.log(`${routineName}; Invalid Docker Machine IP: ${env.DOCKER_HOST_IP}...aborting.`);
-		process.exit(-1);
-	}
-
-/*
 	process.on('SIGTERM', () => {
 		console.log('Telephony Capture Service: Terminated');
-		process.exit(-1);
+		process.exit(0);
 	});
-*/
+
 	process.on('SIGINT', () => {
 		console.log("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
 		process.exit(0);
@@ -73,7 +64,5 @@ export namespace TelephonyCaptureService {
 	databaseQueue = new Queue($.DATABASE_QUEUE);
 
 	// Start listening for incoming messages
-
-	console.log ('networdIP: ', networkIP );
-	new ServerSocket(routineName, networkIP, env.TCS_PORT, dataSink);
+	new ServerSocket(routineName, env.TCS_PORT, dataSink);
 }

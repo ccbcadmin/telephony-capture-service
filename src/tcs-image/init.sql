@@ -1,8 +1,13 @@
 -- System configuration
 ALTER SYSTEM SET wal_level TO 'replica';
 ALTER SYSTEM SET archive_mode TO on;
-ALTER SYSTEM SET archive_command TO 'test ! -f /postgres_backup_xlogs/%f && cp /var/lib/postgresql/data/pg_xlog/%f /postgres_backup_xlogs/%f';
+-- ALTER SYSTEM SET archive_command TO 'test ! -f /postgres_backup_xlogs/%f && cp /var/lib/postgresql/data/pg_xlog/%f /postgres_backup_xlogs/%f';
 ALTER SYSTEM SET max_wal_senders = 20;
+ALTER SYSTEM SET max_replication_slots = 10;
+
+CREATE ROLE barman with SUPERUSER;
+ALTER ROLE barman with LOGIN;
+CREATE ROLE streaming_barman with REPLICATION LOGIN;
 
 -- ----------------------------
 --  Table structure for SMDR

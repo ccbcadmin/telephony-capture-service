@@ -7,16 +7,15 @@ export class ServerSocket {
 	private server: any;
 	private dataSink: any; // Place to direct incoming data
 
-	constructor(serverName, host, port, dataSink) {
+	constructor(serverName, port, dataSink) {
 		this.serverName = serverName;
-		this.host = host;
 		this.port = port;
 		this.dataSink = dataSink;
 
 		this.server = this.net.createServer();
 		this.server.on('connection', this.handleConnection);
 
-		this.server.listen(this.port, this.host, () => {
+		this.server.listen(this.port, () => {
 			console.log(`${this.serverName}: Listening on: ${JSON.stringify(this.server.address())}`);
 		});
 	}

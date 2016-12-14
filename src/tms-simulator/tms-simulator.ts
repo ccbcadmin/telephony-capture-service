@@ -1,8 +1,6 @@
-"use strict";
+import * as $ from '../share/constants';
+import { ServerSocket } from '../share/server-socket';
 
-const $ = require('../share/constants');
-const server_socket_1 = require('../share/server-socket');
-const util_1 = require('../share/util');
 const routineName = 'tms-simulator';
 const envalid = require('envalid');
 const { str } = envalid;
@@ -10,7 +8,6 @@ const env = envalid.cleanEnv(process.env, {
     TMS_PORT: str()
 });
 
-const net = require('net');
 process.on('SIGTERM', () => {
     console.log(`${routineName} terminated`);
     process.exit(0);
@@ -41,4 +38,6 @@ const dataDump = (data) => {
         leftOver = unprocessedData.slice(0);
     }
 };
-new server_socket_1.ServerSocket(routineName, util_1.networkIP, env.TMS_PORT, dataDump);
+
+// Start listening for incoming messages
+new ServerSocket(routineName, env.TMS_PORT, dataDump);

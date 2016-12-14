@@ -16,7 +16,6 @@ export namespace DatabaseInterface {
 	const envalid = require('envalid');
 	const { str, num } = envalid;
 	const env = envalid.cleanEnv(process.env, {
-		DOCKER_HOST_IP: str(),
 		POSTGRES_PASSWORD: str()
 	});
 
@@ -43,7 +42,7 @@ export namespace DatabaseInterface {
 	};
 
 	const connection = {
-		host: env.DOCKER_HOST_IP,
+		host: 'localhost',
 		port: 5432,
 		database: 'postgres',
 		user: 'postgres'
