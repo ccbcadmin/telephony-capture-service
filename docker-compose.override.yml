@@ -2,6 +2,10 @@ version: '2'
 
 services:
 
+  barman:
+    volumes:
+      - ./lib:/app/lib
+
   backup-scheduler:
     volumes:
       - ./lib:/app/lib

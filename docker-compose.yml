@@ -1,7 +1,10 @@
 version: '2'
 
 volumes:
-  postgres_data: {}
+  postgres1_data: {}
+  postgres2_data: {}
+  postgres1_backup_xlogs: {}
+  postgres2_backup_xlogs: {}
 
 services:
 
@@ -27,7 +30,11 @@ services:
     container_name: barman
     privileged: true
     network_mode: "host"
-    command: ["node", "lib/share/forever.js"]
+    volumes:
+      - postgres1_data:/pg1_data
+      - postgres2_data:/pg2_data
+      - ~/barman_home:/var/lib/barman
+    command: ["node", "./lib/share/forever.js"]
 
   database-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -36,8 +43,10 @@ services:
     privileged: true
     network_mode: "host"
     depends_on: 
-      - tcs-postgres
+      - barman
       - rabbitmq
+      - postgres1
+      - postgres2
     environment:
       - DOCKER_HOST_IP
       - POSTGRES_PASSWORD
@@ -62,7 +71,6 @@ services:
       - TCS_PORT=3456
       - TMS_ACTIVE=1    
     depends_on:
-      - tcs-postgres
       - tms-interface
       - database-interface
     command: ["node", "lib/pbx-interface/pbx-interface.js"]
@@ -80,6 +88,34 @@ services:
       - TCS_PORT
     command: ["node", "lib/pbx-simulator/pbx-simulator.js"]
 
+  postgres1:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: postgres1
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"  
+    volumes:
+      - postgres1_data:/var/lib/postgresql/data
+      - postgres1_backup_xlogs:/postgres_backup_xlogs
+    entrypoint: /docker-entrypoint.sh
+    environment:
+      - POSTGRES_PASSWORD
+    command: ["postgres"]
+
+  postgres2:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: postgres2
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"  
+    volumes:
+      - postgres2_data:/var/lib/postgresql/data
+      - postgres2_backup_xlogs:/postgres_backup_xlogs
+    entrypoint: /docker-entrypoint.sh
+    environment:
+      - POSTGRES_PASSWORD
+    command: ["node", "./lib/share/forever.js"]
+
   rabbitmq:
     image: letsxo/rabbitmq
     container_name: rabbitmq
@@ -93,23 +129,6 @@ services:
       dockerfile: ./src/tcs-image/Dockerfile
     image: ccbcadmin/tcs-image${TCS_VERSION}
     container_name: tcs-image
-
-  tcs-postgres:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: tcs-postgres
-    restart: unless-stopped
-    privileged: true
-    network_mode: "host"  
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - /home/postgres/backup_xlogs:/postgres_backup_xlogs
-    entrypoint: /docker-entrypoint.sh
-    depends_on:
-#      - backup-scheduler
-      - barman
-    environment:
-      - POSTGRES_PASSWORD
-    command: ["postgres"]
 
   tms-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}

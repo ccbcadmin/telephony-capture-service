@@ -49,6 +49,11 @@ RUN mkdir -p /var/run/postgresql && chown -R postgres /var/run/postgresql
 ENV PATH /usr/lib/postgresql/$PG_MAJOR/bin:$PATH
 ENV PGDATA /var/lib/postgresql/data
 
+RUN mkdir -p /postgres_backup_xlogs
+RUN chmod 777 /postgres_backup_xlogs
+# If creating a new database, clearout historical xlogs
+RUN rm -rf /postgres_backup_xlogs/*
+
 COPY ./src/tcs-image/docker-entrypoint.sh /
 COPY ./src/tcs-image/init_pg_hba.sh /docker-entrypoint-initdb.d/
 COPY ./src/tcs-image/init.sql /docker-entrypoint-initdb.d/
@@ -76,5 +81,5 @@ COPY ./lib /app/lib
 # Prep for barman
 COPY ./src/tcs-image/barman.conf /etc/
 RUN mkdir -p /etc/barman.d
-COPY ./src/tcs-image/pg.conf /etc/barman.d/
-
+COPY ./src/tcs-image/pg1.conf /etc/barman.d/
+COPY ./src/tcs-image/pg2.conf /etc/barman.d/
