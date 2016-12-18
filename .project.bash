@@ -17,12 +17,10 @@ alias rm-dangling-volumes='docker volume rm $(docker volume ls -f dangling=true 
 alias ls-exited='docker ps -aq -f status=exited'
 alias tcs-down='docker-compose down'
 alias tcs-down-v='docker-compose down -v'
-alias alpine='docker run -it --rm alpine /bin/ash'
-alias pgbackup='pg_basebackup -P -D backup -h $DOCKER_HOST_IP -U postgres -F tar'
 alias pg1='docker exec -it postgres1 psql --username postgres'
 alias pg2='docker exec -it postgres2 psql --username postgres'
-alias pg1-exec='docker exec -it postgres1 /bin/sh'
-alias pg2-exec='docker exec -it postgres2 /bin/sh'
+alias pg1-exec='docker exec -it postgres1 /bin/bash'
+alias pg2-exec='docker exec -it postgres2 /bin/bash'
 alias tcsup='docker-compose up --build -d'
 alias barman='docker exec -it barman /bin/bash'
 alias tcsvers='echo $TCS_VERSION'
@@ -32,11 +30,10 @@ export BACKUP_PURGE_PERIOD_UNITS=minutes
 export BACKUP_PURGE_PERIOD_LIMIT=5
 export COMPOSE_PROJECT_NAME=tcs
 export DOCKER_HOST_IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | grep -v '172.')
-#export DOCKER_HOST_IP=192.168.2.131
 export POSTGRES_PASSWORD=Dsbhottf4$
 export TCS_PORT=3456
 export TMS_ACTIVE=1
-export TMS_HOST=$DOCKER_HOST_IP
+export TMS_HOST=localhost
 export TMS_PORT=6543
 
 mangle () 

@@ -15,7 +15,6 @@ services:
     privileged: true
     network_mode: "host"
     environment:
-      - DOCKER_HOST_IP
       - BACKUP_PURGE_PERIOD_UNITS
       - BACKUP_PURGE_PERIOD_LIMIT
       - BACKUP_SCHEDULE
@@ -48,7 +47,6 @@ services:
       - postgres1
       - postgres2
     environment:
-      - DOCKER_HOST_IP
       - POSTGRES_PASSWORD
     command: ["node", "lib/database-interface/database-interface.js"]
   
@@ -67,7 +65,6 @@ services:
     privileged: true
     network_mode: "host"
     environment:
-      - DOCKER_HOST_IP
       - TCS_PORT=3456
       - TMS_ACTIVE=1    
     depends_on:
@@ -83,7 +80,6 @@ services:
     volumes:
       - /home/smdr-data:/smdr-data
     environment:
-      - DOCKER_HOST_IP
       - PBX_SIMULATOR_SOURCE_DIRECTORY
       - TCS_PORT
     command: ["node", "lib/pbx-simulator/pbx-simulator.js"]
@@ -137,7 +133,6 @@ services:
     privileged: true
     network_mode: "host"
     environment:
-      - DOCKER_HOST_IP
       - TMS_HOST
       - TMS_PORT
     command: ["node", "lib/tms-interface/tms-interface.js"]
