@@ -1,10 +1,11 @@
 -- System configuration
+SELECT set_config('log_statement', 'all', true);
 ALTER SYSTEM SET wal_level TO 'replica';
 ALTER SYSTEM SET archive_mode TO on;
 ALTER SYSTEM SET archive_command TO 'test ! -f /postgres_backup_xlogs/%f && cp /var/lib/postgresql/data/pg_xlog/%f /postgres_backup_xlogs/%f';
 ALTER SYSTEM SET max_wal_senders = 20;
-ALTER SYSTEM SET max_replication_slots = 20;
-ALTER SYSTEM SET wal_keep_segments = 100;
+ALTER SYSTEM SET max_replication_slots = 2;
+--  ALTER SYSTEM SET wal_keep_segments = 10;
 
 CREATE ROLE barman with SUPERUSER;
 ALTER ROLE barman with LOGIN;

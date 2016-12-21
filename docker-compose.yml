@@ -21,7 +21,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/postgres/backups:/postgres_backups
-    command: ["node", "lib/backup-scheduler/backup-scheduler.js"]
+    command: ["node", "./lib/backup-scheduler/backup-scheduler.js"]
 
   barman:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -33,7 +33,7 @@ services:
       - postgres1_data:/pg1_data
       - postgres2_data:/pg2_data
       - ~/barman_home:/var/lib/barman
-    command: ["node", "./lib/share/forever.js"]
+    entrypoint: ["node", "./lib/share/forever.js"]
 
   database-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -48,7 +48,7 @@ services:
       - postgres2
     environment:
       - POSTGRES_PASSWORD
-    command: ["node", "lib/database-interface/database-interface.js"]
+    entrypoint: ["node", "./lib/database-interface/database-interface.js"]
   
   mangle:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -56,7 +56,7 @@ services:
     privileged: false
     volumes:
       - /home/smdr-data:/smdr-data
-    command: ["node", "lib/mangle/mangle.js"]
+    entrypoint: ["node", "./lib/mangle/mangle.js"]
 
   pbx-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -70,7 +70,7 @@ services:
     depends_on:
       - tms-interface
       - database-interface
-    command: ["node", "lib/pbx-interface/pbx-interface.js"]
+    entrypoint: ["node", "./lib/pbx-interface/pbx-interface.js"]
 
   pbx-simulator:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -82,7 +82,7 @@ services:
     environment:
       - PBX_SIMULATOR_SOURCE_DIRECTORY
       - TCS_PORT
-    command: ["node", "lib/pbx-simulator/pbx-simulator.js"]
+    entrypoint: ["node", "./lib/pbx-simulator/pbx-simulator.js"]
 
   postgres1:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -93,7 +93,7 @@ services:
     volumes:
       - postgres1_data:/var/lib/postgresql/data
       - postgres1_backup_xlogs:/postgres_backup_xlogs
-    entrypoint: /docker-entrypoint.sh
+    entrypoint: ["/docker-entrypoint.sh"]
     environment:
       - POSTGRES_PASSWORD
     command: ["postgres"]
@@ -107,10 +107,10 @@ services:
     volumes:
       - postgres2_data:/var/lib/postgresql/data
       - postgres2_backup_xlogs:/postgres_backup_xlogs
-    entrypoint: /docker-entrypoint.sh
+    entrypoint: ["/docker-entrypoint.sh"]
     environment:
       - POSTGRES_PASSWORD
-    command: ["node", "./lib/share/forever.js"]
+#    command: ["node", "./lib/share/forever.js"]
 
   rabbitmq:
     image: letsxo/rabbitmq
@@ -135,7 +135,7 @@ services:
     environment:
       - TMS_HOST
       - TMS_PORT
-    command: ["node", "lib/tms-interface/tms-interface.js"]
+    entrypoint: ["node", "./lib/tms-interface/tms-interface.js"]
    
   tms-simulator:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -145,4 +145,4 @@ services:
     network_mode: "host"
     environment:
       - TMS_PORT
-    command: ["node", "lib/tms-simulator/tms-simulator.js"]
+    entrypoint: ["node", "./lib/tms-simulator/tms-simulator.js"]

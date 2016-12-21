@@ -8,4 +8,8 @@ process.on('SIGINT', () => {
 	process.exit(0);
 });
 
+console.log ('Start cron');
+const spawn = require('child_process').spawn;
+spawn('cron');
+
 setInterval(() => { console.log('Still alive'); }, 5000);

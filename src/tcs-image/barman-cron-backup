@@ -1,0 +1,1 @@
+*/5 * * * * barman [ -x /usr/bin/barman ] && /usr/bin/barman backup pg1

@@ -9,6 +9,7 @@ alias build-tcs='docker-compose build'
 alias run-tcs='docker-compose run -d --rm --service-ports --name pbx-interface pbx-interface'
 alias build-tmssim='docker-compose build tms-simulator'
 alias run-tmssim='docker-compose up -d tms-simulator'
+alias run-mangle='docker-compose run --rm --name mangle -e MANGLE_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 -e MANGLE_TARGET_DIRECTORY=/smdr-data/smdr-data-003 mangle'
 alias run-pbxsim='docker-compose run --rm --name pbx-simulator -e PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 pbx-simulator'
 alias rm-containers='docker rm $(docker ps -q)'
 alias rm-images='docker rmi $(docker images -q)'
@@ -25,16 +26,7 @@ alias tcsup='docker-compose up --build -d'
 alias barman='docker exec -it barman /bin/bash'
 alias tcsvers='echo $TCS_VERSION'
 
-export BACKUP_SCHEDULE='42 * * * * *'
-export BACKUP_PURGE_PERIOD_UNITS=minutes
-export BACKUP_PURGE_PERIOD_LIMIT=5
-export COMPOSE_PROJECT_NAME=tcs
-export DOCKER_HOST_IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | grep -v '172.')
-export POSTGRES_PASSWORD=Dsbhottf4$
-export TCS_PORT=3456
-export TMS_ACTIVE=1
-export TMS_HOST=localhost
-export TMS_PORT=6543
+source ~/.tsc.bash
 
 mangle () 
 {
@@ -93,3 +85,4 @@ alias clean-images='docker images -q --filter dangling=true | xargs docker rmi'
 # Remove containers created before a specific container
 # docker ps --before a1bz3768ez7g -q | xargs docker rm
 
+# export DOCKER_HOST_IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | grep -v '172.')

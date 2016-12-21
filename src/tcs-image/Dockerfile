@@ -83,3 +83,12 @@ COPY ./src/tcs-image/barman.conf /etc/
 RUN mkdir -p /etc/barman.d
 COPY ./src/tcs-image/pg1.conf /etc/barman.d/
 COPY ./src/tcs-image/pg2.conf /etc/barman.d/
+COPY ./src/tcs-image/barman-entrypoint.sh /
+COPY ./src/tcs-image/barman-cron-backup /etc/cron.d/
+
+# Give us an editor too
+ENV TERM xterm
+RUN apt-get install nano
+
+# Create the cron log file to be able to run tail -f
+RUN touch /var/log/cron.log
