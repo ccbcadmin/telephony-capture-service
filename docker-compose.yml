@@ -44,8 +44,6 @@ services:
     depends_on: 
       - barman
       - rabbitmq
-      - postgres1
-      - postgres2
     environment:
       - POSTGRES_PASSWORD
     entrypoint: ["node", "./lib/database-interface/database-interface.js"]
@@ -84,9 +82,9 @@ services:
       - TCS_PORT
     entrypoint: ["node", "./lib/pbx-simulator/pbx-simulator.js"]
 
-  postgres1:
+  pg1:
     image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: postgres1
+    container_name: pg1
     restart: unless-stopped
     privileged: true
     network_mode: "host"  
@@ -98,9 +96,9 @@ services:
       - POSTGRES_PASSWORD
     command: ["postgres"]
 
-  postgres2:
+  pg2:
     image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: postgres2
+    container_name: pg2
     restart: unless-stopped
     privileged: true
     network_mode: "host"  
@@ -110,7 +108,7 @@ services:
     entrypoint: ["/docker-entrypoint.sh"]
     environment:
       - POSTGRES_PASSWORD
-#    command: ["node", "./lib/share/forever.js"]
+    command: ["postgres"]
 
   rabbitmq:
     image: letsxo/rabbitmq

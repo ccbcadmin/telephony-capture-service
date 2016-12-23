@@ -12,4 +12,8 @@ console.log ('Start cron');
 const spawn = require('child_process').spawn;
 spawn('cron');
 
+// define postgres slots
+//spawn ('barman receive-wal --create-slot pg1');
+//spawn ('barman receive-wal --create-slot pg2');
+
 setInterval(() => { console.log('Still alive'); }, 5000);

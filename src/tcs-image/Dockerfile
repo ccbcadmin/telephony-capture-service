@@ -85,6 +85,12 @@ COPY ./src/tcs-image/pg1.conf /etc/barman.d/
 COPY ./src/tcs-image/pg2.conf /etc/barman.d/
 COPY ./src/tcs-image/barman-entrypoint.sh /
 COPY ./src/tcs-image/barman-cron-backup /etc/cron.d/
+RUN mkdir -p /pg1_data
+RUN mkdir -p /pg2_data
+RUN chown barman /pg1_data
+RUN chown barman /pg2_data
+RUN chmod 755 /pg1_data
+RUN chmod 755 /pg2_data
 
 # Give us an editor too
 ENV TERM xterm
