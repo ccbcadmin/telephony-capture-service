@@ -4,7 +4,7 @@ process.on('SIGTERM', () => {
 });
 
 process.on('SIGINT', () => {
-	console.log("forever: Ctrl-C received. Forever terminating");
+	console.log("forever: Ctrl-C received. Forever Terminated");
 	process.exit(0);
 });
 
