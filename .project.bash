@@ -15,23 +15,37 @@ function error_exit
 	return 1
 }
 
-# Example call of the error_exit function.  Note the inclusion
-# of the LINENO environment variable.  It contains the current
-# line number.
-
-# Record the TCS_VERSION if set
-if [ $# -eq 1 ]
-  then
-    export TCS_VERSION=:$1
+if [ $# -gt 1 ]
+then
+        echo "Usage : tcsproj [ TCS Version ]"
+        return 1
 fi
+
+# If a version number is provided, then ensure that it is of the required form
+VERSION_REGEX="^v[0-9]+\.[0-9]+$"
+if [ $# -eq 1 ]; then
+    if ! [[ $1 =~ $VERSION_REGEX ]]; then
+        echo 'TCS Version must be of the form vX.Y, where X and Y are both integers'
+        return 1
+    else
+        # Record the newly set version number
+        echo 'export TCS_VERSION='$1 > ~/.tcs.version
+    fi
+fi
+
+# Load TCS environment variables
+source ~/.tcs.bash
+source ~/.tcs.version
+
+echo 'TCS Version: '$TCS_VERSION
 
 # Aliases to aid Docker usage
 alias build-tcs='docker-compose build'
-alias run-tcs='docker-compose run -d --rm --service-ports --name pbx-interface pbx-interface'
+alias create-pg1='docker-compose create pg1'
+alias create-pg2='docker-compose create pg2'
 alias run-pg1='docker-compose run -d --name pg1 pg1'
 alias run-pg2='docker-compose run -d --name pg2 pg2'
-alias build-tmssim='docker-compose build tms-simulator'
-alias run-tmssim='docker-compose up -d tms-simulator'
+alias run-tmssim='docker-compose run -d --name tms-simulator tms-simulator'
 alias run-mangle='docker-compose run --rm --name mangle -e MANGLE_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 -e MANGLE_TARGET_DIRECTORY=/smdr-data/smdr-data-003 mangle'
 alias run-pbxsim='docker-compose run --rm --name pbx-simulator -e PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 pbx-simulator'
 alias rm-containers='docker rm $(docker ps -q)'
@@ -49,8 +63,6 @@ alias tcsup='docker-compose up --build -d'
 alias barman='docker exec -it barman /bin/bash'
 alias tcsvers='echo $TCS_VERSION'
 
-source ~/.tsc.bash
-
 mangle () 
 {
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
@@ -63,6 +75,7 @@ mangle ()
      
     docker-compose run --rm --name mangle -e MANGLE_SOURCE_DIRECTORY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
 }
+
 pbx-simulator ()
 {
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
@@ -97,89 +110,6 @@ tms-simulator-up ()
         return 1;
     fi
     docker-compose -f docker-compose.yml up -d --no-build --remove-orphans tms-simulator
-}
-
-switch-pg ()
-{
-    # Stop the inflow to the database
-    docker stop database-interface >> /dev/null
-
-    # Decide which direction the switch is to go
-
-    docker inspect --format='{{.State.Running}}' pg1 >> /dev/null
-    if [ $? != 0 ]; then echo 'Container pg1 missing'; return 1; fi
-
-    docker inspect --format='{{.State.Running}}' pg2 >> /dev/null
-    if [ $? != 0 ]; then echo 'Container pg2 missing'; return 1; fi
-   
-    pg1_running=$(docker inspect --format='{{.State.Running}}' pg1)
-    pg2_running=$(docker inspect --format='{{.State.Running}}' pg2)
-
-    if [ "$pg1_running" == "$pg2_running" ]; then
-        if [ "$pg1_running" == "true" ]; then
-            echo 'Confused state: Both Postgres containers are running.';
-            return 1;
-        else
-            echo 'Confused state: Neither Postgres container is running.';
-            return 1;       
-        fi
-    fi
-    
-    if [ "$pg1_running" == "true" ]; then
-        echo 'Switching from pg1 to pg2'
-        FROM_PG='pg1'
-        TO_PG='pg2'
-    else
-        echo 'Switching from pg2 to pg1'
-        FROM_PG='pg2'
-        TO_PG='pg1'
-    fi
-
-    # Ensure that inflows to the database are stopped
-    docker stop database-interface &> /dev/null
-    if [ $? != 0 ]; then return $?; else echo Database Inflow Suspended; fi
-
-    # Do a final backup
-    docker exec -it barman barman backup $FROM_PG
-    if [ $? != 0 ]; then return $?; else echo Backup Complete; fi
-
-    # Configure the outgoing container so that it will not be restarted after a reboot
-    docker update --restart no $FROM_PG 
-    if [ $? != 0 ]; then return $?; else echo $FROM_PG Restart Disabled; fi
-
-    # Now finally shutdown the outgoing container
-    docker stop $FROM_PG
-    if [ $? != 0 ]; then return $?; else echo $FROM_PG Stopped; fi
-
-    # 'barman' must be the owner of the recovery directory
-    if [ $TO_PG == 'pg1' ]; then
-        docker exec -it barman sh -c 'chown -R barman.barman /pg1_data; exit $?;'
-    else
-        docker exec -it barman sh -c 'chown -R barman.barman /pg2_data; exit $?;'
-    fi
-    if [ $? != 0 ]; then echo 'chown failure'; return $?; else echo 'chown Successful'; fi
-
-    # Use barman to recover the latest version of the database
-    if [ $TO_PG == 'pg1' ]; then
-        docker exec -it barman sh -c 'barman recover pg2 latest /pg1_data; exit $?;'
-    else
-        docker exec -it barman sh -c 'barman recover pg1 latest /pg2_data; exit $?;'
-    fi
-    if [ $? != 0 ]; then echo 'Recovery Failure'; return $?; else echo 'Recovery Successful'; fi
-   
-    # Now start the incoming database container
-    docker start $TO_PG
-    if [ $? != 0 ]; then return $?; else echo $TO_PG Started; fi
-
-    # Configure the incoming container to auto restart in the case of a reboot
-    docker update --restart unless-stopped $TO_PG
-    if [ $? != 0 ]; then return $?; else echo $TO_PG Configured to start at reboot; fi
-
-    # Restart dataflow
-    docker start database-interface
-    if [ $? != 0 ]; then return $?; else echo Database Inflow Restarted; fi
-
-    echo 'Postgres Container Switch Successful'
 }
 
 # Remove dangling/untagged images

@@ -9,7 +9,7 @@ process.on('SIGINT', () => {
 });
 
 console.log ('Start cron');
-const spawn = require('child_process').spawn;
+//const spawn = require('child_process').spawn;
 spawn('cron');
 
 // define postgres slots

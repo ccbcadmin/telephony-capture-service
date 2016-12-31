@@ -142,7 +142,7 @@ if [ $? != 0 ]; then error-exit $TO_PG' Recovery Failure'; else msg $TO_PG' Reco
 docker start $TO_PG &> /dev/null
 if [ $? != 0 ]; then error-exit 'Unable to Start Container'$TO_PG; else msg $TO_PG' Started'; fi
 
-sleep 5
+sleep 2
 
 # Ensure stream replication is enabled
 if enable-stream-replication $TO_PG ; then msg $TO_PG' Stream Replication Enabled'; else error-exit $TO_PG' Failed to Enable Stream Replication'; fi

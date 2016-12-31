@@ -1,0 +1,48 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+
+if [ $# != 1 ]; then
+	echo 'Usage: '$PROGNAME' pg1 | pg2'
+	exit 1
+fi
+
+if [ $1 != 'pg1' ]; then
+	if [ $1 != 'pg2' ]; then
+		echo 'Usage: '$PROGNAME' pg1 | pg2'
+		exit 1
+	fi
+fi
+
+function msg {
+	echo "${PROGNAME}: ${1:-"Message Not Provided"}" 1>&2
+}
+
+function error-exit {
+	# Display error message and exit
+	msg "${1:-"Unknown Error"}" 1>&2
+	msg $PROGNAME' Failure'
+	tcs-down
+	exit
+}
+
+docker-compose down
+
+if [ $1 == 'pg1' ]; then
+	docker-compose run -d --name pg1 pg1 &> /dev/null
+	if [ $? != 0 ]; then error-exit 'Failed to Start Container pg1'; fi
+	docker-compose create pg2 &> /dev/null
+	if [ $? != 0 ]; then error-exit 'Failed to Create Container pg2'; fi
+else
+	docker-compose create pg1 &> /dev/null
+	if [ $? != 0 ]; then error-exit 'Failed to Create Container pg1'; fi
+	docker-compose run -d --name pg2 pg2 &> /dev/null
+	if [ $? != 0 ]; then error-exit 'Failed to Start Container pg2'; fi
+fi
+
+sleep 2;
+
+docker-compose run -d --name pbx-interface pbx-interface &> /dev/null
+if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
+
+echo 'TCS Started Using Postgres Container: '$1

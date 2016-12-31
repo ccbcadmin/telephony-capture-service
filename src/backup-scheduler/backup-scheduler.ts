@@ -1,29 +1,35 @@
-import { ServerSocket } from '../share/server-socket';
-import { Queue } from '../share/queue';
-import { networkIP } from '../share/util';
-import * as util from './util';
-
-const routineName = 'backup-scheduler';
+const routineName = 'barman';
 
 // Ensure the presence of required environment variables
 const envalid = require('envalid');
 const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
-	// Need the docker machine IP to link together the various Microservices
 	BACKUP_SCHEDULE: str(),
-	BACKUP_PURGE_PERIOD_UNITS: str(),
-	BACKUP_PURGE_PERIOD_LIMIT: str()
 });
 
-// Ensure the backup Epoch is recognized
-if (['minutes', 'hours', 'days', 'weeks', 'months', 'years'].indexOf(env.BACKUP_PURGE_PERIOD_UNITS) < 0) {
-	console.log("BACKUP_PURGE_EPOCH must be one of 'minutes', 'hours', 'days', 'weeks', 'months', or 'years'.  Aborting...");
-	process.exit(-1);
+const exec = require('child_process').exec;
+
+// At startup, arbitrarily assume pg1
+let activePostgresContainer = 'pg1';  
+
+// Attempt to backup both pg1 and pg2
+const barmanBackup = () => {
+	console.log(`barman backup ${activePostgresContainer}`);
+	exec(`barman backup ${activePostgresContainer}`, error => {
+		if (error) {
+			// If here, then first backup attempt failed - try the other container
+			activePostgresContainer = activePostgresContainer === 'pg1' ? 'pg2' : 'pg1';
+			console.log(`barman backup ${activePostgresContainer}`);
+			exec(`barman backup ${activePostgresContainer}`);
+		}
+	});
 }
 
-require('node-schedule').scheduleJob(env.BACKUP_SCHEDULE, util.backupDatabase);
+console.log('Start cron');
+const spawn = require('child_process').spawn;
+exec('cron');
 
-setInterval(util.purgeAgedBackups, 10000, '/postgres_backups', env.BACKUP_PURGE_PERIOD_UNITS, env.BACKUP_PURGE_PERIOD_LIMIT);
+exec('barman cron');
 
 process.on('SIGTERM', () => {
 	console.log(`\r${routineName}: Terminated`);
@@ -35,5 +41,8 @@ process.on('SIGINT', () => {
 	process.exit(0);
 });
 
+require('node-schedule').scheduleJob(env.BACKUP_SCHEDULE, barmanBackup);
+
 console.log(`${routineName}: Started`);
 
+setInterval(() => { }, 5000);

@@ -3,8 +3,6 @@ version: '2'
 volumes:
   postgres1_data: {}
   postgres2_data: {}
-  postgres1_backup_xlogs: {}
-  postgres2_backup_xlogs: {}
 
 services:
 
@@ -15,8 +13,6 @@ services:
     privileged: true
     network_mode: "host"
     environment:
-      - BACKUP_PURGE_PERIOD_UNITS
-      - BACKUP_PURGE_PERIOD_LIMIT
       - BACKUP_SCHEDULE
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -29,11 +25,13 @@ services:
     container_name: barman
     privileged: true
     network_mode: "host"
+    environment:
+      - BACKUP_SCHEDULE
     volumes:
       - postgres1_data:/pg1_data
       - postgres2_data:/pg2_data
       - ~/barman_home:/var/lib/barman
-    entrypoint: ["node", "./lib/share/forever.js"]
+    command: ["node", "./lib/backup-scheduler/backup-scheduler.js"]
 
   database-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -90,7 +88,6 @@ services:
     network_mode: "host"  
     volumes:
       - postgres1_data:/var/lib/postgresql/data
-      - postgres1_backup_xlogs:/postgres_backup_xlogs
     entrypoint: ["/docker-entrypoint.sh"]
     environment:
       - POSTGRES_PASSWORD
@@ -104,7 +101,6 @@ services:
     network_mode: "host"  
     volumes:
       - postgres2_data:/var/lib/postgresql/data
-      - postgres2_backup_xlogs:/postgres_backup_xlogs
     entrypoint: ["/docker-entrypoint.sh"]
     environment:
       - POSTGRES_PASSWORD
