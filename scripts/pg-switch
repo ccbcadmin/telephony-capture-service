@@ -81,11 +81,7 @@ function postgres-rollback {
 
 trap postgres-rollback EXIT;
 
-# Stop the inflow to the database
-docker stop database-interface >> /dev/null
-
 # Decide which direction the switch is to go
-
 docker inspect --format='{{.State.Running}}' pg1 >> /dev/null
 if [ $? != 0 ]; then error-exit 'Container pg1 missing'; fi
 
@@ -97,9 +93,9 @@ pg2_running=$(docker inspect --format='{{.State.Running}}' pg2)
 
 if [ "$pg1_running" == "$pg2_running" ]; then
 	if [ "$pg1_running" == "true" ]; then
-		error-exit 'Confused state: Both Postgres containers are running.';
+		error-exit $PROGNAME': Confused state: Both Postgres containers are running.';
 	else
-		error-exit 'Confused state: Neither Postgres container is running.';    
+		error-exit $PROGNAME': Confused state: Neither Postgres container is running.';    
 	fi
 fi
 
@@ -113,6 +109,9 @@ else
 fi
 
 msg 'Begin Postgres Container Switch from '$FROM_PG' to '$TO_PG;
+
+# Stop the inflow to the database
+docker stop database-interface >> /dev/null
 
 # Ensure that inflows to the database are stopped
 docker stop database-interface &> /dev/null

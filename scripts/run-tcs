@@ -45,4 +45,4 @@ sleep 2;
 docker-compose run -d --name pbx-interface pbx-interface &> /dev/null
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
-echo 'TCS Started Using Postgres Container: '$1
+echo 'TCS Started, Running Postgres Container: '$1

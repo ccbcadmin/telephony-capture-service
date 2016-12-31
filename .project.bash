@@ -4,6 +4,9 @@
 
 PROGNAME=$(basename $0)
 
+# Allow access to bash scripts
+export PATH=./scripts:$PATH
+
 function error_exit
 {
 #	----------------------------------------------------------------
@@ -14,6 +17,8 @@ function error_exit
 	echo "${PROGNAME}: ${1:-"Unknown Error"}" 1>&2
 	return 1
 }
+
+
 
 if [ $# -gt 1 ]
 then
@@ -29,7 +34,7 @@ if [ $# -eq 1 ]; then
         return 1
     else
         # Record the newly set version number
-        echo 'export TCS_VERSION='$1 > ~/.tcs.version
+        echo 'export TCS_VERSION=:'$1 > ~/.tcs.version
     fi
 fi
 
@@ -37,7 +42,7 @@ fi
 source ~/.tcs.bash
 source ~/.tcs.version
 
-echo 'TCS Version: '$TCS_VERSION
+echo 'TCS Version'$TCS_VERSION
 
 # Aliases to aid Docker usage
 alias build-tcs='docker-compose build'
@@ -55,8 +60,8 @@ alias rm-dangling-volumes='docker volume rm $(docker volume ls -f dangling=true 
 alias ls-exited='docker ps -aq -f status=exited'
 alias tcs-down='docker-compose down'
 alias tcs-down-v='docker-compose down -v'
-alias pg1='docker exec -it pg1 psql --username postgres'
-alias pg2='docker exec -it pg2 psql --username postgres'
+alias psql1='docker exec -it pg1 psql --username postgres'
+alias psql2='docker exec -it pg2 psql --username postgres'
 alias pg1-exec='docker exec -it pg1 /bin/bash'
 alias pg2-exec='docker exec -it pg2 /bin/bash'
 alias tcsup='docker-compose up --build -d'
@@ -67,9 +72,7 @@ mangle ()
 {
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
 
-    if docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        : 
-    else
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1;
     fi
      
@@ -80,45 +83,54 @@ pbx-simulator ()
 {
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
 
-    if docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        : 
-    else
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1;
     fi    
     docker-compose run --rm --name pbx-simulator -e PBX_SIMULATOR_SOURCE_DIRECTORY="$1" pbx-simulator
 }
 
-tcs-up ()
+tcs ()
 {
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
 
-    if docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        : 
-    else
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1;
     fi
     docker-compose -f docker-compose.yml up -d --no-build --remove-orphans pbx-interface
 }
 
-tms-simulator-up ()
+pg1 ()
 {
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
 
-    if docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        : 
-    else
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
+        return 1;
+    fi
+    docker-compose -f docker-compose.yml up -d --no-build --remove-orphans pg1
+}
+
+pg2 ()
+{
+    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
+
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
+        return 1;
+    fi
+    docker-compose -f docker-compose.yml up -d --no-build --remove-orphans pg2
+}
+
+tms-simulator ()
+{
+    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
+
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1;
     fi
     docker-compose -f docker-compose.yml up -d --no-build --remove-orphans tms-simulator
 }
-
-# Remove dangling/untagged images
-alias clean-images='docker images -q --filter dangling=true | xargs docker rmi'
 
 # Remove containers created after a specific container
 # docker ps --since a1bz3768ez7g -q | xargs docker rm
 
 # Remove containers created before a specific container
 # docker ps --before a1bz3768ez7g -q | xargs docker rm
-
-# export DOCKER_HOST_IP=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | grep -v '172.')
