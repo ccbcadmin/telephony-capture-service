@@ -6,10 +6,6 @@ services:
     volumes:
       - ./lib:/app/lib
 
-  backup-scheduler:
-    volumes:
-      - ./lib:/app/lib
-
   database-interface:
     volumes:
       - ./lib:/app/lib

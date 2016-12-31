@@ -6,19 +6,6 @@ volumes:
 
 services:
 
-  backup-scheduler:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    restart: unless-stopped
-    container_name: backup-scheduler
-    privileged: true
-    network_mode: "host"
-    environment:
-      - BACKUP_SCHEDULE
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /home/postgres/backups:/postgres_backups
-    command: ["node", "./lib/backup-scheduler/backup-scheduler.js"]
-
   barman:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     restart: unless-stopped

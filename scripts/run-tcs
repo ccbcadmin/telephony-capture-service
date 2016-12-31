@@ -26,7 +26,7 @@ function error-exit {
 	exit
 }
 
-docker-compose down
+docker-compose down &> /dev/null
 
 if [ $1 == 'pg1' ]; then
 	docker-compose run -d --name pg1 pg1 &> /dev/null
@@ -45,4 +45,4 @@ sleep 2;
 docker-compose run -d --name pbx-interface pbx-interface &> /dev/null
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
-echo 'TCS Started, Running Postgres Container: '$1
+echo 'TCS Started, Active Postgres Container: '$1
