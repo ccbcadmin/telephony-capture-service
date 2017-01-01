@@ -89,16 +89,6 @@ pbx-simulator ()
     docker-compose run --rm --name pbx-simulator -e PBX_SIMULATOR_SOURCE_DIRECTORY="$1" pbx-simulator
 }
 
-tcs ()
-{
-    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
-
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        return 1;
-    fi
-    docker-compose -f docker-compose.yml up -d --no-build --remove-orphans pbx-interface
-}
-
 pg1 ()
 {
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi

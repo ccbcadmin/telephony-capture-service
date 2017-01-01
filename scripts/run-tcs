@@ -22,7 +22,7 @@ function error-exit {
 	# Display error message and exit
 	msg "${1:-"Unknown Error"}" 1>&2
 	msg $PROGNAME' Failure'
-	tcs-down
+	docker-compose down &> /dev/null
 	exit
 }
 

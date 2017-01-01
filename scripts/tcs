@@ -1,0 +1,55 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+
+function msg {
+	echo "${PROGNAME}: ${1:-"Message Not Provided"}" 1>&2
+}
+
+function error-exit {
+	# Display error message and exit
+	msg "${1:-"Unknown Error"}" 1>&2
+	msg $PROGNAME' Failure'
+	docker-compose down &> /dev/null
+	exit 1
+}
+
+if [ $# != 1 ]; then
+	echo 'Usage: '$PROGNAME' pg1 | pg2'
+	exit 1
+fi
+
+if [ $1 != 'pg1' ]; then
+	if [ $1 != 'pg2' ]; then
+		echo 'Usage: '$PROGNAME' pg1 | pg2'
+		exit 1
+	fi
+fi
+
+# Start from a clean sheet
+docker-compose down &> /dev/null
+
+if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
+
+if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then
+    exit 1
+fi
+
+if [ $1 == 'pg1' ]; then
+    docker-compose -f docker-compose.yml up -d --no-build --remove-orphans pg1 &> /dev/null
+	if [ $? != 0 ]; then error-exit 'Failed to Start Container pg1'; fi
+	docker-compose -f docker-compose.yml create pg2 &> /dev/null
+	if [ $? != 0 ]; then error-exit 'Failed to Create Container pg2'; fi
+else
+	docker-compose -f docker-compose.yml create pg1 &> /dev/null
+	if [ $? != 0 ]; then error-exit 'Failed to Create Container pg1'; fi
+    docker-compose -f docker-compose.yml up -d --no-build --remove-orphans pg2 &> /dev/null
+	if [ $? != 0 ]; then error-exit 'Failed to Start Container pg2'; fi
+fi
+
+sleep 2;
+
+docker-compose -f docker-compose.yml up -d --no-build --remove-orphans pbx-interface &> /dev/null
+if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
+
+echo 'TCS Started, Running Postgres Container: '$1
