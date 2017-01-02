@@ -96,6 +96,15 @@ barman-check () {
 	return $?
 }
 
+confirm-barman () {
+    # Minimally barman must be running
+    docker inspect --format='{{.State.Running}}' barman >> /dev/null
+    if [ $? != 0 ]; then error-exit 'barman MISSING'; fi
+
+    barman_running=$(docker inspect --format='{{.State.Running}}' barman)
+    if [ "$barman_running" == "false" ]; then error-exit 'barman STOPPED'; fi
+}
+
 validate-pg-selection () {
     if [ "$1" != 'pg1' ]; then
         if [ "$1" != 'pg2' ]; then
@@ -108,4 +117,14 @@ validate-pg-selection () {
 validate-backup_id () {
     docker exec -it barman sh -c 'barman list-backup --minimal '$1' | grep -w '$2'; exit $?;' > /dev/null
     return $?
+}
+
+change-pgdata-owner () {
+    docker exec -it barman sh -c 'chown -R '$1'.'$1' /'$2'_data; exit $?;' &> /dev/null
+    if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
+}
+
+change-pgdata-permissions () {
+    docker exec -it barman sh -c 'chmod -R 775 /'$1'_data; exit $?;' &> /dev/null
+    if [ $? != 0 ]; then error-exit 'PGDATA Permissions Change Failed'; fi
 }

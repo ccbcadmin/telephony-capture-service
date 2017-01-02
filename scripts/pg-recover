@@ -10,44 +10,37 @@ if [ "$#" != 2 ]; then
 	fi
 fi
 
-# Minimally barman must be running
-docker inspect --format='{{.State.Running}}' barman >> /dev/null
-if [ $? != 0 ]; then error-exit 'barman Not Available'; fi
-
-barman_running=$(docker inspect --format='{{.State.Running}}' barman)
-if [ "$barman_running" == "false" ]; then error-exit 'barman STOPPED'; fi
-
 validate-pg-selection $1
 if [ $? != 0 ]; then error-exit 'Usage: '$PROGNAME' pg1|pg2 backup_id [target_time]'; fi
 
 validate-backup_id $1 $2
 if [ $? != 0 ]; then error-exit 'Unknown '$1' backup_id '$3; fi
 
+# the barman container must be up and running
+confirm-barman
+
 # Ensure that inflows to the database are stopped
 docker stop database-interface &> /dev/null
 if [ $? != 0 ]; then error-exit 'Unable to close inflow'; else msg 'Database Inflow Suspended'; fi
 
-# Stop and remove both pg1 and pg2 containers
+# Stop and remove both pg containers
 docker stop pg1 &> /dev/null
 docker stop pg2 &> /dev/null
 docker-compose rm -f pg1 &> /dev/null
 docker-compose rm -f pg2 &> /dev/null
 
-# 'barman' must be the owner of the recovery directory
-docker exec -it barman sh -c 'chown -R barman.barman /'$1'_data; exit $?;' &> /dev/null
-if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
+# First barman gets ownership
+change-pgdata-owner barman $1
 
-# Modify permissions
-docker exec -it barman sh -c 'chmod -R 775 /'$1'_data; exit $?;' &> /dev/null
-if [ $? != 0 ]; then error-exit 'PGDATA Permissions Change Failed'; fi
+# Tweak unix permissions
+change-pgdata-permissions $1
 
-# Now do the recovery
+# Do the recovery
 docker exec -it barman sh -c 'barman recover --target-time '$3' '$1' '$2' /'$1'_data; exit $?;' &> /dev/null
 if [ $? != 0 ]; then error-exit $1' Recovery Failure'; else msg $1' Recovery Successful'; fi
 
-# 'postgres' must be the owner of the recovery directory
-docker exec -it barman sh -c 'chown -R postgres.postgres /'$1'_data; exit $?;' &> /dev/null
-if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
+# Ownership passed to postgres
+change-pgdata-owner postgres $1
 
 # Start the pg container
 docker-compose run -d --name $1 $1 &> /dev/null
