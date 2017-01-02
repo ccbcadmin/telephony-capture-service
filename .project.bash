@@ -18,8 +18,6 @@ function error_exit
 	return 1
 }
 
-
-
 if [ $# -gt 1 ]
 then
         echo "Usage : tcsproj [ TCS Version ]"
@@ -41,6 +39,9 @@ fi
 # Load TCS environment variables
 source ~/.tcs.bash
 source ~/.tcs.version
+
+# various useful bash functions
+source ./scripts/bash-functions
 
 echo 'TCS Version'$TCS_VERSION
 
@@ -119,8 +120,52 @@ tms-simulator ()
     docker-compose -f docker-compose.yml up -d --no-build --remove-orphans tms-simulator
 }
 
-# Remove containers created after a specific container
-# docker ps --since a1bz3768ez7g -q | xargs docker rm
+is-pg1-active () {
+	docker exec -it pg1 sh -c 'psql -c "select version();" -U postgres; exit $?;' &>/dev/null
+	return $?
+}
 
-# Remove containers created before a specific container
-# docker ps --before a1bz3768ez7g -q | xargs docker rm
+is-pg2-active () {
+	docker exec -it pg2 sh -c 'psql -c "select version();" -U postgres; exit $?;' &>/dev/null
+	return $?
+}
+
+active-pg () {
+    if is-pg1-active; then
+        ACTIVE_PG=pg1
+        return 0
+    else 
+        if is-pg2-active; then
+            ACTIVE_PG=pg2
+            return 0
+        else
+            unset ACTIVE_PG
+            return 1; # Neither
+        fi
+    fi
+}
+
+is-pg1-pitr () {
+	docker exec -it pg1 sh -c 'psql -c "select version();" -p 5433 -U postgres; exit $?;' &>/dev/null
+	return $?
+}
+
+is-pg2-pitr () {
+	docker exec -it pg2 sh -c 'psql -c "select version();" -p 5433 -U postgres; exit $?;' &>/dev/null
+	return $?
+}
+
+pitr-pg () {
+    if is-pg1-pitr; then
+        PITR_PG=pg1
+        return 0
+    else 
+        if is-pg2-pitr; then
+            PITR_PG=pg2
+            return 0
+        else
+            unset PITR_PG
+            return 1; # Neither
+        fi
+    fi
+}

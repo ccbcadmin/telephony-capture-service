@@ -9,11 +9,10 @@ function msg {
 function error-exit {
 	# Display error message and exit
 	msg "${1:-"Unknown Error"}" 1>&2
-	msg 'Switch Failed'
-	exit
+	exit 1
 }
 
-function enable-stream-replication {
+enable-stream-replication () {
 	docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres; exit $?;' &> /dev/null
 	if [ $? != 0 ]; then return 1; fi
 	docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres; exit $?;' &> /dev/null
@@ -133,9 +132,17 @@ if [ $? != 0 ]; then error-exit 'Unable to Stop Container '$FROM_PG; else msg $F
 docker exec -it barman sh -c 'chown -R barman.barman /'$TO_PG'_data; exit $?;' &> /dev/null
 if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
 
+# Modify permissions
+docker exec -it barman sh -c 'chmod -R 775 /'$TO_PG'_data; exit $?;' &> /dev/null
+if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
+
 # Use barman to recover the latest version of the database
 docker exec -it barman sh -c 'barman recover '$FROM_PG' latest /'$TO_PG'_data; exit $?;' &> /dev/null
 if [ $? != 0 ]; then error-exit $TO_PG' Recovery Failure'; else msg $TO_PG' Recovery Successful'; fi
+
+# 'barman' must be the owner of the recovery directory
+docker exec -it barman sh -c 'chown -R postgres.postgres /'$TO_PG'_data; exit $?;' &> /dev/null
+if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
 
 # Now start the incoming database container
 docker start $TO_PG &> /dev/null
@@ -165,3 +172,4 @@ docker update --restart unless-stopped $TO_PG &> /dev/null
 if [ $? != 0 ]; then error-exit 'Unable to Reconfigure '$TO_PG' Container to Auto Restart'; else msg $TO_PG' Auto Restart Enabled'; fi
 
 msg 'Postgres Container Switch Successful'
+exit 0

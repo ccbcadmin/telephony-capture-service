@@ -1,0 +1,44 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+
+source ./scripts/bash-functions
+
+if [ "$#" != 3 ]; then error-exit 'Usage: '$PROGNAME' [pg1 | pg2] target_time backup_id'; fi
+
+if [ $(validate-pg-selection $1) ]; then error-exit 'Usage: '$PROGNAME' [pg1 | pg2] target_time backup_id'; fi
+
+# Get the active pg container
+active-pg
+
+if [ "$ACTIVE_PG" == 'pg1' ]; then
+	PITR_PG='pg2'
+elif [ "$ACTIVE_PG" == 'pg2' ]; then
+	PITR_PG='pg1'
+else
+	error-exit 'Neither pg1 nor pg2 containers are active!'
+fi
+
+# Ensure what is to be the PITR container is removed for the moment
+docker stop $PITR_PG &> /dev/null
+docker-compose rm -f -v $PITR_PG &> /dev/null
+
+# 'barman' must be the owner of the recovery directory
+docker exec -it barman sh -c 'chown -R barman.barman /'$PITR_PG'_data; exit $?;' &> /dev/null
+if [ $? != 0 ]; then error-exit 'Ownership Change Failed'; fi
+
+# Next the point in time recovery
+docker exec -it barman sh -c 'barman recover --target-time='$2' '$1' '$3' /'$PITR_PG'_data; exit $?;'
+if [ $? != 0 ]; then error-exit $PITR_PG' Recovery Failure'; fi
+
+# Finally bring up the PITR container to listen on port 5433
+if ! docker-compose run -d --entrypoint 'gosu postgres postgres -p 5433' --name $PITR_PG $PITR_PG; then
+	error-exit 'Point-In-Time Recovery Failed'
+fi
+
+sleep 3
+
+enable-stream-replication $PITR_PG 5433
+if [ $? != 0 ]; then error-exit 'Point-In-Time Recovery Failure to Container '$PITR_PG; fi
+
+msg 'Point-In-Time Recovery to Container '$PITR_PG' Successful'
