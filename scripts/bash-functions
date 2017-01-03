@@ -217,7 +217,7 @@ start-container () {
 }
 
 start-pg-container () {
-    docker-compose run -d --entrypoint 'gosu postgres postgres -p '$2 --name $1 $1 2>&1 >/dev/null
+    docker-compose run -d --entrypoint 'gosu postgres postgres -p '$2 --name $1 $1
     if [ $? != 0 ]; then error-exit $1' Container Failed to Start'; else msg $1' Container Started'; fi
 }
 
@@ -230,7 +230,7 @@ stop-container () {
 validate-pg-selection () {
     if [ "$1" != 'pg1' ]; then
         if [ "$1" != 'pg2' ]; then
-            # $2 is the script usage 
+            # $2 is the $USAGE 
             error-exit "$2"
         fi
     fi

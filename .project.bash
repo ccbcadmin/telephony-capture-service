@@ -61,8 +61,6 @@ alias rm-dangling-volumes='docker volume rm $(docker volume ls -f dangling=true 
 alias ls-exited='docker ps -aq -f status=exited'
 alias tcs-down='docker-compose down'
 alias tcs-down-v='docker-compose down -v'
-alias psql1='docker exec -it pg1 psql --username postgres'
-alias psql2='docker exec -it pg2 psql --username postgres'
 alias pg1-exec='docker exec -it pg1 /bin/bash'
 alias pg2-exec='docker exec -it pg2 /bin/bash'
 alias tcsup='docker-compose up --build -d'
@@ -118,39 +116,4 @@ tms-simulator ()
         return 1;
     fi
     docker-compose -f docker-compose.yml up -d --no-build --remove-orphans tms-simulator
-}
-
-is-pg1-active () {
-	docker exec -it pg1 sh -c 'psql -c "select version();" -U postgres; exit $?;' &>/dev/null
-	return $?
-}
-
-is-pg2-active () {
-	docker exec -it pg2 sh -c 'psql -c "select version();" -U postgres; exit $?;' &>/dev/null
-	return $?
-}
-
-is-pg1-pitr () {
-	docker exec -it pg1 sh -c 'psql -c "select version();" -p 5433 -U postgres; exit $?;' &>/dev/null
-	return $?
-}
-
-is-pg2-pitr () {
-	docker exec -it pg2 sh -c 'psql -c "select version();" -p 5433 -U postgres; exit $?;' &>/dev/null
-	return $?
-}
-
-pitr-pg () {
-    if is-pg1-pitr; then
-        PITR_PG=pg1
-        return 0
-    else 
-        if is-pg2-pitr; then
-            PITR_PG=pg2
-            return 0
-        else
-            unset PITR_PG
-            return 1; # Neither
-        fi
-    fi
 }

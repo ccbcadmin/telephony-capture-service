@@ -11,11 +11,11 @@ validate-pg-selection $1 "$USAGE"
 # Start from a clean sheet
 docker-compose down &> /dev/null
 
-start-pg-container $1 5432; sleep 3;
+start-pg-container $1 5432;
 
 docker-compose run -d --name pbx-interface pbx-interface &> /dev/null
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
-enable-stream-replication $1 5432
+# enable-stream-replication $1 5432
 
 echo 'TCS Started, Active Postgres Container: '$1
