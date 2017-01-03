@@ -64,7 +64,7 @@ alias tcs-down-v='docker-compose down -v'
 alias pg1-exec='docker exec -it pg1 /bin/bash'
 alias pg2-exec='docker exec -it pg2 /bin/bash'
 alias tcsup='docker-compose up --build -d'
-alias barman='docker exec -it barman /bin/bash'
+alias barman-exec='docker exec -it barman /bin/bash'
 alias tcsvers='echo $TCS_VERSION'
 
 mangle () 

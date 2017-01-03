@@ -13,7 +13,7 @@ validate-backup_id $1 $2
 
 # Ensure that inflow to the database is stopped
 container-exists database-interface
-if [ "$?" == 0 ]; then stop-container database-interface; fi
+if container-exists database-interface; then stop-container database-interface; fi
 
 # Remove both pg containers
 remove-container pg1
@@ -28,8 +28,7 @@ start-pg-container $1 5432; sleep 2
 enable-stream-replication $1
 
 # Restore inflow to the database
-container-exists database-interface
-if [ "$?" == 0 ]; then start-container database-interface; fi
+if container-exists database-interface; then start-container database-interface; fi
 
 msg 'Postgres Recovery Complete'
 exit 0

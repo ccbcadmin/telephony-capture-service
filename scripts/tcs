@@ -1,11 +1,17 @@
 #!/bin/bash
 
 PROGNAME=$(basename $0)
-USAGE='Usage: '$PROGNAME' pg1|pg2'
+USAGE='Usage: '$PROGNAME' -v|--version|pg1|pg2'
 source ./scripts/bash-functions
 
 # ensure input params validity
 if [ "$#" != 1 ]; then error-exit "$USAGE"; fi
+
+if [ "$1" == '--version' ]; then
+	echo 'TCS Version'$TCS_VERSION
+	exit 0
+fi
+
 validate-pg-selection $1 "$USAGE"
 
 # Start from a clean sheet
