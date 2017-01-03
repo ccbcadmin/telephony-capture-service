@@ -10,18 +10,16 @@ is-pg2-active () {
 	return $?
 }
 
-active-pg () {
+pg-statuses () {
     if is-pg1-active; then
         ACTIVE_PG=pg1
-        return 0
-    else 
-        if is-pg2-active; then
-            ACTIVE_PG=pg2
-            return 0
-        else
-            unset ACTIVE_PG
-            return 1; # Neither
-        fi
+        PITR_PG=pg2
+    elif is-pg2-active; then
+        ACTIVE_PG=pg2
+        PITR_PG=pg1
+    else
+        unset ACTIVE_PG
+        unset PITR_PG
     fi
 }
 
@@ -54,71 +52,6 @@ msg () {
 	echo "${PROGNAME}: ${1:-"Message Not Provided"}" 1>&2
 }
 
-error-exit () {
-	# Display error message and exit
-	msg "${1:-"Unknown Error"}" 1>&2
-    msg 'Aborted'
-	exit
-}
-
-enable-stream-replication () {
-	if [ $# == 1 ]; then
-		local PORT=5432
-	elif [ $# == 2 ]; then
-		local PORT=$2
-	else
-		return 1
-	fi
-
-	docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres -p '$PORT'; exit $?;' &> /dev/null
-	if [ $? != 0 ]; then return 1; fi
-	docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres  -p '$PORT'; exit $?;' &> /dev/null
-	return $?
-}
-
-barman-create-slot () {
-	docker exec -it barman sh -c 'barman receive-wal --create-slot '$1'; exit $?;' &> /dev/null
-	return $?
-}
-
-barman-reset () {
-	docker exec -it barman sh -c 'barman receive-wal --reset '$1'; exit $?;' &> /dev/null
-	return $?
-}
-
-barman-cron () {
-	docker exec -it barman sh -c 'barman cron; exit $?;' &> /dev/null
-	return $?
-}
-
-barman-check () {
-	docker exec -it barman sh -c 'ps -ef | grep pg_receivexlog | grep -v grep; exit $?;' > /dev/null
-	return $?
-}
-
-confirm-barman () {
-    # Minimally barman must be running
-    docker inspect --format='{{.State.Running}}' barman >> /dev/null
-    if [ $? != 0 ]; then error-exit 'barman MISSING'; fi
-
-    barman_running=$(docker inspect --format='{{.State.Running}}' barman)
-    if [ "$barman_running" == "false" ]; then error-exit 'barman STOPPED'; fi
-}
-
-validate-pg-selection () {
-    if [ "$1" != 'pg1' ]; then
-        if [ "$1" != 'pg2' ]; then
-            return 1
-        fi
-    fi
-    return 0
-}
-
-validate-backup_id () {
-    docker exec -it barman sh -c 'barman list-backup --minimal '$1' | grep -w '$2'; exit $?;' > /dev/null
-    return $?
-}
-
 change-pgdata-owner () {
     docker exec -it barman sh -c 'chown -R '$1'.'$1' /'$2'_data; exit $?;' &> /dev/null
     if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
@@ -127,4 +60,183 @@ change-pgdata-owner () {
 change-pgdata-permissions () {
     docker exec -it barman sh -c 'chmod -R 775 /'$1'_data; exit $?;' &> /dev/null
     if [ $? != 0 ]; then error-exit 'PGDATA Permissions Change Failed'; fi
+}
+
+# Ensure that a container is not restarted at boot time
+disable-restart () {
+    docker update --restart no $1 2>&1 >/dev/null
+}
+
+# Configure the container to auto restart in the case of a reboot
+enable-restart () {
+    docker update --restart unless-stopped $1 2>&1 >/dev/null
+    if [ $? != 0 ]; then 
+        error-exit 'Unable to Reconfigure '$1' Container to Auto Restart'; 
+    else 
+        msg $1' Auto Restart Enabled'; 
+    fi
+}
+
+enable-stream-replication () {
+
+	if [ "$#" == 1 ]; then
+		local PORT=5432
+	elif [ "$#" == 2 ]; then
+		local PORT=$2
+	else
+        error-exit 'enable-stream-replication: Incorrect number of parameters'
+	fi
+
+	docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres -p '$PORT' 2>&1 >/dev/null; exit $?;'
+    if [ $? != 0 ]; then error-exit $1' Failed to Alter archive_command'; fi
+	docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres  -p '$PORT' 2>&1 >/dev/null; exit $?;'
+    if [ $? != 0 ]; then error-exit $1' Failed to Reload Postgres';  fi
+    msg $1' Stream Replication Enabled';
+    sleep 3;
+
+    # postgres is ready; next ensure barman is too
+    barman-create-slot $1; sleep 2
+    barman-reset $1; sleep 2
+    barman-cron; sleep 2
+    barman-check $1;
+}
+
+error-exit () {
+	# Display error message and exit
+	msg "${1:-"Unknown Error"}" 1>&2
+    msg 'Aborted'
+	exit
+}
+
+barman-check () {
+	docker exec -it barman sh -c 'ps -ef | grep pg_receivexlog | grep -v grep; exit $?;' &> /dev/null
+	if [ $? != 0 ]; then
+
+         # If barman configuration fails, report why
+        docker exec -it barman sh -c 'barman check '$1'; exit $?;'
+
+        error-exit $1' Stream Replication Activation Failed';
+    else
+        msg $1' Stream Replication Activated';
+    fi
+}
+
+barman-create-slot () {
+	docker exec -it barman sh -c 'barman receive-wal --create-slot '$1' 2>&1 >/dev/null; exit $?;' 
+}
+
+barman-cron () {
+	docker exec -it barman sh -c 'barman cron 2>&1 >/dev/null; exit $?;'
+	return $?
+}
+
+barman-recover-latest () {
+
+    # barman needs ownership of the pgdata area
+    change-pgdata-owner barman $2
+
+    # Tweak unix permissions
+    change-pgdata-permissions $2
+
+    # Use barman to recover the latest backup for the selected pg container
+    docker exec -it barman sh -c 'barman recover '$1' latest /'$2'_data 2>&1 >/dev/null; exit $?;'
+    if [ $? != 0 ]; then error-exit $2' Recovery Failure'; else msg $2' Recovery Successful'; fi
+
+    # Ownership now passed to postgres
+    change-pgdata-owner postgres $2
+}
+
+barman-pitr () {
+
+    # barman needs ownership of the pgdata area
+    change-pgdata-owner barman $1
+
+    # Tweak unix permissions
+    change-pgdata-permissions $1
+
+    # Do the recovery
+    if [ "$#" == 3 ]; then
+        docker exec -it barman sh -c 'barman recover --target-time '$3' '$1' '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'
+        if [ $? != 0 ]; then error-exit $1' Recovery Failure'; else msg $1' Recovery Successful'; fi
+    elif [ "$#" == 4 ]; then
+        docker exec -it barman sh -c 'barman recover --target-time '$4' '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'
+        if [ $? != 0 ]; then error-exit $1' Recovery Failure'; else msg $1' Recovery Successful'; fi
+    else
+        error-exit 'barman-pitr: Incorrect number of parameters'
+    fi
+
+    # Ownership passed to postgres
+    change-pgdata-owner postgres $1
+}
+
+barman-reset () {
+	docker exec -it barman sh -c 'barman receive-wal --reset '$1'; exit $?;' &> /dev/null
+	if [ $? != 0 ]; then
+        error-exit $1' Failed to Reset Stream Replication';
+    else
+        msg $1' Stream Replication Reset';
+    fi
+}
+
+container-exists () {
+    docker inspect --format='{{.State.Running}}' $1 &> /dev/null
+    return $?
+}
+
+confirm-barman () {
+    # Minimally barman must be running
+    docker inspect --format='{{.State.Running}}' barman &> /dev/null
+    if [ $? != 0 ]; then error-exit 'barman GONE'; fi
+
+    barman_running=$(docker inspect --format='{{.State.Running}}' barman)
+    if [ "$barman_running" == "false" ]; then error-exit 'barman STOPPED'; fi
+}
+
+remove-container () {
+	# If there is no such container, then nothing to do
+    container-exists $1
+    if [ $? == 0 ]; then
+        docker stop --time 10 $1 2>&1 >/dev/null
+	    docker-compose rm -f -v $1 &>/dev/null
+        msg $1' Container Removed'
+    fi
+}
+
+create-container () {
+    docker-compose run -d --name $1 $1 2>&1 >/dev/null
+    if [ $? != 0 ]; then error-exit $1' Startup Failure'; else msg $1' Started'; fi
+
+    enable-restart $1
+}
+
+start-container () {
+    docker start $1 &> /dev/null
+    if [ $? != 0 ]; then error-exit 'Unable to Start Container '$1; else msg $1' Container Started'; fi
+
+    enable-restart $1
+}
+
+start-pg-container () {
+    docker-compose run -d --entrypoint 'gosu postgres postgres -p '$2 --name $1 $1 2>&1 >/dev/null
+    if [ $? != 0 ]; then error-exit $1' Container Failed to Start'; else msg $1' Container Started'; fi
+}
+
+stop-container () {
+    docker-compose stop $1 &> /dev/null
+    msg $1' Stopped';
+    disable-restart $1
+}
+
+validate-pg-selection () {
+    if [ "$1" != 'pg1' ]; then
+        if [ "$1" != 'pg2' ]; then
+            # $2 is the script usage 
+            error-exit "$2"
+        fi
+    fi
+}
+
+validate-backup_id () {
+    docker exec -it barman sh -c 'barman list-backup --minimal '$1' | grep -w '$2'; exit $?;' > /dev/null
+    if [ $? != 0 ]; then error-exit 'Unknown '$1' backup_id '$2; fi
 }

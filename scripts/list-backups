@@ -1,17 +1,7 @@
 #!/bin/bash
 
 PROGNAME=$(basename $0)
-
-function msg {
-	echo "${PROGNAME}: ${1:-"Message Not Provided"}" 1>&2
-}
-
-function error-exit {
-	# Display error message and exit
-	msg "${1:-"Unknown Error"}" 1>&2
-	msg 'Switch Failed'
-	exit
-}
+source ./scripts/bash-functions
 
 docker exec -it barman sh -c 'barman list-backup all' | grep -v FAILED | grep -v OBSOLETE
 exit $?

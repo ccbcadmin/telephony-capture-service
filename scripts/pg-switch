@@ -2,174 +2,65 @@
 
 PROGNAME=$(basename $0)
 
-function msg {
-	echo "${PROGNAME}: ${1:-"Message Not Provided"}" 1>&2
-}
+source ./scripts/bash-functions
 
-function error-exit {
-	# Display error message and exit
-	msg "${1:-"Unknown Error"}" 1>&2
-	exit 1
-}
+postgres-rollback () {
 
-enable-stream-replication () {
-	docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres; exit $?;' &> /dev/null
-	if [ $? != 0 ]; then return 1; fi
-	docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres; exit $?;' &> /dev/null
-	return $?
-}
+	# If neither pg container is running, then try to bring the original back to life
+	pg-statuses
 
-function barman-create-slot {
-	docker exec -it barman sh -c 'barman receive-wal --create-slot '$1'; exit $?;' &> /dev/null
-	return $?
-}
-
-function barman-reset {
-	docker exec -it barman sh -c 'barman receive-wal --reset '$1'; exit $?;' &> /dev/null
-	return $?
-}
-
-function barman-cron {
-	docker exec -it barman sh -c 'barman cron; exit $?;' &> /dev/null
-	return $?
-}
-
-function barman-check {
-	docker exec -it barman sh -c 'ps -ef | grep pg_receivexlog | grep -v grep; exit $?;' &> /dev/null
-	return $?
-}
-
-function postgres-rollback {
-
-	# If neither pg container is running, then we have to bring one back to life
-	pg1_running=$(docker inspect --format='{{.State.Running}}' pg1)
-	pg2_running=$(docker inspect --format='{{.State.Running}}' pg2)
-
-	if [[ "$pg1_running" != "true" && "$pg2_running" != "true" ]]; then
-
-		# Houston, we have a problem
+	if [ -z "$ACTIVE_PG" ]; then
 		# Attempt to start the container that was originally supporting the mission
-		docker start $FROM_PG
+		start-pg-container $FROM_PG 5432
 		if [ $? != 0 ]; then
 			msg 'Unable to restart the original container'; 
 			msg 'WARNING: TCS is partially disabled';
 			exit
 		else
-			# Wait a bit and then check that the container is up and running
-			sleep 5
-			pg_running=$(docker inspect --format='{{.State.Running}}' $FROM_PG)
+			# Check that the container is up and running
+			sleep 2; pg_running=$(docker inspect --format='{{.State.Running}}' $FROM_PG)
 			if [ pg_running != "true" ]; then
 				msg 'WARNING: TCS is partially disabled'
 				exit
 			fi
 			# When the container is back up, ensure stream replication is enabled
-			sleep 5
-			if enable-stream-replication $FROM_PG ; then echo 'Stream Replication Enabled: '$FROM_PG; else echo 'Failed to Enable Stream Replication: '$FROM_PG; fi
-			sleep 5
-			barman-create-slot $FROM_PG
-			sleep 5
-			barman-reset $FROM_PG
-			sleep
-			barman-cron $FROM_PG		
+			sleep 2;
+			enable-stream-replication $FROM_PG		
 		fi
 	fi
 
-	docker start database-interface &> /dev/null
-	if [ $? != 0 ]; then msg 'Unable to restart the database inflow'; else msg 'Database Inflow Restarted'; fi
+	start-container database-interface
 }
 
 trap postgres-rollback EXIT;
 
-# Decide which direction the switch is to go
-docker inspect --format='{{.State.Running}}' pg1 >> /dev/null
-if [ $? != 0 ]; then error-exit 'Container pg1 missing'; fi
+# Load ACTIVE_PG and PITR_PG with the following
+pg-statuses
 
-docker inspect --format='{{.State.Running}}' pg2 >> /dev/null
-if [ $? != 0 ]; then error-exit 'Container pg2 missing'; fi
-
-pg1_running=$(docker inspect --format='{{.State.Running}}' pg1)
-pg2_running=$(docker inspect --format='{{.State.Running}}' pg2)
-
-if [ "$pg1_running" == "$pg2_running" ]; then
-	if [ "$pg1_running" == "true" ]; then
-		error-exit $PROGNAME': Confused state: Both Postgres containers are running.';
-	else
-		error-exit $PROGNAME': Confused state: Neither Postgres container is running.';    
-	fi
-fi
-
-# The pg containers are in the correct state, therefore proceed
-if [ "$pg1_running" == "true" ]; then
-	FROM_PG='pg1'
-	TO_PG='pg2'
-else
-	FROM_PG='pg2'
-	TO_PG='pg1'
-fi
-
+FROM_PG=$ACTIVE_PG
+TO_PG=$PITR_PG
 msg 'Begin Postgres Container Switch from '$FROM_PG' to '$TO_PG;
 
 # Stop the inflow to the database
-docker stop database-interface >> /dev/null
+stop-container database-interface
 
-# Ensure that inflows to the database are stopped
-docker stop database-interface &> /dev/null
-if [ $? != 0 ]; then error-exit 'Unable to close inflow'; else msg 'Database Inflow Suspended'; fi
+# Ensure the target container is quiet
+remove-container $TO_PG
 
 # Do a final backup
-docker exec -it barman sh -c 'barman backup '$FROM_PG'; exit $?;' &> /dev/null
+docker exec -it barman sh -c 'barman backup '$FROM_PG' 2>&1 >/dev/null; exit $?;'
 if [ $? != 0 ]; then error-exit $FROM_PG' Final Backup Failed'; else msg $FROM_PG' Final Backup Successful'; fi
 
-# Configure the outgoing container so that it will not be restarted after a reboot
-docker update --restart no $FROM_PG &> /dev/null
-if [ $? != 0 ]; then error-exit 'Unable to Disable Auto Restart Container '$FROM_PG; else msg $FROM_PG' Auto Restart Disabled'; fi
+# Shutdown the outgoing container
+remove-container $FROM_PG
 
-# Now finally shutdown the outgoing container
-docker stop $FROM_PG &> /dev/null
-if [ $? != 0 ]; then error-exit 'Unable to Stop Container '$FROM_PG; else msg $FROM_PG' Stopped'; fi
-
-# 'barman' must be the owner of the recovery directory
-docker exec -it barman sh -c 'chown -R barman.barman /'$TO_PG'_data; exit $?;' &> /dev/null
-if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
-
-# Modify permissions
-docker exec -it barman sh -c 'chmod -R 775 /'$TO_PG'_data; exit $?;' &> /dev/null
-if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
-
-# Use barman to recover the latest version of the database
-docker exec -it barman sh -c 'barman recover '$FROM_PG' latest /'$TO_PG'_data; exit $?;' &> /dev/null
-if [ $? != 0 ]; then error-exit $TO_PG' Recovery Failure'; else msg $TO_PG' Recovery Successful'; fi
-
-# 'barman' must be the owner of the recovery directory
-docker exec -it barman sh -c 'chown -R postgres.postgres /'$TO_PG'_data; exit $?;' &> /dev/null
-if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
+barman-recover-latest $FROM_PG $TO_PG
 
 # Now start the incoming database container
-docker start $TO_PG &> /dev/null
-if [ $? != 0 ]; then error-exit 'Unable to Start Container'$TO_PG; else msg $TO_PG' Started'; fi
-
-sleep 2
+start-pg-container $TO_PG 5432; sleep 5;
 
 # Ensure stream replication is enabled
-if enable-stream-replication $TO_PG ; then msg $TO_PG' Stream Replication Enabled'; else error-exit $TO_PG' Failed to Enable Stream Replication'; fi
-
-if barman-create-slot $TO_PG ; then msg $TO_PG' Stream Replication Slot Created'; else error-exit $TO_PG' Failed to Create Stream Replication Slot'; fi
-
-sleep 2
-
-if barman-reset $TO_PG ; then msg $TO_PG' Stream Replication Reset'; else error-exit $TO_PG' Failed to Reset Stream Replication'; fi
-
-sleep 2
-
-barman-cron
-
-sleep 2
-
-if barman-check $TO_PG ; then msg $TO_PG' Stream Replication Activation Successful'; else error-exit $TO_PG' Stream Replication Activation Failed'; fi
-
-# Configure the incoming container to auto restart in the case of a reboot
-docker update --restart unless-stopped $TO_PG &> /dev/null
-if [ $? != 0 ]; then error-exit 'Unable to Reconfigure '$TO_PG' Container to Auto Restart'; else msg $TO_PG' Auto Restart Enabled'; fi
+enable-stream-replication $TO_PG 5432;
 
 msg 'Postgres Container Switch Successful'
 exit 0

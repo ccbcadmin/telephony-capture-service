@@ -1,72 +1,35 @@
 #!/bin/bash
 
 PROGNAME=$(basename $0)
+USAGE='Usage: '$PROGNAME' pg1|pg2 backup_id [target_time]'
 
 source ./scripts/bash-functions
 
-if [ "$#" != 3 ]; then error-exit 'Usage: '$PROGNAME' [pg1 | pg2] backup_id target_time'; fi
+if [ "$#" != 3 ]; then error-exit "$USAGE"; fi
 
-validate-pg-selection $1
-if [ $? != 0 ]; then error-exit 'Usage: '$PROGNAME' [pg1 | pg2] backup_id target_time'; fi
+validate-pg-selection $1 "$USAGE"
 
-validate-backup_id $1 $3
-if [ $? != 0 ]; then error-exit 'Unknown '$1' backup_id '$3; fi
-
-active-pg
-if [ $? != 0 ]; then error-exit 'Neither pg1 Nor pg2 Active'; fi
+validate-backup_id $1 $2
 
 # Ensure that inflows to the database are stopped
-docker stop database-interface &> /dev/null
-if [ $? != 0 ]; then error-exit 'Unable to Suspend Database Inflow'; else msg 'Database Inflow Suspended'; fi
+stop-container database-interface
 
-# Now finally shutdown the outgoing container
-docker stop $ACTIVE_PG &> /dev/null
-if [ $? != 0 ]; then error-exit 'Unable to Stop Container '$ACTIVE_PG; else msg $ACTIVE_PG' Container Stopped'; fi
+# Get the statuses of the Postgres containers
+pg-statuses
 
-# 'barman' must be the owner of the recovery directory
-docker exec -it barman sh -c 'chown -R barman.barman /'$ACTIVE_PG'_data; exit $?;' &> /dev/null
-if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
+# Shutdown the outgoing container
+remove-container $ACTIVE_PG
 
-# Modify permissions
-docker exec -it barman sh -c 'chmod -R 775 /'$ACTIVE_PG'_data; exit $?;' &> /dev/null
-if [ $? != 0 ]; then error-exit 'PGDATA Permissions Change Failed'; fi
-
-# Use barman now the recovery
-docker exec -it barman sh -c 'barman recover --target-time='$3' '$1' '$2' /'$ACTIVE_PG'_data; exit $?;' > /dev/null
-if [ $? != 0 ]; then error-exit $ACTIVE_PG' Recovery Failure'; else msg $ACTIVE_PG' Recovery Successful'; fi
-
-# 'postgres' must be the owner of the recovery directory
-docker exec -it barman sh -c 'chown -R postgres.postgres /'$ACTIVE_PG'_data; exit $?;' &> /dev/null
-if [ $? != 0 ]; then error-exit 'PGDATA Ownership Change Failed'; fi
+# Do the recovery
+barman-pitr $ACTIVE_PG $1 $2 $3
 
 # Restart the container
-docker start $ACTIVE_PG &> /dev/null
-if [ $? != 0 ]; then error-exit 'Unable to Start Container'$ACTIVE_PG; else msg $ACTIVE_PG' Started'; fi
+start-pg-container $ACTIVE_PG 5432; sleep 2; 
 
-sleep 2
-
-# Re-enable stream replication
-if enable-stream-replication $ACTIVE_PG ; then msg $ACTIVE_PG' Stream Replication Enabled'; else error-exit $ACTIVE_PG' Failed to Enable Stream Replication'; fi
-
-if barman-create-slot $ACTIVE_PG ; then msg $ACTIVE_PG' Stream Replication Slot Created'; else error-exit $ACTIVE_PG' Failed to Create Stream Replication Slot'; fi
-
-sleep 2
-
-if barman-reset $ACTIVE_PG ; then msg $ACTIVE_PG' Stream Replication Reset'; else error-exit $ACTIVE_PG' Failed to Reset Stream Replication'; fi
-
-barman-cron
-
-sleep 2
-
-if barman-check $ACTIVE_PG ; then msg $ACTIVE_PG' Stream Replication Activated'; else error-exit $ACTIVE_PG' Stream Replication Activation Failed'; fi
-
-# Configure the incoming container to auto restart in the case of a reboot
-docker update --restart unless-stopped $ACTIVE_PG &> /dev/null
-if [ $? != 0 ]; then error-exit 'Unable to Reconfigure '$ACTIVE_PG' Container to Auto Restart'; else msg $ACTIVE_PG' Auto Restart Enabled'; fi
+enable-stream-replication $ACTIVE_PG
 
 # Restart the inflow to the database
-docker start database-interface &> /dev/null
-if [ $? != 0 ]; then msg 'Unable to restart the database inflow'; else msg 'Database Inflow Restarted'; fi
+start-container database-interface
 
-msg 'Postgres Container Rollback Successful'
+msg 'Postgres Container Rollback Complete'
 exit 0

@@ -130,21 +130,6 @@ is-pg2-active () {
 	return $?
 }
 
-active-pg () {
-    if is-pg1-active; then
-        ACTIVE_PG=pg1
-        return 0
-    else 
-        if is-pg2-active; then
-            ACTIVE_PG=pg2
-            return 0
-        else
-            unset ACTIVE_PG
-            return 1; # Neither
-        fi
-    fi
-}
-
 is-pg1-pitr () {
 	docker exec -it pg1 sh -c 'psql -c "select version();" -p 5433 -U postgres; exit $?;' &>/dev/null
 	return $?

@@ -1,48 +1,21 @@
 #!/bin/bash
 
 PROGNAME=$(basename $0)
+USAGE='Usage: '$PROGNAME' pg1|pg2'
+source ./scripts/bash-functions
 
-if [ $# != 1 ]; then
-	echo 'Usage: '$PROGNAME' pg1 | pg2'
-	exit 1
-fi
+# ensure input params validity
+if [ "$#" != 1 ]; then error-exit "$USAGE"; fi
+validate-pg-selection $1 "$USAGE"
 
-if [ $1 != 'pg1' ]; then
-	if [ $1 != 'pg2' ]; then
-		echo 'Usage: '$PROGNAME' pg1 | pg2'
-		exit 1
-	fi
-fi
-
-function msg {
-	echo "${PROGNAME}: ${1:-"Message Not Provided"}" 1>&2
-}
-
-function error-exit {
-	# Display error message and exit
-	msg "${1:-"Unknown Error"}" 1>&2
-	msg $PROGNAME' Failure'
-	docker-compose down &> /dev/null
-	exit
-}
-
+# Start from a clean sheet
 docker-compose down &> /dev/null
 
-if [ $1 == 'pg1' ]; then
-	docker-compose run -d --name pg1 pg1 &> /dev/null
-	if [ $? != 0 ]; then error-exit 'Failed to Start Container pg1'; fi
-	docker-compose create pg2 &> /dev/null
-	if [ $? != 0 ]; then error-exit 'Failed to Create Container pg2'; fi
-else
-	docker-compose create pg1 &> /dev/null
-	if [ $? != 0 ]; then error-exit 'Failed to Create Container pg1'; fi
-	docker-compose run -d --name pg2 pg2 &> /dev/null
-	if [ $? != 0 ]; then error-exit 'Failed to Start Container pg2'; fi
-fi
-
-sleep 2;
+start-pg-container $1 5432; sleep 3;
 
 docker-compose run -d --name pbx-interface pbx-interface &> /dev/null
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
+
+enable-stream-replication $1 5432
 
 echo 'TCS Started, Active Postgres Container: '$1
