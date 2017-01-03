@@ -7,7 +7,7 @@ source ./scripts/bash-functions
 # ensure input params validity
 if [ "$#" != 1 ]; then error-exit "$USAGE"; fi
 
-if [ "$1" == '--version' ]; then
+if [ "$1" == '--version' ] || [ "$1" == '-v' ]; then
 	echo 'TCS Version'$TCS_VERSION
 	exit 0
 fi

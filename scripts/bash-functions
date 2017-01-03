@@ -214,11 +214,9 @@ stop-container () {
 }
 
 validate-pg-selection () {
-    if [ "$1" != 'pg1' ]; then
-        if [ "$1" != 'pg2' ]; then
-            # $2 is the $USAGE 
-            error-exit "$2"
-        fi
+    if [ "$1" != 'pg1' ] && [ "$1" != 'pg2' ]; then
+        # $2 is the $USAGE
+        error-exit "$2"
     fi
 }
 
