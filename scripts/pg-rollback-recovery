@@ -12,7 +12,7 @@ validate-pg-selection $1 "$USAGE"
 validate-backup_id $1 $2
 
 # Ensure that inflows to the database are stopped
-stop-container database-interface
+if container-exists database-interface; then stop-container database-interface; fi
 
 # Get the statuses of the Postgres containers
 pg-statuses
@@ -29,7 +29,7 @@ start-pg-container $ACTIVE_PG 5432; sleep 2;
 enable-stream-replication $ACTIVE_PG
 
 # Restart the inflow to the database
-start-container database-interface
+if container-exists database-interface; then start-container database-interface; fi
 
-msg 'Postgres Container Rollback Complete'
+msg 'Postgres Rollback Complete'
 exit 0
