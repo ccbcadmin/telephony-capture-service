@@ -19,7 +19,7 @@ docker-compose down &> /dev/null
 
 # Ensure we have the correct image and, if not, go get it
 if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
-if !docker pull ccbcadmin/tcs-image$TCS_VERSION; then exit 1; fi
+if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then exit 1; fi
 
 # First start the selected Postgres container
 docker-compose -f docker-compose.yml up -d --no-build --remove-orphans $1 &> /dev/null
