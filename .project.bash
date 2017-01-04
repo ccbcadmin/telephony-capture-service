@@ -31,7 +31,9 @@ if [ $# -eq 1 ]; then
         echo 'TCS Version must be of the form vX.Y, where X and Y are both integers'
         return 1
     else
-        # Record the newly set version number
+        # Ensure that the TCS software is up-to-date
+        git pull
+        git checkout tags/$1 -b $1
         echo 'export TCS_VERSION=:'$1 > ~/.tcs.version
     fi
 fi
