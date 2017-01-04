@@ -7,33 +7,18 @@ PROGNAME=$(basename $0)
 # Allow access to bash scripts
 export PATH=./scripts:$PATH
 
-function error_exit
-{
-#	----------------------------------------------------------------
-#	Function for exit due to fatal program error
-#		Accepts 1 argument:
-#			string containing descriptive error message
-#	----------------------------------------------------------------
-	echo "${PROGNAME}: ${1:-"Unknown Error"}" 1>&2
-	return 1
-}
-
-if [ $# -gt 1 ]
-then
-        echo "Usage : tcsproj [ TCS Version ]"
-        return 1
-fi
+if [ $# -gt 1 ]; then echo "Usage : tcsproj [ TCS Version ]"; exit 1; fi
 
 # If a version number is provided, then ensure that it is of the required form
 VERSION_REGEX="^v[0-9]+\.[0-9]+$"
 if [ $# -eq 1 ]; then
     if ! [[ $1 =~ $VERSION_REGEX ]]; then
         echo 'TCS Version must be of the form vX.Y, where X and Y are both integers'
-        return 1
+        exit 1
     else
-        # Ensure that the TCS software is up-to-date
-        git pull
-        git checkout tags/$1 -b $1
+        # Ensure TCS software is up-to-date
+        if !git pull 2>&1 >/dev/null; then error-exit 'Pull from GitHub Failed'; fi
+        if !git checkout tags/$1 -b $1 2>&1 >/dev/null; then error-exit 'Checkout Failed'; fi
         echo 'export TCS_VERSION=:'$1 > ~/.tcs.version
     fi
 fi

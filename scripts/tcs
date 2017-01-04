@@ -14,15 +14,12 @@ fi
 
 validate-pg-selection $1 "$USAGE"
 
-# Start from a clean sheet
+# Start with a clean sheet
 docker-compose down &> /dev/null
 
 # Ensure we have the correct image and, if not, go get it
 if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
-
-if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then
-    exit 1
-fi
+if !docker pull ccbcadmin/tcs-image$TCS_VERSION; then exit 1; fi
 
 # First start the selected Postgres container
 docker-compose -f docker-compose.yml up -d --no-build --remove-orphans $1 &> /dev/null
@@ -31,4 +28,4 @@ if [ $? != 0 ]; then error-exit 'Failed to Start Container '$1; fi
 docker-compose -f docker-compose.yml up -d --no-build --remove-orphans pbx-interface &> /dev/null
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
-echo 'TCS Started, Running Postgres Container: '$1
+echo 'TCS Started, Active Postgres Container: '$1
