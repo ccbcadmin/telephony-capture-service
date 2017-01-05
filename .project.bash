@@ -17,8 +17,8 @@ if [ $# -eq 1 ]; then
         exit 1
     else
         # Ensure TCS software is up-to-date
-        if ! git pull 2>&1 >/dev/null; then error-exit 'Pull from GitHub Failed'; fi
-        if ! git checkout tags/$1 -b $1 2>&1 >/dev/null; then error-exit 'Checkout Failed'; fi
+        if ! git pull 2>&1 >/dev/null; then msg 'Pull from GitHub Failed'; return 1; fi
+        if ! git checkout tags/$1 -b $1 2>&1 >/dev/null; then msg 'Checkout Failed'; return 1; fi
         echo 'export TCS_VERSION=:'$1 > ~/.tcs.version
     fi
 fi
