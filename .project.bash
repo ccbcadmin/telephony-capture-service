@@ -4,6 +4,9 @@
 
 PROGNAME=$(basename $0)
 
+# various useful bash functions
+source ./scripts/bash-functions
+
 # Allow access to bash scripts
 export PATH=./scripts:$PATH
 
@@ -26,9 +29,6 @@ fi
 # Load TCS environment variables
 source ~/.tcs.bash
 source ~/.tcs.version
-
-# various useful bash functions
-source ./scripts/bash-functions
 
 echo 'TCS Version'$TCS_VERSION
 
