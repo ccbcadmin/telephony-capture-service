@@ -1,9 +1,0 @@
---- Copying files at Fri Jan  6 22:46:10 UTC 2017
-INSTALLED plugins/git.jpi : 2.3.5
-INSTALLED plugins/git-client.jpi : 1.16.1
-INSTALLED plugins/scm-api.jpi : 0.2
-INSTALLED plugins/greenballs.jpi : 1.14
-INSTALLED init.groovy.d/tcp-slave-agent-port.groovy
---- Copying files at Fri Jan  6 22:48:35 UTC 2017
---- Copying files at Fri Jan  6 22:55:45 UTC 2017
---- Copying files at Fri Jan  6 23:01:24 UTC 2017
