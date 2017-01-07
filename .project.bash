@@ -22,13 +22,13 @@ if [ $# -eq 1 ]; then
         # Ensure TCS software is up-to-date
         if ! git pull 2>&1 >/dev/null; then msg 'Pull from GitHub Failed'; return 1; fi
         if ! git checkout tags/$1 -b $1 2>&1 >/dev/null; then msg 'Checkout Failed'; return 1; fi
-        echo 'export TCS_VERSION=:'$1 > ~/.tcs.version
+        echo 'export TCS_VERSION=:'$1 > ./.tcs.version
     fi
 fi
 
 # Load TCS environment variables
-source ~/.tcs.bash
-source ~/.tcs.version
+source ./.tcs.env
+source ./.tcs.version
 
 echo 'TCS Version'$TCS_VERSION
 

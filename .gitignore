@@ -7,4 +7,6 @@ SQL/
 docker-compose.env
 postgres_data/
 jenkins/
+.tcs.env
+.tcs.version
 ~$*
