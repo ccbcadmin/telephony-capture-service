@@ -6,4 +6,5 @@ smdr-data-*/
 SQL/
 docker-compose.env
 postgres_data/
+jenkins/
 ~$*
