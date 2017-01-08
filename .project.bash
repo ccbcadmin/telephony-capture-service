@@ -5,6 +5,8 @@
 PROGNAME=$(basename $0)
 
 # various useful bash functions
+echo '11111'
+
 source ./scripts/bash-functions
 
 # Allow access to bash scripts
