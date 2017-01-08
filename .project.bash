@@ -27,7 +27,9 @@ if [ $# -eq 1 ]; then
 fi
 
 # Load TCS environment variables
+echo '11111'
 source ./.tcs.env
+echo '22222'
 source ./.tcs.version
 
 echo 'TCS Version'$TCS_VERSION
