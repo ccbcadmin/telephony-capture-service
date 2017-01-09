@@ -93,7 +93,7 @@ services:
     build: 
       context: .
       dockerfile: ./src/tcs-image/Dockerfile
-    image: ccbcadmin/tcs-image${TCS_VERSION}
+    image: ccbcadmin/tcs-image
     container_name: tcs-image
 
   tms-interface:
