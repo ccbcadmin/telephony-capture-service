@@ -35,7 +35,7 @@ services:
     entrypoint: ["node", "./lib/database-interface/database-interface.js"]
   
   mangle:
-    image: ccbcadmin/tcs-image$
+    image: ccbcadmin/tcs-image
     container_name: mangle
     privileged: false
     volumes:
