@@ -8,7 +8,7 @@ volumes:
 services:
 
   barman:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
+    image: ccbcadmin/tcs-image
     restart: unless-stopped
     container_name: barman
     privileged: true
@@ -22,7 +22,7 @@ services:
     command: ["node", "./lib/backup-scheduler/backup-scheduler.js"]
 
   database-interface:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
+    image: ccbcadmin/tcs-image
     container_name: database-interface
     restart: unless-stopped
     privileged: true
@@ -35,7 +35,7 @@ services:
     entrypoint: ["node", "./lib/database-interface/database-interface.js"]
   
   mangle:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
+    image: ccbcadmin/tcs-image$
     container_name: mangle
     privileged: false
     volumes:
@@ -43,7 +43,7 @@ services:
     entrypoint: ["node", "./lib/mangle/mangle.js"]
 
   pbx-interface:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
+    image: ccbcadmin/tcs-image
     container_name: pbx-interface
     restart: unless-stopped
     privileged: true
@@ -56,20 +56,8 @@ services:
       - database-interface
     entrypoint: ["node", "./lib/pbx-interface/pbx-interface.js"]
 
-  pbx-simulator:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: pbx-simulator
-    privileged: false
-    network_mode: "host"
-    volumes:
-      - /home/smdr-data:/smdr-data
-    environment:
-      - PBX_SIMULATOR_SOURCE_DIRECTORY
-      - TCS_PORT=3456
-    entrypoint: ["node", "./lib/pbx-simulator/pbx-simulator.js"]
-
   pg1:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
+    image: ccbcadmin/tcs-image
     container_name: pg1
     restart: unless-stopped
     privileged: true
@@ -82,7 +70,7 @@ services:
     command: ["postgres"]
 
   pg2:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
+    image: ccbcadmin/tcs-image
     container_name: pg2
     restart: unless-stopped
     privileged: true
@@ -94,18 +82,6 @@ services:
       - POSTGRES_PASSWORD
     command: ["postgres"]
 
-  jenkins:
-    build:
-      context: .
-      dockerfile: ./src/jenkins/Dockerfile
-    container_name: jenkins
-    restart: unless-stopped
-    privileged: true
-    network_mode: "host"
-    volumes:
-      - jenkins_data:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-
   rabbitmq:
     image: letsxo/rabbitmq
     container_name: rabbitmq
@@ -113,15 +89,8 @@ services:
     privileged: true
     network_mode: "host"
 
-  tcs-image:
-    build: 
-      context: .
-      dockerfile: ./src/tcs-image/Dockerfile
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: tcs-image
-
   tms-interface:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
+    image: ccbcadmin/tcs-image
     container_name: tms-interface
     restart: unless-stopped
     privileged: true
@@ -131,12 +100,3 @@ services:
       - TMS_PORT
     entrypoint: ["node", "./lib/tms-interface/tms-interface.js"]
    
-  tms-simulator:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: tms-simulator
-    restart: unless-stopped
-    privileged: true
-    network_mode: "host"
-    environment:
-      - TMS_PORT
-    entrypoint: ["node", "./lib/tms-simulator/tms-simulator.js"]
