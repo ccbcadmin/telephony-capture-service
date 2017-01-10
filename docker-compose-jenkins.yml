@@ -10,7 +10,7 @@ services:
   barman:
     image: ccbcadmin/tcs-image
     restart: unless-stopped
-    container_name: barman
+    # container_name: barman
     privileged: true
     network_mode: "host"
     environment:
@@ -44,7 +44,7 @@ services:
 
   pbx-interface:
     image: ccbcadmin/tcs-image
-    container_name: pbx-interface
+    # container_name: pbx-interface
     restart: unless-stopped
     privileged: true
     network_mode: "host"
