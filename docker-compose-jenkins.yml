@@ -23,7 +23,7 @@ services:
 
   database-interface:
     image: ccbcadmin/tcs-image
-    container_name: database-interface
+    # container_name: database-interface
     restart: unless-stopped
     privileged: true
     network_mode: "host"
@@ -58,7 +58,7 @@ services:
 
   pg1:
     image: ccbcadmin/tcs-image
-    container_name: pg1
+    # container_name: pg1
     restart: unless-stopped
     privileged: true
     network_mode: "host"  
@@ -71,7 +71,7 @@ services:
 
   pg2:
     image: ccbcadmin/tcs-image
-    container_name: pg2
+    # container_name: pg2
     restart: unless-stopped
     privileged: true
     network_mode: "host"  
@@ -98,12 +98,12 @@ services:
 
   tms-interface:
     image: ccbcadmin/tcs-image
-    container_name: tms-interface
+    # container_name: tms-interface
     restart: unless-stopped
     privileged: true
     network_mode: "host"
     environment:
-      - TMS_HOST
-      - TMS_PORT
+      - TMS_HOST=localhost
+      - TMS_PORT=6543
     entrypoint: ["node", "./lib/tms-interface/tms-interface.js"]
    
