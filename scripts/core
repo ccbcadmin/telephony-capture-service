@@ -1,0 +1,48 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+USAGE='Usage: '$PROGNAME' -v|--version|pg1|pg2'
+source ./scripts/bash-functions
+
+# ensure input params validity
+if [ "$#" != 1 ]; then error-exit "$USAGE"; fi
+
+if [ "$1" == '--version' ] || [ "$1" == '-v' ]; then
+	echo 'TCS Version'$TCS_VERSION
+	exit 0
+fi
+
+validate-pg-selection $1 "$USAGE"
+
+COMPOSE_ARGS=" -f docker-compose-core.yml -p CORE "
+
+# Ensure we have the correct image and, if not, go get it
+if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
+if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then exit 1; fi
+
+# Start the selected Postgres container
+if ! container-exists $1; then
+	echo 'Starting '$1
+	docker-compose $COMPOSE_ARGS up -d $1
+	if [ $? != 0 ]; then error-exit 'Failed to Start Container '$1; fi
+fi
+
+# Start RabbitMQ
+if ! container-exists rabbitmq; then
+	docker-compose $COMPOSE_ARGS up -d --no-build rabbitmq
+	if [ $? != 0 ]; then error-exit 'Failed to Start Container RabbitMQ'; fi
+fi
+
+# Start barman
+if ! container-exists barman; then
+	docker-compose $COMPOSE_ARGS up -d --no-build barman
+	if [ $? != 0 ]; then error-exit 'Failed to Start Container barman'; fi
+fi
+
+# Start jenkins
+if ! container-exists jenkins; then
+	docker-compose $COMPOSE_ARGS up -d jenkins
+	if [ $? != 0 ]; then error-exit 'Failed to Start Container jenkins'; fi
+fi
+
+echo 'TCS Started, '$COMPOSE_PROJECT_NAME' Active Postgres Container: '$1

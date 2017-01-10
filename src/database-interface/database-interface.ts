@@ -14,6 +14,7 @@ const pgp = require('pg-promise')();
 const envalid = require('envalid');
 const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
+	DB_QUEUE: str(),
 	POSTGRES_PASSWORD: str()
 });
 
@@ -209,4 +210,4 @@ const dataSink = (msg): boolean => {
 	return true;
 }
 
-const databaseQueue = new Queue($.DATABASE_QUEUE, dataSink);
+const databaseQueue = new Queue(env.DB_QUEUE, dataSink);

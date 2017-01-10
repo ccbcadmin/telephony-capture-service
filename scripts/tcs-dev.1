@@ -11,9 +11,12 @@ validate-pg-selection $1 "$USAGE"
 # Start from a clean sheet
 docker-compose down &> /dev/null
 
+export COMPOSE_FILE=docker-compose.yml:docker-compose-prod.yml
+export COMPOSE_PROJECT_NAME=prod
+
 start-pg-container $1 5432;
 
-docker-compose run -d --name pbx-interface pbx-interface &> /dev/null
+docker-compose up -d pbx-interface
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
 # enable-stream-replication $1 5432

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+USAGE='Usage: '$PROGNAME' -v|--version|pg1|pg2'
+source ./scripts/bash-functions
+
+COMPOSE_ARGS=" -f docker-compose-core.yml -p CORE "
+
+docker-compose $COMPOSE_ARGS down

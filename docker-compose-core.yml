@@ -1,0 +1,74 @@
+version: '2'
+
+volumes:
+  postgres1_data: {}
+  postgres2_data: {}
+  jenkins_data: {}
+
+services:
+
+  barman:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: CORE-barman
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"
+    environment:
+      - BACKUP_SCHEDULE
+    volumes:
+      - postgres1_data:/pg1_data
+      - postgres2_data:/pg2_data
+      - ~/barman_home:/var/lib/barman
+    command: ["node", "./lib/backup-scheduler/backup-scheduler.js"]
+
+  pg1:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: CORE-pg1
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"  
+    volumes:
+      - postgres1_data:/var/lib/postgresql/data
+    entrypoint: ["/docker-entrypoint.sh"]
+    environment:
+      - POSTGRES_PASSWORD
+    command: ["postgres"]
+
+  pg2:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: CORE-pg2
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"  
+    volumes:
+      - postgres2_data:/var/lib/postgresql/data
+    entrypoint: ["/docker-entrypoint.sh"]
+    environment:
+      - POSTGRES_PASSWORD
+    command: ["postgres"]
+
+  jenkins:
+    build:
+      context: .
+      dockerfile: ./src/jenkins/Dockerfile
+    container_name: CORE-jenkins
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  rabbitmq:
+    image: letsxo/rabbitmq
+    container_name: CORE-rabbitmq
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"
+
+  tcs-image:
+    build: 
+      context: .
+      dockerfile: ./src/tcs-image/Dockerfile
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: tcs-image

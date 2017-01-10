@@ -13,7 +13,9 @@ const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
 	// Need the docker machine IP to link together the various Microservices
 	TMS_ACTIVE: num(),
-	TCS_PORT: num()
+	TCS_PORT: num(),
+	DB_QUEUE: str(),
+	TMS_QUEUE: str()
 });
 
 process.on('SIGTERM', () => {
@@ -56,10 +58,10 @@ const dataSink = (data: Buffer) => {
 }
 
 // Setup the queue to the TMS if needed
-tmsQueue = env.TMS_ACTIVE ? new Queue($.TMS_QUEUE) : null;
+tmsQueue = env.TMS_ACTIVE ? new Queue(env.TMS_QUEUE) : null;
 
 // Always need the database queue
-databaseQueue = new Queue($.DATABASE_QUEUE);
+databaseQueue = new Queue(env.DB_QUEUE);
 
 // Start listening for incoming messages
 new ServerSocket(routineName, env.TCS_PORT, dataSink);

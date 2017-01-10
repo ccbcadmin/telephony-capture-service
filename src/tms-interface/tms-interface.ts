@@ -19,7 +19,8 @@ const { str, num } = envalid;
 
 const env = envalid.cleanEnv(process.env, {
 	TMS_PORT: num(),
-	TMS_HOST: str()
+	TMS_HOST: str(),
+	TMS_QUEUE: str()
 });
 
 console.log ('networkIP: ', networkIP);
@@ -54,7 +55,7 @@ tmsSocketConnect$.subscribe((data) => {
 	reconnectSubscription = null;
 
 	// (Re-)establish a connect to the queue
-	tmsQueue = new Queue($.TMS_QUEUE, dataSink);
+	tmsQueue = new Queue(env.TMS_QUEUE, dataSink);
 });
 
 tmsSocketClose$.subscribe((data) => {

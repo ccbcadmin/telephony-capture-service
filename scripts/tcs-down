@@ -1,0 +1,9 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+source ./scripts/bash-functions
+
+COMPOSE_ARGS=" -f docker-compose.yml -f docker-compose-prod.yml -p PROD "
+
+# Start with a clean sheet
+docker-compose $COMPOSE_ARGS down --remove-orphans

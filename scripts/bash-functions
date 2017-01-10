@@ -10,6 +10,11 @@ is-pg2-active () {
 	return $?
 }
 
+is-pg-active () {
+	docker exec -it $1 sh -c 'psql -c "select version();" -U postgres; exit $?;' &>/dev/null
+	return $?
+}
+
 pg-statuses () {
     if is-pg1-active; then
         ACTIVE_PG=pg1
