@@ -15,7 +15,7 @@ fi
 validate-pg-selection $1 "$USAGE"
 
 # Start with a clean sheet
-docker-compose -f docker-compose.yml down --remove-orphans 
+docker-compose down --remove-orphans 
 
 # Ensure we have the correct image and, if not, go get it
 if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
