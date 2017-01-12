@@ -5,9 +5,7 @@
 
 PROGNAME=$(basename $0)
 
-# various useful bash functions
-echo '11111'
-
+# define various functions
 source ./scripts/bash-functions
 
 # Allow access to bash scripts
@@ -30,19 +28,15 @@ if [ $# -eq 1 ]; then
 fi
 
 # Load TCS environment variables
-echo '11111'
 source ./.tcs.env
-echo '22222'
 source ./.tcs.version
 
 echo 'TCS Version'$TCS_VERSION
 
 # Aliases to aid Docker usage
-alias build-tcs='docker-compose build'
-alias create-pg1='docker-compose create pg1'
-alias create-pg2='docker-compose create pg2'
-alias run-pg1='docker-compose run -d --name pg1 pg1'
-alias run-pg2='docker-compose run -d --name pg2 pg2'
+alias build-dev='docker-compose -f docker-compose.yml -f docker-compose-dev.yml build'
+alias build-qa='docker-compose -f docker-compose.yml -f docker-compose-qa.yml build'
+alias build-prod='docker-compose -f docker-compose.yml -f docker-compose-prod.yml build'
 alias run-tmssim='docker-compose run -d --name tms-simulator tms-simulator'
 alias run-mangle='docker-compose run --rm --name mangle -e MANGLE_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 -e MANGLE_TARGET_DIRECTORY=/smdr-data/smdr-data-003 mangle'
 alias run-pbxsim='docker-compose run --rm --name pbx-simulator -e PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 pbx-simulator'
@@ -54,7 +48,6 @@ alias ls-exited='docker ps -aq -f status=exited'
 alias tcs-down-v='docker-compose down -v'
 alias pg1-exec='docker exec -it pg1 /bin/bash'
 alias pg2-exec='docker exec -it pg2 /bin/bash'
-alias tcsup='docker-compose up --build -d'
 alias barman-exec='docker exec -it barman /bin/bash'
 
 mangle () 

@@ -1,0 +1,31 @@
+version: '2'
+
+services:
+
+  database-interface:
+    container_name: QA-database-interface
+    environment:
+      - DATABASE=qa
+      - DB_QUEUE=QA_DB_QUEUE
+
+  mangle:
+    container_name: QA-mangle
+
+  pbx-interface:
+    container_name: QA-pbx-interface
+    environment:
+      - TCS_PORT=3458
+      - TMS_ACTIVE=1 
+      - DB_QUEUE=QA_DB_QUEUE
+      - TMS_QUEUE=QA_TMS_QUEUE
+ 
+  pbx-simulator:
+    container_name: QA-pbx-simulator
+ 
+  tms-interface:
+    container_name: QA-tms-interface
+    environment:
+      - TMS_QUEUE=QA_TMS_QUEUE
+
+  tms-simulator:
+    container_name: QA-tms-simulator

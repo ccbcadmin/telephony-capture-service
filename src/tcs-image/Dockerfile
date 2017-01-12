@@ -77,6 +77,7 @@ RUN npm install
 
 # scoop up all the NodeJS code
 COPY ./lib /app/lib
+COPY ./src /app/src
 
 # Prep for barman
 COPY ./src/tcs-image/barman.conf /etc/

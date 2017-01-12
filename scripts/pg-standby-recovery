@@ -4,6 +4,7 @@ PROGNAME=$(basename $0)
 USAGE='Usage: '$PROGNAME' pg1|pg2 backup_id target_time'
 
 source ./scripts/bash-functions
+source ./.tcs-pg-ports
 
 if [ "$#" != 3 ]; then error-exit "$USAGE"; fi
 
@@ -12,18 +13,18 @@ validate-pg-selection $1 "$USAGE"
 validate-backup_id $1 $2
 
 # Get the pg statuses (Active or PITR)
-pg-statuses
+pg-status &> /dev/null
 
-# Ensure what is to be the PITR container is removed (for the moment)
-remove-container $PITR_PG
-msg $PITR_PG' Container Removed'
+# Remove the STANDBY container, before doing the recovery
+remove-pg-container $STANDBY_PG
 
 # Do the recovery
-barman-pitr $PITR_PG $1 $2 $3
+barman-pitr $STANDBY_PG $1 $2 $3
 
-# Finally bring up the PITR container to listen on port 5433
-start-pg-container $PITR_PG 5433; sleep 2;
-enable-stream-replication $PITR_PG 5433
+# Finally bring up the STANDBY container to listen on port 5433
+start-pg-container $STANDBY_PG; sleep 2;
+enable-stream-replication $STANDBY_PG 5433 &> /dev/null
 
-msg 'Point-In-Time Recovery to Container '$PITR_PG' Complete'
+msg 'Standby Recovery to '$STANDBY_PG' Complete'
+pg-status
 exit 0

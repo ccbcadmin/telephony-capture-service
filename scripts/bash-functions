@@ -15,25 +15,48 @@ is-pg-active () {
 	return $?
 }
 
-pg-statuses () {
+pg-status () {
+    
     if is-pg1-active; then
-        ACTIVE_PG=pg1
-        PITR_PG=pg2
-    elif is-pg2-active; then
-        ACTIVE_PG=pg2
-        PITR_PG=pg1
+        local pg1_STATE='ACTIVE'
+    elif is-pg1-standby; then
+        local pg1_STATE='STANDBY'
+    elif container-exists pg1; then
+        local pg1_STATE='STOPPED'
     else
+        local pg1_STATE='GONE'
+    fi;
+
+    if is-pg2-active; then
+        local pg2_STATE='ACTIVE'
+    elif is-pg2-standby; then
+        local pg2_STATE='STANDBY'
+    elif container-exists pg2; then
+        local pg2_STATE='STOPPED'
+    else
+        local pg2_STATE='GONE'
+    fi;
+
+    if [ $pg1_STATE == 'ACTIVE' ]; then
+        ACTIVE_PG='pg1'
+        STANDBY_PG='pg2'
+    elif [ $pg2_STATE == 'ACTIVE' ]; then
+        ACTIVE_PG='pg2'
+        STANDBY_PG='pg1'
+    else  # If neither, then unset both
         unset ACTIVE_PG
-        unset PITR_PG
-    fi
+        unset STANDBY_PG
+    fi;
+
+    msg 'pg1: '$pg1_STATE', pg2: '$pg2_STATE
 }
 
-is-pg1-pitr () {
+is-pg1-standby () {
 	docker exec -it pg1 sh -c 'psql -c "select version();" -p 5433 -U postgres; exit $?;' &>/dev/null
 	return $?
 }
 
-is-pg2-pitr () {
+is-pg2-standby () {
 	docker exec -it pg2 sh -c 'psql -c "select version();" -p 5433 -U postgres; exit $?;' &>/dev/null
 	return $?
 }
@@ -45,14 +68,18 @@ msg () {
 change-pgdata-owner () {
     
     if ! docker exec -it barman sh -c 'chown -R '$1'.'$1' /'$2'_data; exit $?;' &> /dev/null; then 
-        error-exit 'PGDATA Ownership Change Failed'; 
+        function-error $FUNCNAME $LINENO 'PGDATA Ownership Change Failed';
+        return 1
     fi
+    return 0
 }
 
 change-pgdata-permissions () {
     if ! docker exec -it barman sh -c 'chmod -R 775 /'$1'_data; exit $?;' &> /dev/null; then 
-        error-exit 'PGDATA Permissions Change Failed';
+        function-error $FUNCNAME $LINENO 'PGDATA Permissions Change Failed';
+        return 1
     fi
+    return 0
 }
 
 # Ensure that a container is not restarted at boot time
@@ -65,36 +92,58 @@ enable-restart () {
     
     if docker update --restart unless-stopped $1 2>&1 >/dev/null; then 
         msg $1' Auto Restart Enabled';
+        return 0
     else 
-        error-exit 'Unable to Reconfigure '$1' Container to Auto Restart';   
+        function-error $FUNCNAME $LINENO 'Unable to Reconfigure '$1' Container to Auto Restart'; 
+        return 1;  
     fi
 }
 
+disable-stream-replication () {
+	if ! docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_mode TO off;" -U postgres -p 5433 2>&1 >/dev/null; exit $?;'; then 
+        function-error $FUNCNAME $LINENO $1' Failed to Alter archive_mode'; 
+        return 1
+    fi
+
+    if ! docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres 2>&1 >/dev/null; exit $?;'; then 
+        function-error $FUNCNAME $LINENO $1' Failed to Reload Postgres';
+        return 1
+    fi
+
+    msg $1' Stream Replication Disabled';
+    return 0
+}
+
 enable-stream-replication () {
+    
+	if ! docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_mode TO on;" -U postgres 2>&1 >/dev/null; exit $?;'; then 
+        function-error $FUNCNAME $LINENO $1' Failed to Alter archive_mode';
+        return 1
+    fi
 
-	if [ "$#" == 1 ]; then
-		local PORT=5432
-	elif [ "$#" == 2 ]; then
-		local PORT=$2
-	else
-        error-exit 'enable-stream-replication: Incorrect number of parameters'
-	fi
-
-    if ! docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres -p '$PORT' 2>&1 >/dev/null; exit $?;'; then 
-        error-exit $1' Failed to Alter archive_command'; 
+    if ! docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres 2>&1 >/dev/null; exit $?;'; then 
+        function-error $FUNCNAME $LINENO $1' Failed to Alter archive_command';
+        return 1
     fi
 	
-    if ! docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres  -p '$PORT' 2>&1 >/dev/null; exit $?;'; then 
-        error-exit $1' Failed to Reload Postgres';  
+    if ! docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres 2>&1 >/dev/null; exit $?;'; then 
+        function-error $FUNCNAME $LINENO $1' Failed to Reload Postgres';
+        return 1
     fi
-    msg $1' Stream Replication Enabled';
-    sleep 3;
+    return 0
+}
 
-    # postgres is ready; next ensure barman is too
-    barman-create-slot $1; sleep 2
-    barman-reset $1; sleep 2
-    barman-cron; sleep 2
-    barman-check $1;
+enable-barman-backups () {
+    # Various steps to ensure that barman is backing up the ACTIVE pg
+    pg-status &> /dev/null
+    barman-create-slot $ACTIVE_PG;
+    sleep 2
+    if ! barman-reset $ACTIVE_PG; then return 1; fi
+    sleep 2
+    if ! barman-cron; then return 1; fi
+    sleep 2
+    if ! barman-check $ACTIVE_PG; then return 1; fi
+    return 0
 }
 
 error-exit () {
@@ -104,19 +153,26 @@ error-exit () {
 	exit
 }
 
+function-error () {
+    msg 'Error in Function '$1' Line '$2': '"$3"
+}
+
 barman-check () {
 	
+    if [ $# != 1 ]; then function-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 	if ! docker exec -it barman sh -c 'ps -ef | grep pg_receivexlog | grep -v grep; exit $?;' &> /dev/null; then
          # If barman configuration fails, report why
         docker exec -it barman sh -c 'barman check '$1'; exit $?;'
-        error-exit $1' Stream Replication Activation Failed';
+        msg $1' Stream Replication Activation Failed';
+        return 1
     else
         msg $1' Stream Replication Activated';
+        return 0
     fi
 }
 
 barman-create-slot () {
-	docker exec -it barman sh -c 'barman receive-wal --create-slot '$1' 2>&1 >/dev/null; exit $?;' 
+	docker exec -it barman sh -c 'barman receive-wal --create-slot '$1'; exit $?;' &> /dev/null
 }
 
 barman-cron () {
@@ -134,10 +190,16 @@ barman-recover-latest () {
 
     # Use barman to recover the latest backup for the selected pg container
     docker exec -it barman sh -c 'barman recover '$1' latest /'$2'_data 2>&1 >/dev/null; exit $?;'
-    if [ $? != 0 ]; then error-exit $2' Recovery Failure'; else msg $2' Recovery Successful'; fi
+    if [ $? != 0 ]; then 
+        function-error $FUNCNAME $LINENO  $2' Recovery Failure';
+        return 1
+    else 
+        msg $2' Recovery Successful'; 
+    fi
 
     # Ownership now passed to postgres
     change-pgdata-owner postgres $2
+    return $?
 }
 
 barman-pitr () {
@@ -151,23 +213,34 @@ barman-pitr () {
     # Do the recovery
     if [ "$#" == 3 ]; then
         docker exec -it barman sh -c 'barman recover --target-time '$3' '$1' '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'
-        if [ $? != 0 ]; then error-exit $1' Recovery Failure'; else msg $1' Recovery Successful'; fi
+        if [ $? != 0 ]; then 
+            function-error $FUNCNAME $LINENO $1' Recovery Failure';
+            return 1
+        else 
+            msg $1' Recovery Successful'; 
+        fi
     elif [ "$#" == 4 ]; then
         docker exec -it barman sh -c 'barman recover --target-time '$4' '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'
-        if [ $? != 0 ]; then error-exit $1' Recovery Failure'; else msg $1' Recovery Successful'; fi
+        if [ $? != 0 ]; then 
+            function-error $FUNCNAME $LINENO  $1' Recovery Failure';
+            return 1
+        else 
+            msg $1' Recovery Successful'; 
+        fi
     else
-        error-exit 'barman-pitr: Incorrect number of parameters'
+        function-error $FUNCNAME $LINENO 'Incorrect number of parameters'
     fi
 
     # Ownership passed to postgres
     change-pgdata-owner postgres $1
+    return $?
 }
 
 barman-reset () {
 	if docker exec -it barman sh -c 'barman receive-wal --reset '$1'; exit $?;' &> /dev/null; then
         msg $1' Stream Replication Reset';
     else
-        error-exit $1' Failed to Reset Stream Replication';        
+        msg $1' Failed to Reset Stream Replication';      
     fi
 }
 
@@ -178,10 +251,18 @@ container-exists () {
 
 confirm-barman () {
     # Minimally barman must be running
-    if [ ! docker inspect --format='{{.State.Running}}' barman &> /dev/null ]; then error-exit 'barman GONE'; fi
+    if [ ! docker inspect --format='{{.State.Running}}' barman &> /dev/null ]; then 
+        function-error $FUNCNAME $LINENO 'barman GONE'
+        return 1
+    fi
 
     barman_running=$(docker inspect --format='{{.State.Running}}' barman)
-    if [ "$barman_running" == "false" ]; then error-exit 'barman STOPPED'; fi
+    if [ "$barman_running" == "false" ]; then 
+        function-error $FUNCNAME $LINENO 'barman Not Running'
+        return 1; 
+    fi
+
+    return 0
 }
 
 remove-container () {
@@ -193,28 +274,71 @@ remove-container () {
     fi
 }
 
+remove-pg-container () {
+	# If there is no such container, then nothing to do
+    if container-exists $1; then
+        docker stop --time 10 $1 2>&1 >/dev/null
+	    docker-compose -f docker-compose-core.yml -p CORE rm -f -v $1 &> /dev/null
+        msg $1' Container Removed'
+    fi
+}
+
 create-container () {
-    if docker-compose run -d --name $1 $1 2>&1 >/dev/null; then error-exit $1' Startup Failure'; else msg $1' Started'; fi
+    if docker-compose run -d --name $1 $1 2>&1 >/dev/null; then 
+        function-error $FUNCNAME $LINENO $1' Startup Failure';
+        return 1
+    else 
+        msg $1' Started'; 
+    fi
+    
     enable-restart $1
+    return $?
+}
+
+set-pg-ports () {
+    if [ $1 == 'pg1' ]; then
+	    echo 'export PG1_PORT=5432; export PG2_PORT=5433;' > .tcs-pg-ports
+        return 0
+    elif [ $1 == 'pg2' ]; then
+	    echo 'export PG1_PORT=5433; export PG2_PORT=5432;' > .tcs-pg-ports
+        return 0
+    else
+        function-error $pg-status
+ $LINENO 'Invalid pg Selection '$1
+        return 1;
+    fi
+}
+
+start-barman () {
+    source ./.tcs-pg-ports
+    if ! container-exists barman; then
+        if ! docker-compose -f docker-compose-core.yml -p CORE up -d --no-build barman; then
+            msg 'Failed to Start Container barman'; 
+            return 1;
+        fi
+    fi
+
+    sleep 2
+    if ! enable-barman-backups; then msg 'barman Configuration Incomplete'; return 1; fi
+    return 0
 }
 
 start-container () {
-    if docker start $1 &> /dev/null; then msg $1' Container Started'; else error-exit 'Unable to Start Container '$1; fi
+    if ! docker start $1 2>&1 >/dev/null; then return 1; fi
 
     enable-restart $1
+    return $?
 }
 
 start-pg-container () {
-    if docker-compose run -d --entrypoint 'gosu postgres postgres -p '$2 --name $1 $1; then
-        msg $1' Container Started';  
-    else 
-        error-exit $1' Container Failed to Start'; 
-    fi
+    source ./.tcs-pg-ports
+    docker-compose -f docker-compose-core.yml -p CORE up -d $1 &> /dev/null
+    return $?
 }
 
 stop-container () {
     docker-compose stop $1 &> /dev/null
-    msg $1' Stopped';
+    msg $1' Container Stopped';
     disable-restart $1
 }
 

@@ -3,25 +3,29 @@ version: '2'
 services:
 
   database-interface:
-    environment:
-      - DB_QUEUE=PROD_DB_QUEUE
     container_name: PROD-database-interface
+    environment:
+      - DATABASE=prod
+      - DB_QUEUE=PROD_DB_QUEUE
 
   mangle:
     container_name: PROD-mangle
 
   pbx-interface:
+    container_name: PROD-pbx-interface
     environment:
       - TCS_PORT=3457
       - TMS_ACTIVE=1 
       - DB_QUEUE=PROD_DB_QUEUE
-    container_name: PROD-pbx-interface
+      - TMS_QUEUE=PROD_TMS_QUEUE
  
   pbx-simulator:
     container_name: PROD-pbx-simulator
  
   tms-interface:
     container_name: PROD-tms-interface
+    environment:
+      - TMS_QUEUE=PROD_TMS_QUEUE
 
   tms-simulator:
     container_name: PROD-tms-simulator

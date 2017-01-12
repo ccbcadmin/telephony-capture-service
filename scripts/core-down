@@ -4,6 +4,8 @@ PROGNAME=$(basename $0)
 USAGE='Usage: '$PROGNAME' -v|--version|pg1|pg2'
 source ./scripts/bash-functions
 
+source ./.tcs-pg-ports
+
 COMPOSE_ARGS=" -f docker-compose-core.yml -p CORE "
 
 docker-compose $COMPOSE_ARGS down

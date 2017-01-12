@@ -14,6 +14,7 @@ const pgp = require('pg-promise')();
 const envalid = require('envalid');
 const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
+	DATABASE: str(),
 	DB_QUEUE: str(),
 	POSTGRES_PASSWORD: str()
 });
@@ -43,7 +44,7 @@ interface SmdrRecord {
 const connection = {
 	host: 'localhost',
 	port: 5432,
-	database: 'postgres',
+	database: env.DATABASE,
 	user: 'postgres'
 };
 

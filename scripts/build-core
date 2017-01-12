@@ -1,0 +1,6 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+
+source ./.tcs-pg-ports
+docker-compose -f docker-compose-core.yml build

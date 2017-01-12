@@ -7,60 +7,101 @@ source ./scripts/bash-functions
 postgres-rollback () {
 
 	# If neither pg container is running, then try to bring the original back to life
-	pg-statuses
+	pg-status &> /dev/null
 
 	if [ -z "$ACTIVE_PG" ]; then
-		# Attempt to start the container that was originally supporting the mission
-		start-pg-container $FROM_PG 5432
-		if [ $? != 0 ]; then
+
+		msg 'Switch Failed - Rolling Back to '$FROM_PG;
+
+		# Remove the pg container whose startup failed
+		remove-pg-container $TO_PG
+
+		# Adjust the ports back to what they were
+		set-pg-ports $FROM_PG
+		
+		if ! start-pg-container $FROM_PG; then
 			msg 'Unable to restart the original container'; 
 			msg 'WARNING: TCS is partially disabled';
-			exit
+			exit 1
 		else
-			# Check that the container is up and running
-			sleep 2; pg_running=$(docker inspect --format='{{.State.Running}}' $FROM_PG)
-			if [ pg_running != "true" ]; then
-				msg 'WARNING: TCS is partially disabled'
-				exit
-			fi
-			# When the container is back up, ensure stream replication is enabled
-			sleep 2;
-			enable-stream-replication $FROM_PG		
+			msg $FROM_PG' Container Started'
+		fi
+		
+		sleep 7
+		if enable-stream-replication $FROM_PG; then 
+			msg $FROM' Stream Replication Activated'; 
+		else 
+			msg $1' Stream Replication Failed to Activate'; 
 		fi
 	fi
 
-	start-container database-interface
+	# Bring barman back
+	if container-exists barman; then
+		if start-container barman; then 
+			msg 'barman Restarted'; 
+		else 
+			msg 'barman Restart Failed'; 
+		fi
+		sleep 2
+		enable-barman-backups
+	fi
+	pg-status
 }
 
-trap postgres-rollback EXIT;
-
-# Load ACTIVE_PG and PITR_PG with the following
-pg-statuses
+# Load $ACTIVE_PG and $STANDBY_PG with the following
+pg-status &> /dev/null
 
 FROM_PG=$ACTIVE_PG
-TO_PG=$PITR_PG
+TO_PG=$STANDBY_PG
+
+if [ -z ${ACTIVE_PG+x} ]; then error-exit 'No Active Postgres Container'; fi
+
 msg 'Begin Postgres Container Switch from '$FROM_PG' to '$TO_PG;
 
-# Stop the inflow to the database
-stop-container database-interface
+# Do a final backup
+if docker exec -it barman sh -c 'barman backup '$FROM_PG' 2>&1 >/dev/null; exit $?;'; then
+	msg $FROM_PG' Final Backup Successful';
+else
+	# Abort if a final backup is not possible
+	error-exit $FROM_PG' Final Backup Failed';
+fi
 
 # Ensure the target container is quiet
-remove-container $TO_PG
+remove-pg-container $TO_PG
 
-# Do a final backup
-docker exec -it barman sh -c 'barman backup '$FROM_PG' 2>&1 >/dev/null; exit $?;'
-if [ $? != 0 ]; then error-exit $FROM_PG' Final Backup Failed'; else msg $FROM_PG' Final Backup Successful'; fi
+# Make barman quiet
+stop-container barman
+
+# Arrange for a possible rollback, if something goes amiss
+trap postgres-rollback EXIT;
 
 # Shutdown the outgoing container
-remove-container $FROM_PG
+remove-pg-container $FROM_PG
 
 barman-recover-latest $FROM_PG $TO_PG
 
+# Port mappings need to be modified
+set-pg-ports $TO_PG
+source ./.tcs-pg-ports
+
 # Now start the incoming database container
-start-pg-container $TO_PG 5432; sleep 5;
+if ! start-pg-container $TO_PG; then
+	error-exit $TO_PG' Failed to Start Container';
+fi
+
+sleep 10;
 
 # Ensure stream replication is enabled
-enable-stream-replication $TO_PG 5432;
+if ! enable-stream-replication $TO_PG; then
+	error-exit 'Failed to Enable Stream Replication';
+fi
 
+# Bring barman back
+start-container barman
+sleep 2
+enable-barman-backups
+
+trap '' EXIT;
 msg 'Postgres Container Switch Successful'
+pg-status
 exit 0

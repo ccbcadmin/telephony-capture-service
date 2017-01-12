@@ -8,4 +8,5 @@ docker-compose.env
 postgres_data/
 /.tcs.env
 /.tcs.version
+/.tcs-pg-ports
 ~$*

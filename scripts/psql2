@@ -7,7 +7,7 @@ source ./scripts/bash-functions
 if is-pg2-active == 0; then
 	echo 'pg2 ACTIVE'
 	docker exec -it pg2 psql --username postgres -p 5432
-elif is-pg2-pitr == 0; then
+elif is-pg2-standby == 0; then
 	echo 'pg2 STANDBY'
 	docker exec -it pg2 psql --username postgres -p 5433
 elif container-exists pg2; then

@@ -9,7 +9,7 @@ services:
 
   barman:
     image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: CORE-barman
+    container_name: barman
     restart: unless-stopped
     privileged: true
     network_mode: "host"
@@ -23,7 +23,7 @@ services:
 
   pg1:
     image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: CORE-pg1
+    container_name: pg1
     restart: unless-stopped
     privileged: true
     network_mode: "host"  
@@ -32,11 +32,11 @@ services:
     entrypoint: ["/docker-entrypoint.sh"]
     environment:
       - POSTGRES_PASSWORD
-    command: ["postgres"]
+    command: ["postgres", "-p", $PG1_PORT]
 
   pg2:
     image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: CORE-pg2
+    container_name: pg2
     restart: unless-stopped
     privileged: true
     network_mode: "host"  
@@ -45,13 +45,13 @@ services:
     entrypoint: ["/docker-entrypoint.sh"]
     environment:
       - POSTGRES_PASSWORD
-    command: ["postgres"]
+    command: ["postgres", "-p", $PG2_PORT]
 
   jenkins:
     build:
       context: .
       dockerfile: ./src/jenkins/Dockerfile
-    container_name: CORE-jenkins
+    container_name: jenkins
     restart: unless-stopped
     privileged: true
     network_mode: "host"
@@ -61,7 +61,7 @@ services:
 
   rabbitmq:
     image: letsxo/rabbitmq
-    container_name: CORE-rabbitmq
+    container_name: rabbitmq
     restart: unless-stopped
     privileged: true
     network_mode: "host"

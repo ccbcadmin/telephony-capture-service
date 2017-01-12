@@ -5,6 +5,7 @@ services:
   database-interface:
     container_name: DEV-database-interface
     environment:
+      - DATABASE=dev
       - DB_QUEUE=DEV_DB_QUEUE    
     volumes:
       - ./lib:/app/lib
