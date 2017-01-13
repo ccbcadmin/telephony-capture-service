@@ -3,7 +3,7 @@
 PROGNAME=$(basename $0)
 source ./scripts/bash-functions
 
-COMPOSE_ARGS=" -f docker-compose.yml -f docker-compose-prod.yml -p PROD "
+COMPOSE_ARGS=" -f docker-compose.yml -f docker-compose-prod.yml -p prod "
 
 # Ensure we have the correct image and, if not, go get it
 if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
@@ -12,4 +12,4 @@ if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then exit 1; fi
 docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
-echo 'TCS Started, '$COMPOSE_PROJECT_NAME' Active Postgres Container: '$1
+msg 'TCS (Production) Started'

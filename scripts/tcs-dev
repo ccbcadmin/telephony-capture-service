@@ -3,9 +3,9 @@
 PROGNAME=$(basename $0)
 source ./scripts/bash-functions
 
-COMPOSE_ARGS=" -f docker-compose.yml -f docker-compose-dev.yml -p DEV "
+COMPOSE_ARGS=" -f docker-compose.yml -f docker-compose-dev.yml -p dev "
 
 docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
-echo 'TCS Started, '$COMPOSE_PROJECT_NAME' Active Postgres Container: '$1
+msg 'TCS (DEV) Started'

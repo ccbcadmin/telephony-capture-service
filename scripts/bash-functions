@@ -1,20 +1,42 @@
 #!/bin/bash
 
+#######################################
+# Cleanup files from the backup dir
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   == 0 => pg1 is ACTIVE; != 0 => pg1 is not ACTIVE
+#######################################
 is-pg1-active () {
 	docker exec -it pg1 sh -c 'psql -c "select version();" -U postgres; exit $?;' &>/dev/null
 	return $?
 }
 
+#######################################
+# Cleanup files from the backup dir
+# Globals:
+#   None
+# Arguments:
+#   None
+# Returns:
+#   == 0 => pg2 is ACTIVE; != 0 => pg2 is not ACTIVE
+#######################################
 is-pg2-active () {
 	docker exec -it pg2 sh -c 'psql -c "select version();" -U postgres; exit $?;' &>/dev/null
 	return $?
 }
 
-is-pg-active () {
-	docker exec -it $1 sh -c 'psql -c "select version();" -U postgres; exit $?;' &>/dev/null
-	return $?
-}
-
+#######################################
+# Cleanup files from the backup dir
+# Globals:
+#   Exports $ACTIVE_PG and $STANDBY_PG if either is ACTIVE
+# Arguments:
+#   None
+# Returns:
+#   None
+#######################################
 pg-status () {
     
     if is-pg1-active; then
@@ -67,7 +89,7 @@ msg () {
 
 change-pgdata-owner () {
     
-    if ! docker exec -it barman sh -c 'chown -R '$1'.'$1' /'$2'_data; exit $?;' &> /dev/null; then 
+    if ! docker exec -it barman sh -c 'chown -R '$1'.'$1' /'$2'_data; exit $?;' 2>&1 >/dev/null; then 
         function-error $FUNCNAME $LINENO 'PGDATA Ownership Change Failed';
         return 1
     fi
@@ -85,6 +107,7 @@ change-pgdata-permissions () {
 # Ensure that a container is not restarted at boot time
 disable-restart () {
     docker update --restart no $1 2>&1 >/dev/null
+    return $?
 }
 
 # Configure the container to auto restart in the case of a reboot
@@ -183,10 +206,10 @@ barman-cron () {
 barman-recover-latest () {
 
     # barman needs ownership of the pgdata area
-    change-pgdata-owner barman $2
+    if ! change-pgdata-owner barman $2; then return 1; fi
 
     # Tweak unix permissions
-    change-pgdata-permissions $2
+    if ! change-pgdata-permissions $2; then return 1; fi
 
     # Use barman to recover the latest backup for the selected pg container
     docker exec -it barman sh -c 'barman recover '$1' latest /'$2'_data 2>&1 >/dev/null; exit $?;'
@@ -198,14 +221,14 @@ barman-recover-latest () {
     fi
 
     # Ownership now passed to postgres
-    change-pgdata-owner postgres $2
+    if ! change-pgdata-owner postgres $2; then return 1; fi
     return $?
 }
 
 barman-pitr () {
 
     # barman needs ownership of the pgdata area
-    change-pgdata-owner barman $1
+    if ! change-pgdata-owner barman $1; then return 1; fi
 
     # Tweak unix permissions
     change-pgdata-permissions $1
@@ -291,7 +314,7 @@ create-container () {
         msg $1' Started'; 
     fi
     
-    enable-restart $1
+    enable-restart
     return $?
 }
 
@@ -303,8 +326,7 @@ set-pg-ports () {
 	    echo 'export PG1_PORT=5433; export PG2_PORT=5432;' > .tcs-pg-ports
         return 0
     else
-        function-error $pg-status
- $LINENO 'Invalid pg Selection '$1
+        function-error $FUNCNAME $LINENO 'Invalid pg Selection '$1
         return 1;
     fi
 }

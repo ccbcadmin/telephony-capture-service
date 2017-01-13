@@ -78,7 +78,7 @@ trap postgres-rollback EXIT;
 # Shutdown the outgoing container
 remove-pg-container $FROM_PG
 
-barman-recover-latest $FROM_PG $TO_PG
+if ! barman-recover-latest $FROM_PG $TO_PG; then error-exit 'Failed Database Recovery'; fi
 
 # Port mappings need to be modified
 set-pg-ports $TO_PG

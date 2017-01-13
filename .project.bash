@@ -33,21 +33,32 @@ source ./.tcs.version
 
 echo 'TCS Version'$TCS_VERSION
 
-# Aliases to aid Docker usage
-alias build-dev='docker-compose -f docker-compose.yml -f docker-compose-dev.yml build'
-alias build-qa='docker-compose -f docker-compose.yml -f docker-compose-qa.yml build'
-alias build-prod='docker-compose -f docker-compose.yml -f docker-compose-prod.yml build'
-alias run-tmssim='docker-compose run -d --name tms-simulator tms-simulator'
-alias run-mangle='docker-compose run --rm --name mangle -e MANGLE_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 -e MANGLE_TARGET_DIRECTORY=/smdr-data/smdr-data-003 mangle'
-alias run-pbxsim='docker-compose run --rm --name pbx-simulator -e PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 pbx-simulator'
+CORE_COMPOSE_ARGS='-f docker-compose-core.yml -p core '
+DEV_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose-dev.yml -p dev '
+QA_COMPOSE_ARGS='  -f docker-compose.yml -f docker-compose-qa.yml -p dev '
+PROD_COMPOSE_ARGS='-f docker-compose.yml -f docker-compose-prod.yml -p dev '
+
+# Application aliases
+alias build-dev='docker-compose '"$DEV_COMPOSE_ARGS"' build'
+alias build-qa='docker-compose '"$QA_COMPOSE_ARGS"' build'
+alias build-prod='docker-compose '"$PROD_COMPOSE_ARGS"' build'
+alias run-tmssim='docker-compose '"$DEV_COMPOSE_ARGS"' run -d --name tms-simulator tms-simulator'
+alias run-mangle='docker-compose '"$DEV_COMPOSE_ARGS"' run --rm --name mangle \
+    -e MANGLE_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 \
+    -e MANGLE_TARGET_DIRECTORY=/smdr-data/smdr-data-003 \
+    mangle'
+alias run-pbxsim='docker-compose '"$DEV_COMPOSE_ARGS"' run --rm --name pbx-simulator \
+    -e PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 \
+    pbx-simulator'
+alias pg1-exec='docker exec -it pg1 /bin/bash'
+alias pg2-exec='docker exec -it pg2 /bin/bash'
+
+# Aliases to manage Docker
 alias rm-containers='docker rm $(docker ps -q)'
 alias rm-images='docker rmi $(docker images -q)'
 alias rm-exited='docker rm $(docker ps -a -f status=exited -q)'
 alias rm-dangling-volumes='docker volume rm $(docker volume ls -f dangling=true -q) >> /dev/null'
 alias ls-exited='docker ps -aq -f status=exited'
-alias tcs-down-v='docker-compose down -v'
-alias pg1-exec='docker exec -it pg1 /bin/bash'
-alias pg2-exec='docker exec -it pg2 /bin/bash'
 alias barman-exec='docker exec -it barman /bin/bash'
 
 mangle () 
@@ -58,7 +69,7 @@ mangle ()
         return 1;
     fi
      
-    docker-compose run --rm --name mangle -e MANGLE_SOURCE_DIRECTORY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
+    docker-compose $PROD_COMPOSE_ARGS run --rm --name mangle -e MANGLE_SOURCE_DIRECTORY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
 }
 
 pbx-simulator ()
@@ -68,27 +79,7 @@ pbx-simulator ()
     if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1;
     fi    
-    docker-compose run --rm --name pbx-simulator -e PBX_SIMULATOR_SOURCE_DIRECTORY="$1" pbx-simulator
-}
-
-pg1 ()
-{
-    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
-
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        return 1;
-    fi
-    docker-compose -f docker-compose.yml up -d --no-build --remove-orphans pg1
-}
-
-pg2 ()
-{
-    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
-
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        return 1;
-    fi
-    docker-compose -f docker-compose.yml up -d --no-build --remove-orphans pg2
+    docker-compose $PROD_COMPOSE_ARGS run --rm --name pbx-simulator -e PBX_SIMULATOR_SOURCE_DIRECTORY="$1" pbx-simulator
 }
 
 tms-simulator ()
@@ -98,5 +89,5 @@ tms-simulator ()
     if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1;
     fi
-    docker-compose -f docker-compose.yml up -d --no-build --remove-orphans tms-simulator
+    docker-compose $PROD_COMPOSE_ARGS up -d --no-build --remove-orphans tms-simulator
 }

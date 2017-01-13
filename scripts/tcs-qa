@@ -1,31 +1,15 @@
 #!/bin/bash
 
 PROGNAME=$(basename $0)
-USAGE='Usage: '$PROGNAME' -v|--version|pg1|pg2'
 source ./scripts/bash-functions
 
-# ensure input params validity
-if [ "$#" != 1 ]; then error-exit "$USAGE"; fi
-
-if [ "$1" == '--version' ] || [ "$1" == '-v' ]; then
-	echo 'TCS Version'$TCS_VERSION
-	exit 0
-fi
-
-validate-pg-selection $1 "$USAGE"
-
-# Start with a clean sheet
-docker-compose down --remove-orphans 
+COMPOSE_ARGS=" -f docker-compose.yml -f docker-compose-qa.yml -p qa "
 
 # Ensure we have the correct image and, if not, go get it
 if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
 if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then exit 1; fi
 
-# First start the selected Postgres container
-docker-compose -f docker-compose-jenkins.yml up -d --no-build --remove-orphans $1 &> /dev/null
-if [ $? != 0 ]; then error-exit 'Failed to Start Container '$1; else echo $1' Started'; fi
-
-docker-compose -f docker-compose-jenkins.yml up -d --no-build --remove-orphans pbx-interface
+docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
-echo 'TCS Started, Active Postgres Container: '$1
+msg 'TCS (QA) Started'
