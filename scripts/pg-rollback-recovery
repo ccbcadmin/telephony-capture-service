@@ -6,14 +6,25 @@ USAGE='Usage: '$PROGNAME' pg1|pg2 backup_id [target_time]'
 source ./scripts/bash-functions
 source ./.tcs-pg-ports
 
-if [ "$#" != 3 ]; then error-exit "$USAGE"; fi
+echo -n "Executing this command will result in data loss.  Proceed? [yes or no]: "
+read yno
+case $yno in
+    [yY] | [yY][Ee][Ss] )
+        ;;
+    [nN] | [n|N][O|o] )
+        echo "Command aborted.";
+        exit 1
+        ;;
+    *) echo "Invalid input"
+		exit 1
+        ;;
+esac
+
+if [ "$#" != 2 ] && [ "$#" != 3 ] ; then error-exit "$USAGE"; fi
 
 validate-pg-selection $1 "$USAGE"
 
 validate-backup_id $1 $2
-
-# Make barman quiet
-stop-container barman
 
 # Get the statuses of the Postgres containers
 pg-status &> /dev/null
@@ -22,17 +33,14 @@ pg-status &> /dev/null
 remove-pg-container $ACTIVE_PG
 
 # Do the recovery
-barman-pitr $ACTIVE_PG $1 $2 $3
+case "$#" in
+	2)	if ! barman-recover $ACTIVE_PG $@; then error-exit 'Recovery Failure'; fi ;;
+	3)  if ! barman-pitr $ACTIVE_PG $@; then error-exit 'Recover Failure'; fi ;;
+	*)  error-exit 'Assertion Error @ '$LINENO ;;
+esac
 
-# Restart the container
-start-pg-container $ACTIVE_PG; sleep 2; 
-enable-stream-replication $ACTIVE_PG
-
-# Bring barman back
-start-container barman
-sleep 2
-enable-barman-backups
+# Now restart the Postgres container
+if ! start-pg-container $ACTIVE_PG; then exit 1; fi
 
 msg 'Rollback Recovery Complete'
-pg-status
 exit 0

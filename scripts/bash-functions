@@ -97,6 +97,7 @@ change-pgdata-owner () {
 }
 
 change-pgdata-permissions () {
+
     if ! docker exec -it barman sh -c 'chmod -R 775 /'$1'_data; exit $?;' &> /dev/null; then 
         function-error $FUNCNAME $LINENO 'PGDATA Permissions Change Failed';
         return 1
@@ -114,7 +115,6 @@ disable-restart () {
 enable-restart () {
     
     if docker update --restart unless-stopped $1 2>&1 >/dev/null; then 
-        msg $1' Auto Restart Enabled';
         return 0
     else 
         function-error $FUNCNAME $LINENO 'Unable to Reconfigure '$1' Container to Auto Restart'; 
@@ -122,76 +122,67 @@ enable-restart () {
     fi
 }
 
-disable-stream-replication () {
-	if ! docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_mode TO off;" -U postgres -p 5433 2>&1 >/dev/null; exit $?;'; then 
-        function-error $FUNCNAME $LINENO $1' Failed to Alter archive_mode'; 
-        return 1
-    fi
-
-    if ! docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres 2>&1 >/dev/null; exit $?;'; then 
-        function-error $FUNCNAME $LINENO $1' Failed to Reload Postgres';
-        return 1
-    fi
-
-    msg $1' Stream Replication Disabled';
-    return 0
-}
-
-enable-stream-replication () {
-    
-	if ! docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_mode TO on;" -U postgres 2>&1 >/dev/null; exit $?;'; then 
-        function-error $FUNCNAME $LINENO $1' Failed to Alter archive_mode';
-        return 1
-    fi
-
-    if ! docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres 2>&1 >/dev/null; exit $?;'; then 
-        function-error $FUNCNAME $LINENO $1' Failed to Alter archive_command';
-        return 1
-    fi
-	
-    if ! docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres 2>&1 >/dev/null; exit $?;'; then 
-        function-error $FUNCNAME $LINENO $1' Failed to Reload Postgres';
-        return 1
-    fi
-    return 0
+alter-archive-command () {
+        
+    for i in {1..10}
+    do
+        sleep 2
+        if ! docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres; exit $?;' &> /dev/null; then 
+            function-error $FUNCNAME $LINENO $1' Failed to Alter archive_command';
+            continue
+        fi
+        
+        if ! docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres 2>&1 >/dev/null; exit $?;' &> /dev/null; then 
+            function-error $FUNCNAME $LINENO $1' Failed to Reload Postgres';
+            continue
+        fi
+        return 0
+    done
+    function-error $FUNCNAME $LINENO $1' Unable to Alter archive_command';
+    return 1
 }
 
 enable-barman-backups () {
+
+    echo -n $PROGNAME': Enable Backups ... '
     # Various steps to ensure that barman is backing up the ACTIVE pg
     pg-status &> /dev/null
     barman-create-slot $ACTIVE_PG;
-    sleep 2
     if ! barman-reset $ACTIVE_PG; then return 1; fi
-    sleep 2
     if ! barman-cron; then return 1; fi
-    sleep 2
     if ! barman-check $ACTIVE_PG; then return 1; fi
+    echo 'done'
     return 0
 }
 
 error-exit () {
+
 	# Display error message and exit
 	msg "${1:-"Unknown Error"}" 1>&2
     msg 'Aborted'
-	exit
+	exit 1
 }
 
 function-error () {
-    msg 'Error in Function '$1' Line '$2': '"$3"
+    msg 'Error in function: '$1', Line '$2': '"$3"
 }
 
 barman-check () {
 	
     if [ $# != 1 ]; then function-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
-	if ! docker exec -it barman sh -c 'ps -ef | grep pg_receivexlog | grep -v grep; exit $?;' &> /dev/null; then
-         # If barman configuration fails, report why
-        docker exec -it barman sh -c 'barman check '$1'; exit $?;'
-        msg $1' Stream Replication Activation Failed';
-        return 1
-    else
-        msg $1' Stream Replication Activated';
-        return 0
-    fi
+
+    for i in {1..10}
+    do
+        sleep 2
+        if docker exec -it barman sh -c 'ps -ef | grep pg_receivexlog | grep -v grep; exit $?;' &> /dev/null; then
+            return 0
+        fi
+    done
+
+    # If barman configuration fails, report why
+    docker exec -it barman sh -c 'barman check '$1'; exit $?;'
+    msg $1' Stream Replication Activation Failed';
+    return 1
 }
 
 barman-create-slot () {
@@ -205,6 +196,8 @@ barman-cron () {
 
 barman-recover-latest () {
 
+    echo -n $PROGNAME': Backup (latest) Recovery to '$2' ... '
+
     # barman needs ownership of the pgdata area
     if ! change-pgdata-owner barman $2; then return 1; fi
 
@@ -216,16 +209,17 @@ barman-recover-latest () {
     if [ $? != 0 ]; then 
         function-error $FUNCNAME $LINENO  $2' Recovery Failure';
         return 1
-    else 
-        msg $2' Recovery Successful'; 
     fi
 
     # Ownership now passed to postgres
     if ! change-pgdata-owner postgres $2; then return 1; fi
-    return $?
+    echo 'done'
+    return 0
 }
 
-barman-pitr () {
+barman-recover () {
+
+    echo -n $PROGNAME': Backup (latest) Recovery to '$2' ... '
 
     # barman needs ownership of the pgdata area
     if ! change-pgdata-owner barman $1; then return 1; fi
@@ -234,35 +228,70 @@ barman-pitr () {
     change-pgdata-permissions $1
 
     # Do the recovery
-    if [ "$#" == 3 ]; then
-        docker exec -it barman sh -c 'barman recover --target-time '$3' '$1' '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'
+    if [ "$#" == 2 ]; then
+        docker exec -it barman sh -c 'barman recover '$1' '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'
         if [ $? != 0 ]; then 
             function-error $FUNCNAME $LINENO $1' Recovery Failure';
             return 1
         else 
             msg $1' Recovery Successful'; 
         fi
-    elif [ "$#" == 4 ]; then
-        docker exec -it barman sh -c 'barman recover --target-time '$4' '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'
-        if [ $? != 0 ]; then 
+    elif [ "$#" == 3 ]; then
+        if ! docker exec -it barman sh -c 'barman recover '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
             function-error $FUNCNAME $LINENO  $1' Recovery Failure';
             return 1
-        else 
-            msg $1' Recovery Successful'; 
         fi
     else
         function-error $FUNCNAME $LINENO 'Incorrect number of parameters'
     fi
 
+    # Ownership now passed to postgres
+    if ! change-pgdata-owner postgres $2; then return 1; fi
+    echo 'done'
+    return 0   
+}
+
+barman-clear-legacy-streaming () {
+    if ! docker exec -it barman sh -c 'rm -rf /var/lib/barman/'$1'/streaming/*; exit $?;'; then
+        function-error $FUNCNAME $LINENO 'Unable to clear legacy streaming';
+        return 1
+    fi
+}
+
+barman-pitr () {
+
+    echo -n $PROGNAME': Point-In-Time Recovery to '$1' ... '
+
+    if [ "$#" != 3 ] && [ "$#" != 4 ] ; then function-error $FUNCNAME $LINENO 'Incorrect number of parameters'; return 1; fi
+
+    # barman needs ownership of the pgdata area
+    if ! change-pgdata-owner barman $1; then return 1; fi
+
+    # Tweak unix permissions
+    if ! change-pgdata-permissions $1; then return 1; fi
+
+    # Do the recovery
+    case "$#" in
+        3) if ! docker exec -it barman sh -c 'barman recover --target-time '$3' '$1' '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
+            return 1
+            fi
+            ;;
+        4) if ! docker exec -it barman sh -c 'barman recover --target-time '$4' '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'; 
+            then return 1; fi
+            ;;
+        *)  function-error $FUNCNAME $LINENO 'Assertion Error'
+            return 1
+            ;;
+    esac
+
     # Ownership passed to postgres
-    change-pgdata-owner postgres $1
-    return $?
+    if ! change-pgdata-owner postgres $1; then return 1; fi
+    echo 'done'
+    return 0
 }
 
 barman-reset () {
-	if docker exec -it barman sh -c 'barman receive-wal --reset '$1'; exit $?;' &> /dev/null; then
-        msg $1' Stream Replication Reset';
-    else
+	if ! docker exec -it barman sh -c 'barman receive-wal --reset '$1'; exit $?;' &> /dev/null; then
         msg $1' Failed to Reset Stream Replication';      
     fi
 }
@@ -291,18 +320,20 @@ confirm-barman () {
 remove-container () {
 	# If there is no such container, then nothing to do
     if container-exists $1; then
+        echo -n $PROGNAME': Removing Container '$1' ... '
         docker stop --time 10 $1 2>&1 >/dev/null
 	    docker-compose rm -f -v $1 &>/dev/null
-        msg $1' Container Removed'
+        echo 'done'
     fi
 }
 
 remove-pg-container () {
 	# If there is no such container, then nothing to do
     if container-exists $1; then
+        echo -n $PROGNAME': Removing Container '$1' ... '
         docker stop --time 10 $1 2>&1 >/dev/null
 	    docker-compose -f docker-compose-core.yml -p CORE rm -f -v $1 &> /dev/null
-        msg $1' Container Removed'
+        echo 'done'
     fi
 }
 
@@ -331,20 +362,6 @@ set-pg-ports () {
     fi
 }
 
-start-barman () {
-    source ./.tcs-pg-ports
-    if ! container-exists barman; then
-        if ! docker-compose -f docker-compose-core.yml -p CORE up -d --no-build barman; then
-            msg 'Failed to Start Container barman'; 
-            return 1;
-        fi
-    fi
-
-    sleep 2
-    if ! enable-barman-backups; then msg 'barman Configuration Incomplete'; return 1; fi
-    return 0
-}
-
 start-container () {
     if ! docker start $1 2>&1 >/dev/null; then return 1; fi
 
@@ -352,10 +369,34 @@ start-container () {
     return $?
 }
 
-start-pg-container () {
+start-core-container () {
+    echo -n $PROGNAME': Starting '$1' ... '
     source ./.tcs-pg-ports
-    docker-compose -f docker-compose-core.yml -p CORE up -d $1 &> /dev/null
-    return $?
+    if ! docker-compose -f docker-compose-core.yml -p core up -d $1 &> /dev/null; then
+        return 1
+    fi
+
+    if enable-restart $1; then echo 'done'; return 0; else return 1; fi
+}
+
+start-pg-container () {
+
+    set-pg-ports $1
+    source ./.tcs-pg-ports
+
+    # Ensure Postgres owns everything
+    if ! change-pgdata-owner postgres $1; then exit 1; fi
+
+    # Now start the incoming Postgres container
+    if ! start-core-container $1; then error-exit 'Failed to Start Container '$1; fi
+
+    if ! alter-archive-command $1; then exit 1; fi
+
+    if ! barman-clear-legacy-streaming $1; then exit 1; fi
+
+    if ! enable-barman-backups; then exit 1; fi
+
+    return 0;
 }
 
 stop-container () {

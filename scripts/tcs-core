@@ -1,0 +1,80 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+USAGE='Usage: '$PROGNAME' -v|pg1|pg2|down'
+CORE_COMPOSE_ARGS=" -f docker-compose-core.yml -p core "
+
+source ./scripts/bash-functions
+source ./.tcs-pg-ports
+
+cleanup () {
+	docker-compose $CORE_COMPOSE_ARGS down
+}
+
+# ensure input params validity
+if [ "$#" != 1 ]; then error-exit "$USAGE"; fi
+
+case "$1" in
+	[-][v])
+		echo 'TCS Version'$TCS_VERSION
+		exit 0
+		;;
+	[d][o][w][n])
+		docker-compose $CORE_COMPOSE_ARGS down
+		;;
+	[p][g][1] | [p][g][2])
+		# 5432 is the ACTIVE port, 5433 is STANDBY
+		set-pg-ports $1
+		source ./.tcs-pg-ports
+
+		# Ensure we have the correct image and, if not, go get it
+		if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
+
+		# Ensure tcs-image is up-to-date
+		echo -n $PROGNAME': Ensure tcs-image is current ... '
+		if docker pull ccbcadmin/tcs-image$TCS_VERSION 2>&1 >/dev/null; then 
+			echo 'done'; 
+		else
+			error-exit 'failed';
+		fi
+
+		# Clean things up if things go awry
+		trap cleanup EXIT
+
+		if ! container-exists barman; then
+			if ! start-core-container barman; then
+				error-exit 'Failed to Start Container barman'; 
+			fi
+		fi
+
+		# Ensure Postgres owns everything
+		if ! change-pgdata-owner postgres $1; then exit 1; fi
+
+		# Start the selected Postgres container
+		if ! container-exists $1; then
+			if ! start-pg-container $1; then 
+				error-exit 'Failed to Start Container '$1; 
+			fi
+		fi
+
+		if ! container-exists rabbitmq; then
+			if ! start-core-container rabbitmq; then
+				msg 'rabbitmq Container Started';
+			fi
+		fi
+
+		if ! container-exists jenkins; then
+			if ! start-core-container jenkins; then
+				error-exit 'jenkins Failed to Start Container'; 
+			fi
+		fi
+
+		# No need for a cleanup
+		trap '' EXIT;
+
+		exit 0
+		;;
+	*) error-exit "$USAGE";
+		;;
+esac
+

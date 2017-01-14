@@ -6,7 +6,7 @@ USAGE='Usage: '$PROGNAME' pg1|pg2 backup_id target_time'
 source ./scripts/bash-functions
 source ./.tcs-pg-ports
 
-if [ "$#" != 3 ]; then error-exit "$USAGE"; fi
+if [ "$#" != 2 ] && [ "$#" != 3 ] ; then error-exit "$USAGE"; fi
 
 validate-pg-selection $1 "$USAGE"
 
@@ -19,11 +19,15 @@ pg-status &> /dev/null
 remove-pg-container $STANDBY_PG
 
 # Do the recovery
-barman-pitr $STANDBY_PG $1 $2 $3
+case "$#" in
+	2)	if ! barman-recover $@; then error-exit 'Recovery Failure'; fi ;;
+	3)  if ! barman-pitr $@; then error-exit 'Recovery Failure'; fi ;;
+	*)  error-exit 'Assertion Error @ '$LINENO ;;
+esac
+msg 'Recovery Successful'
 
 # Finally bring up the STANDBY container to listen on port 5433
-start-pg-container $STANDBY_PG; sleep 2;
-enable-stream-replication $STANDBY_PG 5433 &> /dev/null
+if ! start-pg-container $STANDBY_PG; then exit 1; fi
 
 msg 'Standby Recovery to '$STANDBY_PG' Complete'
 pg-status

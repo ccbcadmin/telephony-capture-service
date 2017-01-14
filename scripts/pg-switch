@@ -19,7 +19,8 @@ postgres-rollback () {
 		# Adjust the ports back to what they were
 		set-pg-ports $FROM_PG
 		
-		if ! start-pg-container $FROM_PG; then
+		# Now start the incoming Postgres container
+		if ! start-core-container $FROM_PG; then
 			msg 'Unable to restart the original container'; 
 			msg 'WARNING: TCS is partially disabled';
 			exit 1
@@ -27,24 +28,19 @@ postgres-rollback () {
 			msg $FROM_PG' Container Started'
 		fi
 		
-		sleep 7
-		if enable-stream-replication $FROM_PG; then 
-			msg $FROM' Stream Replication Activated'; 
-		else 
-			msg $1' Stream Replication Failed to Activate'; 
+		if ! alter-archive-command $TO_PG; then 
+			msg 'WARNING: TCS is partially disabled';
+			exit 1
 		fi
+
 	fi
 
-	# Bring barman back
-	if container-exists barman; then
-		if start-container barman; then 
-			msg 'barman Restarted'; 
-		else 
-			msg 'barman Restart Failed'; 
-		fi
-		sleep 2
-		enable-barman-backups
+	if enable-barman-backups; then
+		msg 'Barman Backups Enabled';
+	else
+		error-exit 'Failed to Enable Barman Backups'
 	fi
+
 	pg-status
 }
 
@@ -59,8 +55,9 @@ if [ -z ${ACTIVE_PG+x} ]; then error-exit 'No Active Postgres Container'; fi
 msg 'Begin Postgres Container Switch from '$FROM_PG' to '$TO_PG;
 
 # Do a final backup
+echo -n $PROGNAME': Final '$FROM_PG' Backup ... '
 if docker exec -it barman sh -c 'barman backup '$FROM_PG' 2>&1 >/dev/null; exit $?;'; then
-	msg $FROM_PG' Final Backup Successful';
+	echo 'done';
 else
 	# Abort if a final backup is not possible
 	error-exit $FROM_PG' Final Backup Failed';
@@ -69,10 +66,7 @@ fi
 # Ensure the target container is quiet
 remove-pg-container $TO_PG
 
-# Make barman quiet
-stop-container barman
-
-# Arrange for a possible rollback, if something goes amiss
+# Arrange for a possible rollback
 trap postgres-rollback EXIT;
 
 # Shutdown the outgoing container
@@ -80,28 +74,10 @@ remove-pg-container $FROM_PG
 
 if ! barman-recover-latest $FROM_PG $TO_PG; then error-exit 'Failed Database Recovery'; fi
 
-# Port mappings need to be modified
-set-pg-ports $TO_PG
-source ./.tcs-pg-ports
+if ! start-pg-container $TO_PG; then exit 1; fi
 
-# Now start the incoming database container
-if ! start-pg-container $TO_PG; then
-	error-exit $TO_PG' Failed to Start Container';
-fi
-
-sleep 10;
-
-# Ensure stream replication is enabled
-if ! enable-stream-replication $TO_PG; then
-	error-exit 'Failed to Enable Stream Replication';
-fi
-
-# Bring barman back
-start-container barman
-sleep 2
-enable-barman-backups
-
+# No need for a cleanup
 trap '' EXIT;
+
 msg 'Postgres Container Switch Successful'
-pg-status
 exit 0
