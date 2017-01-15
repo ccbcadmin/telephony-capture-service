@@ -90,7 +90,7 @@ msg () {
 change-pgdata-owner () {
     
     if ! docker exec -it barman sh -c 'chown -R '$1'.'$1' /'$2'_data; exit $?;' 2>&1 >/dev/null; then 
-        function-error $FUNCNAME $LINENO 'PGDATA Ownership Change Failed';
+        func-error $FUNCNAME $LINENO 'PGDATA Ownership Change Failed';
         return 1
     fi
     return 0
@@ -99,7 +99,7 @@ change-pgdata-owner () {
 change-pgdata-permissions () {
 
     if ! docker exec -it barman sh -c 'chmod -R 775 /'$1'_data; exit $?;' &> /dev/null; then 
-        function-error $FUNCNAME $LINENO 'PGDATA Permissions Change Failed';
+        func-error $FUNCNAME $LINENO 'PGDATA Permissions Change Failed';
         return 1
     fi
     return 0
@@ -117,7 +117,7 @@ enable-restart () {
     if docker update --restart unless-stopped $1 2>&1 >/dev/null; then 
         return 0
     else 
-        function-error $FUNCNAME $LINENO 'Unable to Reconfigure '$1' Container to Auto Restart'; 
+        func-error $FUNCNAME $LINENO 'Unable to Reconfigure '$1' Container to Auto Restart'; 
         return 1;  
     fi
 }
@@ -128,17 +128,17 @@ alter-archive-command () {
     do
         sleep 2
         if ! docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres; exit $?;' &> /dev/null; then 
-            function-error $FUNCNAME $LINENO $1' Failed to Alter archive_command';
+            func-error $FUNCNAME $LINENO $1' Failed to Alter archive_command';
             continue
         fi
         
         if ! docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres 2>&1 >/dev/null; exit $?;' &> /dev/null; then 
-            function-error $FUNCNAME $LINENO $1' Failed to Reload Postgres';
+            func-error $FUNCNAME $LINENO $1' Failed to Reload Postgres';
             continue
         fi
         return 0
     done
-    function-error $FUNCNAME $LINENO $1' Unable to Alter archive_command';
+    func-error $FUNCNAME $LINENO $1' Unable to Alter archive_command';
     return 1
 }
 
@@ -163,13 +163,13 @@ error-exit () {
 	exit 1
 }
 
-function-error () {
+func-error () {
     msg 'Error in function: '$1', Line '$2': '"$3"
 }
 
 barman-check () {
 	
-    if [ $# != 1 ]; then function-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
+    if [ $# != 1 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 
     for i in {1..10}
     do
@@ -207,7 +207,7 @@ barman-recover-latest () {
     # Use barman to recover the latest backup for the selected pg container
     docker exec -it barman sh -c 'barman recover '$1' latest /'$2'_data 2>&1 >/dev/null; exit $?;'
     if [ $? != 0 ]; then 
-        function-error $FUNCNAME $LINENO  $2' Recovery Failure';
+        func-error $FUNCNAME $LINENO  $2' Recovery Failure';
         return 1
     fi
 
@@ -231,18 +231,18 @@ barman-recover () {
     if [ "$#" == 2 ]; then
         docker exec -it barman sh -c 'barman recover '$1' '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'
         if [ $? != 0 ]; then 
-            function-error $FUNCNAME $LINENO $1' Recovery Failure';
+            func-error $FUNCNAME $LINENO $1' Recovery Failure';
             return 1
         else 
             msg $1' Recovery Successful'; 
         fi
     elif [ "$#" == 3 ]; then
         if ! docker exec -it barman sh -c 'barman recover '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
-            function-error $FUNCNAME $LINENO  $1' Recovery Failure';
+            func-error $FUNCNAME $LINENO  $1' Recovery Failure';
             return 1
         fi
     else
-        function-error $FUNCNAME $LINENO 'Incorrect number of parameters'
+        func-error $FUNCNAME $LINENO 'Incorrect number of parameters'
     fi
 
     # Ownership now passed to postgres
@@ -253,7 +253,7 @@ barman-recover () {
 
 barman-clear-legacy-streaming () {
     if ! docker exec -it barman sh -c 'rm -rf /var/lib/barman/'$1'/streaming/*; exit $?;'; then
-        function-error $FUNCNAME $LINENO 'Unable to clear legacy streaming';
+        func-error $FUNCNAME $LINENO 'Unable to clear legacy streaming';
         return 1
     fi
 }
@@ -262,7 +262,7 @@ barman-pitr () {
 
     echo -n $PROGNAME': Point-In-Time Recovery to '$1' ... '
 
-    if [ "$#" != 3 ] && [ "$#" != 4 ] ; then function-error $FUNCNAME $LINENO 'Incorrect number of parameters'; return 1; fi
+    if [ "$#" != 3 ] && [ "$#" != 4 ] ; then func-error $FUNCNAME $LINENO 'Incorrect number of parameters'; return 1; fi
 
     # barman needs ownership of the pgdata area
     if ! change-pgdata-owner barman $1; then return 1; fi
@@ -279,7 +279,7 @@ barman-pitr () {
         4) if ! docker exec -it barman sh -c 'barman recover --target-time '$4' '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'; 
             then return 1; fi
             ;;
-        *)  function-error $FUNCNAME $LINENO 'Assertion Error'
+        *)  func-error $FUNCNAME $LINENO 'Assertion Error'
             return 1
             ;;
     esac
@@ -304,13 +304,13 @@ container-exists () {
 confirm-barman () {
     # Minimally barman must be running
     if [ ! docker inspect --format='{{.State.Running}}' barman &> /dev/null ]; then 
-        function-error $FUNCNAME $LINENO 'barman GONE'
+        func-error $FUNCNAME $LINENO 'barman GONE'
         return 1
     fi
 
     barman_running=$(docker inspect --format='{{.State.Running}}' barman)
     if [ "$barman_running" == "false" ]; then 
-        function-error $FUNCNAME $LINENO 'barman Not Running'
+        func-error $FUNCNAME $LINENO 'barman Not Running'
         return 1; 
     fi
 
@@ -339,7 +339,7 @@ remove-pg-container () {
 
 create-container () {
     if docker-compose run -d --name $1 $1 2>&1 >/dev/null; then 
-        function-error $FUNCNAME $LINENO $1' Startup Failure';
+        func-error $FUNCNAME $LINENO $1' Startup Failure';
         return 1
     else 
         msg $1' Started'; 
@@ -357,7 +357,7 @@ set-pg-ports () {
 	    echo 'export PG1_PORT=5433; export PG2_PORT=5432;' > .tcs-pg-ports
         return 0
     else
-        function-error $FUNCNAME $LINENO 'Invalid pg Selection '$1
+        func-error $FUNCNAME $LINENO 'Invalid pg Selection '$1
         return 1;
     fi
 }
