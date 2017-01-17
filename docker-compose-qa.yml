@@ -18,14 +18,36 @@ services:
       - TMS_ACTIVE=1 
       - DB_QUEUE=QA_DB_QUEUE
       - TMS_QUEUE=QA_TMS_QUEUE
+    volumes:
+      - ./lib:/app/lib
  
   pbx-simulator:
+    environment:
+      - PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data
     container_name: QA-pbx-simulator
  
   tms-interface:
     container_name: QA-tms-interface
     environment:
       - TMS_QUEUE=QA_TMS_QUEUE
+      - TMS_PORT=6545
+    volumes:
+      - ./lib:/app/lib
 
   tms-simulator:
     container_name: QA-tms-simulator
+    environment:
+      - TMS_PORT=6545
+
+  tcs-qa:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    container_name: tcs-qa
+    privileged: false
+    network_mode: "host"
+    environment:
+      - PBX_SIMULATOR_SOURCE_DIRECTORY
+      - TCS_PORT=3458
+      - TMS_PORT=6545
+    entrypoint: ["node", "./lib/jenkins/test-pbx-to-tms-flow.js"]
+    volumes:
+      - ./lib:/app/lib

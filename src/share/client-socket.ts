@@ -37,7 +37,7 @@ export class ClientSocket {
 		this.socket.removeListener('error');
 
 		console.log(`${this.linkName} link unavailable`);
-		process.exit(-1);
+		process.exit(1);
 
 		if (this.retryCount % 20 === 0) {
 			console.log(`${this.linkName}: Link lost...retrying`);
@@ -56,10 +56,10 @@ export class ClientSocket {
 		setTimeout(this.openSocket, 2000);
 	}
 
-	public write = (msg: string): boolean => {
+	public write = (msg: Buffer): boolean => {
 
 		if (this.active) {
-			if (this.socket.write(msg)) {
+			if (this.socket.write(msg),'binary') {
 				return true;
 			}
 		}

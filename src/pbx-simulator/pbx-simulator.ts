@@ -25,7 +25,7 @@ import { ClientSocket } from '../share/client-socket';
 	let smdrFiles: string[] = [];
 	let smdrFileNo = 0;
 
-	const tscSocket = new ClientSocket('TCSSIM<=>TCS', 'localhost', env.TCS_PORT);
+	const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
 	const sendSmdrRecords = (smdrFileName: string): void => {
 
@@ -64,10 +64,11 @@ import { ClientSocket } from '../share/client-socket';
 				const firstPart = nextMsg.slice(0, partition);
 				const secondPart = nextMsg.slice(partition);
 
-				if (!tscSocket.write($.SMDR_PREAMBLE) || !tscSocket.write(firstPart) || !tscSocket.write(secondPart)) {
+/*				if (!tcsSocket.write($.SMDR_PREAMBLE) || !tcsSocket.write(firstPart) || !tcsSocket.write(secondPart)) {
 					console.log('Link to TCS unavailable...aborting.');
 					process.exit(-1);
 				}
+*/
 			}
 		}, 5);
 	}

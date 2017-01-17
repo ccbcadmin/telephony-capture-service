@@ -51,7 +51,7 @@ const queueCompleteMessages = (data: Buffer) => {
 const dataSink = (data: Buffer) => {
 
 	// Unfiltered data is queued for subsequent transmission to the legacy TMS
-	env.TMS_ACTIVE ? tmsQueue.sendToQueue(data.toString()) : _.noop;
+	env.TMS_ACTIVE ? tmsQueue.sendToQueue(data) : _.noop;
 
 	// However, only true SMDR data is queued for databaase archiving
 	queueCompleteMessages(data);

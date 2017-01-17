@@ -74,9 +74,9 @@ export class Queue {
 
 				if (this.consumer) {
 
-					channel.consume(this.queueName, msg => {
+					channel.consume(this.queueName, (msg) => {
 
-						if (this.consumer(msg)) {
+						if (this.consumer(msg.content)) {
 							this.channel.ack(msg);
 						} else {
 							this.channel.nack(msg);
@@ -90,9 +90,9 @@ export class Queue {
 		});
 	}
 
-	public sendToQueue = (msg: string) => {
+	public sendToQueue = (msg: Buffer) => {
 		// Any hiccups from RabbitMQ and the process exits
-		if (!this.channel.sendToQueue(this.queueName, Buffer.from(msg), { persistent: true })) {
+		if (!this.channel.sendToQueue(this.queueName, msg, { persistent: true })) {
 			console.log(`${this.queueName} not available...aborting`);
 			process.exit(1);
 		}

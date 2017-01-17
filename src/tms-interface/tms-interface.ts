@@ -32,8 +32,7 @@ process.on('SIGTERM', () => {
 	process.exit(0);
 });
 
-const dataSink = msg =>
-	tmsSocket.write(msg.content.toString());
+const dataSink = msg => tmsSocket.write(msg);
 
 let tmsQueue = null;
 
