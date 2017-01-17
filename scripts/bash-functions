@@ -332,7 +332,7 @@ remove-pg-container () {
     if container-exists $1; then
         echo -n $PROGNAME': Removing Container '$1' ... '
         docker stop --time 10 $1 2>&1 >/dev/null
-	    docker-compose -f docker-compose-core.yml -p CORE rm -f -v $1 &> /dev/null
+	    docker-compose -f docker-compose/core/docker-compose.yml -p CORE rm -f -v $1 &> /dev/null
         echo 'done'
     fi
 }
@@ -372,7 +372,7 @@ start-container () {
 start-core-container () {
     echo -n $PROGNAME': Starting '$1' ... '
     source ./.tcs-pg-ports
-    if ! docker-compose -f docker-compose-core.yml -p core up -d $1 &> /dev/null; then
+    if ! docker-compose -f docker-compose/core/docker-compose.yml -p core up -d $1 &> /dev/null; then
         return 1
     fi
 

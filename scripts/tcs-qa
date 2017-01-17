@@ -3,7 +3,7 @@
 PROGNAME=$(basename $0)
 source ./scripts/bash-functions
 
-COMPOSE_ARGS=" -f docker-compose.yml -f docker-compose-qa.yml -p qa "
+COMPOSE_ARGS=" -f docker-compose/docker-compose.yml -f docker-compose/qa/docker-compose.yml -p qa "
 
 # Ensure we have the correct image and, if not, go get it
 if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi

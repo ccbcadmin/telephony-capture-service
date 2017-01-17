@@ -4,6 +4,6 @@ PROGNAME=$(basename $0)
 USAGE='Usage: '$PROGNAME' -v|--version|pg1|pg2'
 source ./scripts/bash-functions
 
-COMPOSE_ARGS=" -f docker-compose.yml -f docker-compose-qa.yml -p qa "
+COMPOSE_ARGS=" -f docker-compose/docker-compose.yml -f docker-compose/qa/docker-compose.yml -p qa "
 
 docker-compose $COMPOSE_ARGS down

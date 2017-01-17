@@ -27,16 +27,16 @@ if [ $# -eq 1 ]; then
     fi
 fi
 
-# Load TCS environment variables
+# Load TCS environment variablesß
 source ./.tcs.env
 source ./.tcs.version
 
 echo 'TCS Version'$TCS_VERSION
 
-CORE_COMPOSE_ARGS='-f docker-compose-core.yml -p core '
-DEV_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose-dev.yml -p dev '
-QA_COMPOSE_ARGS='  -f docker-compose.yml -f docker-compose-qa.yml -p dev '
-PROD_COMPOSE_ARGS='-f docker-compose.yml -f docker-compose-prod.yml -p dev '
+CORE_COMPOSE_ARGS='-f docker-compose/core/docker-compose/core/docker-compose.yml -p core '
+DEV_COMPOSE_ARGS=' -f docker-compose/docker-compose.yml -f docker-compose/dev/docker-compose-dev.yml -p dev '
+QA_COMPOSE_ARGS='  -f docker-compose/docker-compose.yml -f docker-compose/qa/docker-compose.yml -p dev '
+PROD_COMPOSE_ARGS='-f docker-compose/docker-compose.yml -f docker-compose/prod/docker-compose.yml -p dev '
 
 # Application aliases
 alias build-dev='docker-compose '"$DEV_COMPOSE_ARGS"' build'
