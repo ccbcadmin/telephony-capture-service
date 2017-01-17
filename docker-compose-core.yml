@@ -4,6 +4,7 @@ volumes:
   postgres1_data: {}
   postgres2_data: {}
   jenkins_data: {}
+  rabbitmq_data: {}
 
 services:
 
@@ -65,6 +66,8 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: "host"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
   tcs-image:
     build: 

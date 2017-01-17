@@ -48,6 +48,6 @@ services:
       - PBX_SIMULATOR_SOURCE_DIRECTORY
       - TCS_PORT=3458
       - TMS_PORT=6545
-    entrypoint: ["node", "./lib/jenkins/test-pbx-to-tms-flow.js"]
+    entrypoint: ["node", "./lib/jenkins/test-rabbit-interruption-part2.js"]
     volumes:
       - ./lib:/app/lib

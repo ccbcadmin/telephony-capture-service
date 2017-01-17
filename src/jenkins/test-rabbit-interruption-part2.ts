@@ -1,5 +1,4 @@
-#!/bin/env node
-
+import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
 import * as $ from '../share/constants';
@@ -40,38 +39,12 @@ const env = envalid.cleanEnv(process.env, {
 
 // Load the buffer with random data
 for (let index = 0; index < testSize; ++index) {
-	masterTxBuffer[index] = Math.floor(Math.random() * 255);
+	masterTxBuffer[index] = index % 256;
 }
 
 const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
 let masterIndex = 0;
-
-setTimeout(() => {
-
-	const setIntervalId = setInterval(() => {
-
-		// Vary message lengths from 0 to 99, but truncate the last one
-		const dataLength = Math.min(Math.floor(Math.random() * 100), testSize - masterIndex);
-
-		let data = Buffer.alloc(dataLength);
-
-		for (let index = 0; index < dataLength; ++index, ++masterIndex) {
-			data[index] = masterTxBuffer[masterIndex];
-		}
-
-		if (tcsSocket.write(data) === false) {
-			console.log('Link to TCS unavailable ... aborting.');
-			process.exit(1);
-		}
-
-		if (masterIndex === testSize) {
-
-			console.log("tx Complete");
-			clearInterval(setIntervalId);
-		}
-	}, 2);
-}, 1000);
 
 let rxIndex = 0;
 const dataCapture = (data: Buffer) => {
