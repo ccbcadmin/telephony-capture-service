@@ -39,15 +39,9 @@ services:
     environment:
       - TMS_PORT=6545
 
-  tcs-qa:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: tcs-qa
-    privileged: false
-    network_mode: "host"
+  integrate:
+    container_name: QA-integrate
     environment:
-      - PBX_SIMULATOR_SOURCE_DIRECTORY
-      - TCS_PORT=3458
-      - TMS_PORT=6545
-    entrypoint: ["node", "./lib/jenkins/test-rabbit-interruption-part2.js"]
-    volumes:
-      - ../lib:/app/lib
+      - TCS_PORT=3457
+      - TMS_PORT=6544
+

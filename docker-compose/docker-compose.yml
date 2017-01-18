@@ -9,7 +9,7 @@ services:
     network_mode: "host"
     environment:
       - POSTGRES_PASSWORD
-    entrypoint: ["node", "./lib/database-interface/database-interface.js"]
+    command: ["node", "./lib/database-interface/database-interface.js"]
   
   mangle:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -67,3 +67,9 @@ services:
     environment:
       - TMS_PORT
     entrypoint: ["node", "./lib/tms-simulator/tms-simulator.js"]
+
+  integrate:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    privileged: true
+    network_mode: "host"
+    entrypoint: ["node", "./lib/integrate/test-pbx-to-tms-flow.js"]

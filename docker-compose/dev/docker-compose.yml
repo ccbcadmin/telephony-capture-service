@@ -18,7 +18,7 @@ services:
   pbx-interface:
     container_name: DEV-pbx-interface
     environment:
-      - TCS_PORT=3456
+      - TCS_PORT=3457
       - TMS_ACTIVE=1        
       - TMS_QUEUE=DEV_TMS_QUEUE     
       - DB_QUEUE=DEV_DB_QUEUE
@@ -31,17 +31,30 @@ services:
 
   pbx-simulator:
     container_name: DEV-pbx-simulator
+    environment:
+      - TCS_PORT=3457
     volumes:
       - ../lib:/app/lib
 
   tms-interface:
     container_name: DEV-tms-interface
     environment:
-      - TMS_QUEUE=DEV_TMS_QUEUE     
+      - TMS_QUEUE=DEV_TMS_QUEUE   
+      - TMS_PORT=6544  
     volumes:
       - ../lib:/app/lib
 
   tms-simulator:
     container_name: DEV-tms-simulator
+    environment:
+      - TMS_PORT=6544
+    volumes:
+      - ../lib:/app/lib
+
+  integrate:
+    container_name: DEV-integrate
+    environment:
+      - TCS_PORT=3457
+      - TMS_PORT=6544
     volumes:
       - ../lib:/app/lib
