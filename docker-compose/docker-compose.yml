@@ -16,7 +16,7 @@ services:
     privileged: false
     volumes:
       - /home/smdr-data:/smdr-data
-    entrypoint: ["node", "./lib/mangle/mangle.js"]
+    command: ["node", "./lib/mangle/mangle.js"]
 
   pbx-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}

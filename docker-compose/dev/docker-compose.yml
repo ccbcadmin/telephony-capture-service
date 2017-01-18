@@ -8,12 +8,12 @@ services:
       - DATABASE=dev
       - DB_QUEUE=DEV_DB_QUEUE    
     volumes:
-      - ./lib:/app/lib
+      - ../lib:/app/lib
 
   mangle:
     container_name: DEV-mangle
     volumes:
-      - ./lib:/app/lib
+      - ../lib:/app/lib
 
   pbx-interface:
     container_name: DEV-pbx-interface
@@ -27,21 +27,21 @@ services:
       - database-interface
       - tms-simulator
     volumes:
-      - ./lib:/app/lib
+      - ../lib:/app/lib
 
   pbx-simulator:
     container_name: DEV-pbx-simulator
     volumes:
-      - ./lib:/app/lib
+      - ../lib:/app/lib
 
   tms-interface:
     container_name: DEV-tms-interface
     environment:
       - TMS_QUEUE=DEV_TMS_QUEUE     
     volumes:
-      - ./lib:/app/lib
+      - ../lib:/app/lib
 
   tms-simulator:
     container_name: DEV-tms-simulator
     volumes:
-      - ./lib:/app/lib
+      - ../lib:/app/lib

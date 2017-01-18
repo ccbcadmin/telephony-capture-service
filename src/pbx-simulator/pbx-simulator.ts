@@ -29,7 +29,8 @@ import { ClientSocket } from '../share/client-socket';
 
 	const sendSmdrRecords = (smdrFileName: string): void => {
 
-		let data = fs.readFileSync(smdrFileName).toString();
+		//let data = fs.readFileSync(smdrFileName).toString();
+		let data:Buffer = fs.readFileSync(smdrFileName);
 
 		process.stdout.write('Sending ' + smdrFileName + '  ');
 
@@ -45,7 +46,7 @@ import { ClientSocket } from '../share/client-socket';
 				ee.emit('next');
 			} else {
 				++recordCount;
-				const nextMsg = data.slice(index, next_index + 2);
+				const nextMsg:Buffer = data.slice(index, next_index + 2);
 				// process.stdout.write(nextMsg);
 
 				if (recordCount % 20 === 5)
@@ -64,11 +65,10 @@ import { ClientSocket } from '../share/client-socket';
 				const firstPart = nextMsg.slice(0, partition);
 				const secondPart = nextMsg.slice(partition);
 
-/*				if (!tcsSocket.write($.SMDR_PREAMBLE) || !tcsSocket.write(firstPart) || !tcsSocket.write(secondPart)) {
+				if (!tcsSocket.write(firstPart) || !tcsSocket.write(secondPart)) {
 					console.log('Link to TCS unavailable...aborting.');
 					process.exit(-1);
 				}
-*/
 			}
 		}, 5);
 	}

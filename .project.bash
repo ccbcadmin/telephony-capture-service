@@ -34,7 +34,7 @@ source ./.tcs.version
 echo 'TCS Version'$TCS_VERSION
 
 CORE_COMPOSE_ARGS='-f docker-compose/core/docker-compose/core/docker-compose.yml -p core '
-DEV_COMPOSE_ARGS=' -f docker-compose/docker-compose.yml -f docker-compose/dev/docker-compose-dev.yml -p dev '
+DEV_COMPOSE_ARGS=' -f docker-compose/docker-compose.yml -f docker-compose/dev/docker-compose.yml -p dev '
 QA_COMPOSE_ARGS='  -f docker-compose/docker-compose.yml -f docker-compose/qa/docker-compose.yml -p dev '
 PROD_COMPOSE_ARGS='-f docker-compose/docker-compose.yml -f docker-compose/prod/docker-compose.yml -p dev '
 
@@ -42,12 +42,12 @@ PROD_COMPOSE_ARGS='-f docker-compose/docker-compose.yml -f docker-compose/prod/d
 alias build-dev='docker-compose '"$DEV_COMPOSE_ARGS"' build'
 alias build-qa='docker-compose '"$QA_COMPOSE_ARGS"' build'
 alias build-prod='docker-compose '"$PROD_COMPOSE_ARGS"' build'
-alias run-tmssim='docker-compose '"$DEV_COMPOSE_ARGS"' run -d --name tms-simulator tms-simulator'
-alias run-mangle='docker-compose '"$DEV_COMPOSE_ARGS"' run --rm --name mangle \
+alias run-tmssim='docker-compose '"$DEV_COMPOSE_ARGS"' run -d --name DEV-tms-simulator tms-simulator'
+alias run-mangle='docker-compose '"$DEV_COMPOSE_ARGS"' run --rm --name DEV-mangle \
     -e MANGLE_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 \
     -e MANGLE_TARGET_DIRECTORY=/smdr-data/smdr-data-003 \
     mangle'
-alias run-pbxsim='docker-compose '"$DEV_COMPOSE_ARGS"' run --rm --name pbx-simulator \
+alias run-pbxsim='docker-compose '"$DEV_COMPOSE_ARGS"' run --rm --name DEV-pbx-simulator \
     -e PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 \
     pbx-simulator'
 alias pg1-exec='docker exec -it pg1 /bin/bash'

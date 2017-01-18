@@ -31,14 +31,16 @@ process.on('SIGINT', () => {
 let tmsQueue;
 let databaseQueue;
 
-let leftOver: string = '';
+let leftOver = Buffer.alloc(0);
+
 const queueCompleteMessages = (data: Buffer) => {
 
-	const unprocessedData = leftOver + data.toString();
+	const unprocessedData = Buffer.concat ([leftOver, data]);
 
 	const crLfIndexOf = unprocessedData.indexOf($.CRLF);
 
-	const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
+	// const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
+	const msg = unprocessedData.slice (0, crLfIndexOf);
 
 	if (msg) {
 		databaseQueue.sendToQueue(msg[1]);
