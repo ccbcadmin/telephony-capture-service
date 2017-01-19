@@ -18,4 +18,4 @@ tcs down
 tcs
 
 # Testing begins
-docker-compose run --rm --name QA-integrate integrate
+docker-compose $COMPOSE_ARGS run --rm --name QA-integrate integrate
