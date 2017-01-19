@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo 'QA Test Run Begins
+echo 'QA Test Run Begins'
 export PATH=$PATH:./scripts
 
 # Prepare the QA environment
