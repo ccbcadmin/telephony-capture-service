@@ -12,8 +12,6 @@ export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose/docker-compos
 export COMPOSE_ARGS="$PROD_COMPOSE_ARGS"
 export TCSENV=Production
 
-echo 'Here we are'
-
 # define various functions
 . ./scripts/bash-functions
 
