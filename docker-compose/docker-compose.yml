@@ -9,14 +9,14 @@ services:
     network_mode: "host"
     environment:
       - POSTGRES_PASSWORD
-    command: ["node", "./lib/database-interface/database-interface.js"]
+    command: ["./lib/database-interface/database-interface.js"]
   
   mangle:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     privileged: false
     volumes:
       - /home/smdr-data:/smdr-data
-    command: ["node", "./lib/mangle/mangle.js"]
+    command: ["./lib/mangle/mangle.js"]
 
   pbx-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -29,7 +29,7 @@ services:
     depends_on:
       - tms-interface
       - database-interface
-    entrypoint: ["node", "./lib/pbx-interface/pbx-interface.js"]
+    entrypoint: ["./lib/pbx-interface/pbx-interface.js"]
 
   pbx-simulator:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -40,7 +40,7 @@ services:
     environment:
       - PBX_SIMULATOR_SOURCE_DIRECTORY
       - TCS_PORT=3456
-    entrypoint: ["node", "./lib/pbx-simulator/pbx-simulator.js"]
+    entrypoint: ["./lib/pbx-simulator/pbx-simulator.js"]
 
   tms-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -50,7 +50,7 @@ services:
     environment:
       - TMS_HOST
       - TMS_PORT
-    entrypoint: ["node", "./lib/tms-interface/tms-interface.js"]
+    entrypoint: ["./lib/tms-interface/tms-interface.js"]
    
   tms-simulator:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -59,10 +59,10 @@ services:
     network_mode: "host"
     environment:
       - TMS_PORT
-    entrypoint: ["node", "./lib/tms-simulator/tms-simulator.js"]
+    entrypoint: ["./lib/tms-simulator/tms-simulator.js"]
 
   integrate:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     privileged: true
     network_mode: "host"
-    command: ["node", "./lib/integrate/test-pbx-to-tms-flow.js"]
+    command: ["./lib/integrate/test-pbx-to-tms-flow.js"]

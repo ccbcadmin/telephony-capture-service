@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as $ from '../share/constants';
 import { ServerSocket } from '../share/server-socket';
 import { Queue } from '../share/queue';

@@ -18,9 +18,7 @@ services:
       - TMS_ACTIVE=1 
       - DB_QUEUE=QA_DB_QUEUE
       - TMS_QUEUE=QA_TMS_QUEUE
-    volumes:
-      - ./lib:/app/lib
- 
+
   pbx-simulator:
     environment:
       - PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data
@@ -31,8 +29,6 @@ services:
     environment:
       - TMS_QUEUE=QA_TMS_QUEUE
       - TMS_PORT=6545
-    volumes:
-      - ./lib:/app/lib
 
   tms-simulator:
     container_name: QA-tms-simulator
@@ -44,6 +40,5 @@ services:
     environment:
       - TCS_PORT=3457
       - TMS_PORT=6544
-    volumes:
-      - ./lib:/app/lib
+
  

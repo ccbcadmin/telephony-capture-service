@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const routineName = 'barman';
 
 // Ensure the presence of required environment variables

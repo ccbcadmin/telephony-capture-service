@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as $ from '../share/constants';
 import { pathSeparator } from '../share/util';
 
