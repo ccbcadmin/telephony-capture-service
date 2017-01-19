@@ -23,7 +23,7 @@ tcs
 # input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
 # input_testdata and output_testdata must be identical
 TEST=test-pbx-to-tms-flow
-if docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate -c ./lib/integrate/'$TEST'.js'; then
+if docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate -c './lib/integrate/'$TEST'.js'; then
 	echo 'Success: '$TEST
 else
 	echo 'Failure: '$TEST
@@ -33,7 +33,7 @@ fi
 # Test Description: Send a stream of data, shutdown rabbitmq, then restart it.
 # Ensure no dataloss
 TEST=test-rabbit-interruption-part1
-if docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate -c ./lib/integrate/'$TEST'.js'; then
+if docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate -c './lib/integrate/'$TEST'.js'; then
 	echo 'Success: '$TEST
 else
 	echo 'Failure: '$TEST
