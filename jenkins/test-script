@@ -1,14 +1,21 @@
 #!/bin/bash
 
-docker ps
-ls -al
-echo $PATH
+echo 'QA Test Run Begins
 export PATH=$PATH:./scripts
-echo $WORKSPACE
-ls -al $WORKSPACE/.project.bash
+
+# Prepare the QA environment
 cp jenkins/.tcs.env .
 cp jenkins/.tcs.version .
 . $WORKSPACE/.project.bash
+
+# Select the test environment
 tcsenv QA
+
+# Ensure that any existing QA containers are down
 tcs down
+
+# Then start the new ones
 tcs
+
+# Testing begins
+docker-compose run --rm --name QA-integrate integrate
