@@ -8,12 +8,12 @@ services:
       - DATABASE=dev
       - DB_QUEUE=DEV_DB_QUEUE    
     volumes:
-      - ../lib:/app/lib
+      - ./lib:/app/lib
 
   mangle:
     container_name: DEV-mangle
     volumes:
-      - ../lib:/app/lib
+      - ./lib:/app/lib
 
   pbx-interface:
     container_name: DEV-pbx-interface
@@ -27,14 +27,14 @@ services:
       - database-interface
       - tms-simulator
     volumes:
-      - ../lib:/app/lib
+      - ./lib:/app/lib
 
   pbx-simulator:
     container_name: DEV-pbx-simulator
     environment:
       - TCS_PORT=3457
     volumes:
-      - ../lib:/app/lib
+      - ./lib:/app/lib
 
   tms-interface:
     container_name: DEV-tms-interface
@@ -42,14 +42,14 @@ services:
       - TMS_QUEUE=DEV_TMS_QUEUE   
       - TMS_PORT=6544  
     volumes:
-      - ../lib:/app/lib
+      - ./lib:/app/lib
 
   tms-simulator:
     container_name: DEV-tms-simulator
     environment:
       - TMS_PORT=6544
     volumes:
-      - ../lib:/app/lib
+      - ./lib:/app/lib
 
   integrate:
     container_name: DEV-integrate
@@ -57,4 +57,4 @@ services:
       - TCS_PORT=3457
       - TMS_PORT=6544
     volumes:
-      - ../lib:/app/lib
+      - ./lib:/app/lib

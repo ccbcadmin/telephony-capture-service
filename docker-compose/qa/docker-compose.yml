@@ -19,7 +19,7 @@ services:
       - DB_QUEUE=QA_DB_QUEUE
       - TMS_QUEUE=QA_TMS_QUEUE
     volumes:
-      - ../lib:/app/lib
+      - ./lib:/app/lib
  
   pbx-simulator:
     environment:
@@ -32,7 +32,7 @@ services:
       - TMS_QUEUE=QA_TMS_QUEUE
       - TMS_PORT=6545
     volumes:
-      - ../lib:/app/lib
+      - ./lib:/app/lib
 
   tms-simulator:
     container_name: QA-tms-simulator
@@ -44,4 +44,6 @@ services:
     environment:
       - TCS_PORT=3457
       - TMS_PORT=6544
-
+    volumes:
+      - ./lib:/app/lib
+ 
