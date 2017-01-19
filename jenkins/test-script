@@ -10,3 +10,5 @@ cp jenkins/.tcs.env .
 cp jenkins/.tcs.version .
 . $WORKSPACE/.project.bash
 tcsenv QA
+tcs down
+tcs
