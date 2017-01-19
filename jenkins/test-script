@@ -9,3 +9,4 @@ ls -al $WORKSPACE/.project.bash
 cp jenkins/.tcs.env .
 cp jenkins/.tcs.version .
 . $WORKSPACE/.project.bash
+tcsenv QA
