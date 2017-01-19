@@ -1,0 +1,11 @@
+#!/bin/bash
+
+docker ps
+ls -al
+echo $PATH
+export PATH=$PATH:./scripts
+echo $WORKSPACE
+ls -al $WORKSPACE/.project.bash
+cp jenkins/.tcs.env .
+cp jenkins/.tcs.version .
+. $WORKSPACE/.project.bash
