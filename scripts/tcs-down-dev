@@ -1,7 +1,0 @@
-#!/bin/bash
-
-PROGNAME=$(basename $0)
-USAGE='Usage: '$PROGNAME' -v|--version|pg1|pg2'
-source ./scripts/bash-functions
-
-docker-compose $DEV_COMPOSE_ARGS down

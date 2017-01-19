@@ -1,7 +1,0 @@
-#!/bin/bash
-
-PROGNAME=$(basename $0)
-source ./scripts/bash-functions
-
-# Start with a clean sheet
-docker-compose $PROD_COMPOSE_ARGS down --remove-orphans

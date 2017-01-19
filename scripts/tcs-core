@@ -64,7 +64,7 @@ case "$1" in
 
 		if ! container-exists jenkins; then
 			if ! start-core-container jenkins; then
-				error-exit 'jenkins Failed to Start Container'; 
+				error-exit 'jenkins Failed to Start Container';
 			fi
 		fi
 

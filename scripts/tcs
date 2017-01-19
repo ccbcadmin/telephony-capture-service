@@ -3,11 +3,27 @@
 PROGNAME=$(basename $0)
 source ./scripts/bash-functions
 
+USAGE='Usage: tcs [down]';
+
+if [ "$#" != 0 ] && [ "$#" != 1 ] ; then error-exit "$USAGE"; fi
+
+# ensure input params validity
+if [ "$#" == 1 ]; then 
+	if [ "$1" != 'down' ]; then
+		error-exit "$USAGE"; 
+	else
+		docker-compose $COMPOSE_ARGS down --remove-orphans
+		msg 'TCS Down'
+		exit 0
+	fi
+fi
+
 # Ensure we have the correct image and, if not, go get it
 if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
 if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then exit 1; fi
 
-docker-compose $PROD_COMPOSE_ARGS up -d --no-build pbx-interface
+docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
-msg 'TCS (Production) Started'
+msg 'TCS Up'
+exit 0

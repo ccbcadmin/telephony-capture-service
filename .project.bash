@@ -8,6 +8,10 @@ export DEV_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose/docker-compose
 export QA_COMPOSE_ARGS=' -f docker-compose.yml  -f docker-compose/docker-compose.yml -f docker-compose/qa/docker-compose.yml -p qa '
 export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose/docker-compose.yml -f docker-compose/prod/docker-compose.yml -p prod '
 
+# Production environment is the default
+export COMPOSE_ARGS=$PROD_COMPOSE_ARGS
+export TCSENV=Production
+
 # define various functions
 source ./scripts/bash-functions
 

@@ -105,25 +105,35 @@ change-pgdata-permissions () {
     return 0
 }
 
-tcsenv2 () {
-    case "$1" in
-        [dD][eE][vV])
-            echo Mode is dev
-            export COMPOSE_ARGS=$DEV_COMPOSE_ARGS
-            echo $COMPOSE_ARGS
-            return 0
-            ;;
-        [qQ][aA])
-            echo Mode is qa
-            return 0
-            ;;
-        [pP][rR][oO][dD])
-            echo Mode is prod
-            return 0
-            ;;
-        *) func-error "ToDo";
-            ;;
-    esac
+tcsenv () {
+    local USAGE='Usage: tcsenv [dev|qa|prod]'
+
+    if [ "$#" == 0 ]; then
+        echo $TCSENV
+        return 0
+    elif [ "$#" == 1 ]; then
+        case "$1" in
+            [dD][eE][vV])
+                export COMPOSE_ARGS=$DEV_COMPOSE_ARGS
+                export TCSENV=Development
+                ;;
+            [qQ][aA])
+                export COMPOSE_ARGS=$QA_COMPOSE_ARGS
+                export TCSENV=QA
+                ;;
+            [pP][rR][oO][dD])
+                export COMPOSE_ARGS=$PROD_COMPOSE_ARGS
+                export TCSENV=Production
+                ;;
+            *) echo $USAGE
+                return 1
+                ;;
+        esac
+        echo $TCSENV
+        return 0
+    else
+        echo $USAGE
+    fi
 }
 
 # Ensure that a container is not restarted at boot time
