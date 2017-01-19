@@ -15,7 +15,7 @@ export TCSENV=Production
 echo 'Here we are'
 
 # define various functions
-source ./scripts/bash-functions
+. ./scripts/bash-functions
 
 # Allow access to bash scripts
 export PATH=./scripts:$PATH
@@ -37,8 +37,8 @@ if [ $# -eq 1 ]; then
 fi
 
 # Load TCS environment variables
-source ./.tcs.env
-source ./.tcs.version
+. ./.tcs.env
+. ./.tcs.version
 
 echo 'TCS Version'$TCS_VERSION
 
