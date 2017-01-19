@@ -18,4 +18,4 @@ tcs down
 tcs
 
 # Testing begins
-docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate /lib/integrate/test-pbx-to-tms-flow.js
+docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate ./lib/integrate/test-pbx-to-tms-flow.js
