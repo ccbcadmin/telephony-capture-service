@@ -9,7 +9,7 @@ export QA_COMPOSE_ARGS=' -f docker-compose.yml  -f docker-compose/docker-compose
 export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose/docker-compose.yml -f docker-compose/prod/docker-compose.yml -p prod '
 
 # Production environment is the default
-export COMPOSE_ARGS=$PROD_COMPOSE_ARGS
+export COMPOSE_ARGS="$PROD_COMPOSE_ARGS"
 export TCSENV=Production
 
 echo 'Here we are'
