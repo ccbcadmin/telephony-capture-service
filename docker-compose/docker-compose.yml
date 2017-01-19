@@ -65,4 +65,3 @@ services:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     privileged: true
     network_mode: "host"
-    command: ["./lib/integrate/test-pbx-to-tms-flow.js"]
