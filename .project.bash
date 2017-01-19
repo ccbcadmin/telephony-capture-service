@@ -12,6 +12,8 @@ export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose/docker-compos
 export COMPOSE_ARGS=$PROD_COMPOSE_ARGS
 export TCSENV=Production
 
+echo 'Here we are'
+
 # define various functions
 source ./scripts/bash-functions
 
@@ -34,7 +36,7 @@ if [ $# -eq 1 ]; then
     fi
 fi
 
-# Load TCS environment variablesß
+# Load TCS environment variables
 source ./.tcs.env
 source ./.tcs.version
 

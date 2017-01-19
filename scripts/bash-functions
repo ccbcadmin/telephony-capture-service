@@ -105,6 +105,8 @@ change-pgdata-permissions () {
     return 0
 }
 
+# Define the environment (DEV, QA, or PROD)
+# If no parameter provided, then it is a request to diplay the current environment
 tcsenv () {
     local USAGE='Usage: tcsenv [dev|qa|prod]'
 
