@@ -18,4 +18,23 @@ tcs down
 tcs
 
 # Testing begins
-docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate -c ./lib/integrate/test-pbx-to-tms-flow.js
+
+# Test Description: Ensure that a stream of data makes it round-trip: 
+# input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
+# input_testdata and output_testdata must be identical
+if ! docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate -c ./lib/integrate/test-pbx-to-tms-flow.js; then
+	echo 'test-pbx-to-tms-flow failure'
+	exit 1
+fi
+
+# Test Description: Send a stream of data, shutdown rabbitmq, then restart it.
+# Ensure no dataloss
+if ! docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate -c ./lib/integrate/test-rabbit-interruption-part1.js; then
+	echo 'test-rabbit-interruption-part1 failure'
+	exit 1
+fi
+
+if ! docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate -c ./lib/integrate/test-rabbit-interruption-part1.js; then
+	echo 'test-rabbit-interruption-part2 failure'
+	exit 1
+fi
