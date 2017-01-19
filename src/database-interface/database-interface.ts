@@ -105,9 +105,10 @@ let badRawRecords = 0;
 
 const dataSink = (msg): boolean => {
 
-	let raw_call = msg.content.toString().split(',');
+	let raw_call = msg.toString().split(',');
 
 	if (raw_call.length !== 30) {
+		console.log ('bad call length: ', raw_call.length);
 		++badRawRecords;
 	} else {
 
@@ -197,9 +198,8 @@ const dataSink = (msg): boolean => {
 		};
 
 		insertCallRecords(smdrRecord)
-			// If everything OK, then move on to the next line of the file
+			// If OK, then move on the next record
 			.then(() => {
-				// console.log('stored to database success');
 				return true;
 			})
 			.catch(err => {

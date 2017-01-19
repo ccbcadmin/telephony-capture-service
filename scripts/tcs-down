@@ -3,7 +3,5 @@
 PROGNAME=$(basename $0)
 source ./scripts/bash-functions
 
-COMPOSE_ARGS=" -f docker-compose/docker-compose.yml -f docker-compose/prod/docker-compose.yml -p prod "
-
 # Start with a clean sheet
-docker-compose $COMPOSE_ARGS down --remove-orphans
+docker-compose $PROD_COMPOSE_ARGS down --remove-orphans

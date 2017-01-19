@@ -1,9 +1,12 @@
 #!/bin/bash
-# I put a variable in my scripts named PROGNAME which
-# holds the name of the program being run.  You can get this
-# value from the first item on the command line ($0).
 
 PROGNAME=$(basename $0)
+
+# exports for docker-compose
+export CORE_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose/core/docker-compose.yml -p core '
+export DEV_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose/docker-compose.yml -f docker-compose/dev/docker-compose.yml -p dev '
+export QA_COMPOSE_ARGS=' -f docker-compose.yml  -f docker-compose/docker-compose.yml -f docker-compose/qa/docker-compose.yml -p qa '
+export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose/docker-compose.yml -f docker-compose/prod/docker-compose.yml -p prod '
 
 # define various functions
 source ./scripts/bash-functions
@@ -32,11 +35,6 @@ source ./.tcs.env
 source ./.tcs.version
 
 echo 'TCS Version'$TCS_VERSION
-
-CORE_COMPOSE_ARGS='-f docker-compose/core/docker-compose/core/docker-compose.yml -p core '
-DEV_COMPOSE_ARGS=' -f docker-compose/docker-compose.yml -f docker-compose/dev/docker-compose.yml -p dev '
-QA_COMPOSE_ARGS='  -f docker-compose/docker-compose.yml -f docker-compose/qa/docker-compose.yml -p dev '
-PROD_COMPOSE_ARGS='-f docker-compose/docker-compose.yml -f docker-compose/prod/docker-compose.yml -p dev '
 
 # Application aliases
 alias build-dev='docker-compose '"$DEV_COMPOSE_ARGS"' build'

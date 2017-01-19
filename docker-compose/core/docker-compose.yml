@@ -51,7 +51,8 @@ services:
   jenkins:
     build:
       context: .
-      dockerfile: ./src/jenkins/Dockerfile
+      dockerfile: $PWD/src/integrate/Dockerfile
+    image: ccbcadmin/tcs-jenkins${TCS_VERSION}
     container_name: jenkins
     restart: unless-stopped
     privileged: true
@@ -72,6 +73,6 @@ services:
   tcs-image:
     build: 
       context: .
-      dockerfile: ./src/tcs-image/Dockerfile
+      dockerfile: $PWD/src/tcs-image/Dockerfile
     image: ccbcadmin/tcs-image${TCS_VERSION}
     container_name: tcs-image

@@ -33,20 +33,24 @@ let databaseQueue;
 
 let leftOver = Buffer.alloc(0);
 
-const queueCompleteMessages = (data: Buffer) => {
+const queueSmdrMessages = (data: Buffer) => {
 
-	const unprocessedData = Buffer.concat ([leftOver, data]);
+	// Gather all the outstanding data
+	let unprocessedData = Buffer.concat([leftOver, data]);
 
+	// If a CRLF is found, then we have a message
 	const crLfIndexOf = unprocessedData.indexOf($.CRLF);
 
-	// const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
-	const msg = unprocessedData.slice (0, crLfIndexOf);
 
-	if (msg) {
-		databaseQueue.sendToQueue(msg[1]);
-		leftOver = unprocessedData.slice(crLfIndexOf + 2);
-	} else {
-		leftOver = unprocessedData.slice(0);
+	// If no CRLF, then nothing to do
+	if (crLfIndexOf < 0) {
+		leftOver = Buffer.alloc(unprocessedData.length);
+		unprocessedData.copy(leftOver);
+	}
+	else {
+		databaseQueue.sendToQueue(unprocessedData.slice(0, crLfIndexOf + 2));
+		leftOver = Buffer.alloc(unprocessedData.length - (crLfIndexOf + 2));
+		unprocessedData.copy(leftOver, 0, crLfIndexOf + 2);
 	}
 }
 
@@ -56,7 +60,7 @@ const dataSink = (data: Buffer) => {
 	env.TMS_ACTIVE ? tmsQueue.sendToQueue(data) : _.noop;
 
 	// However, only true SMDR data is queued for databaase archiving
-	queueCompleteMessages(data);
+	queueSmdrMessages(data);
 }
 
 // Setup the queue to the TMS if needed

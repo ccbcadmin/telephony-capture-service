@@ -42,13 +42,6 @@ services:
       - TCS_PORT=3456
     entrypoint: ["node", "./lib/pbx-simulator/pbx-simulator.js"]
 
-  tcs-image:
-    build: 
-      context: .
-      dockerfile: ./src/tcs-image/Dockerfile
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    container_name: tcs-image
-
   tms-interface:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     restart: unless-stopped
