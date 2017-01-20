@@ -117,15 +117,15 @@ tcsenv () {
         case "$1" in
             [dD][eE][vV])
                 export COMPOSE_ARGS=$DEV_COMPOSE_ARGS
-                export TCSENV=Development
+                export TCSENV=dev
                 ;;
             [qQ][aA])
                 export COMPOSE_ARGS=$QA_COMPOSE_ARGS
-                export TCSENV=QA
+                export TCSENV=qa
                 ;;
             [pP][rR][oO][dD])
                 export COMPOSE_ARGS=$PROD_COMPOSE_ARGS
-                export TCSENV=Production
+                export TCSENV=prod
                 ;;
             *) echo $USAGE
                 return 1

@@ -10,7 +10,7 @@ export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose/docker-compos
 
 # Production environment is the default
 export COMPOSE_ARGS="$PROD_COMPOSE_ARGS"
-export TCSENV=Production
+export TCSENV=prod
 
 # Allow access to bash scripts
 export PATH=./scripts:$PATH
