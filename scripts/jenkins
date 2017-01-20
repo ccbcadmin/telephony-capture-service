@@ -33,11 +33,9 @@ tcsenv $1
 export PATH=$PATH:./scripts
 ./scripts/.project.bash
 
-echo -n 'Preparing test environment ... '
-# Ensure that any existing QA containers are down
+# Restart the TCS containers
+echo -n 'Preparing the '$1' environment ... '
 docker-compose $COMPOSE_ARGS down &>/dev/null
-
-# Then restart the containers using the correct image
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface &>/dev/null
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface &>/dev/null
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface &>/dev/null

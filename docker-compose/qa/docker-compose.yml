@@ -36,7 +36,6 @@ services:
       - TMS_PORT=6545
 
   integrate:
-    container_name: QA-integrate
     environment:
       - TCS_PORT=3458
       - TMS_PORT=6545

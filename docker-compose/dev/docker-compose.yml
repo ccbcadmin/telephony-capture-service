@@ -52,7 +52,6 @@ services:
       - ./lib:/app/lib
 
   integrate:
-    container_name: DEV-integrate
     environment:
       - TCS_PORT=3457
       - TMS_PORT=6544

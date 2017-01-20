@@ -3,20 +3,53 @@
 PROGNAME=$(basename $0)
 source ./scripts/bash-functions
 
-USAGE='Usage: tcs [down]';
+USAGE='Usage: tcs [down] [dev|qa|prod]';
 
-if [ "$#" != 0 ] && [ "$#" != 1 ] ; then error-exit "$USAGE"; fi
+if [ "$#" != 0 ] && [ "$#" != 1 ] && [ $# != 2 ]; then error-exit "$USAGE"; fi
 
 # ensure input params validity
 if [ "$#" == 1 ]; then 
-	if [ "$1" != 'down' ]; then
+	case "$1" in
+		[d][o][w][n])
+			docker-compose $COMPOSE_ARGS down --remove-orphans
+			msg 'TCS Down'
+			exit 0
+			;;
+		[d][e][v])
+			COMPOSE_ARGS=$DEV_COMPOSE_ARGS
+			;;
+		[q][a])
+			COMPOSE_ARGS=$QA_COMPOSE_ARGS
+			;;
+		[p][r][o][d])
+			COMPOSE_ARGS=$PROD_COMPOSE_ARGS
+			;;
+		*)
+			error-exit "$USAGE";
+	esac		
+elif [ $# == 2 ]; then
+	case "$2" in
+		[d][e][v])
+			COMPOSE_ARGS=$DEV_COMPOSE_ARGS
+			;;
+		[q][a])
+			COMPOSE_ARGS=$QA_COMPOSE_ARGS
+			;;
+		[p][r][o][d])
+			COMPOSE_ARGS=$PROD_COMPOSE_ARGS
+			;;
+		*)
+			error-exit "$USAGE";
+	esac	
+	if [ $1 != 'down' ]; then 
 		error-exit "$USAGE"; 
-	else
-		docker-compose $COMPOSE_ARGS down --remove-orphans
-		msg 'TCS Down'
-		exit 0
+	else 
+		docker-compose $COMPOSE_ARGS down --remove-orphans; 
+		exit 0; 
 	fi
-fi
+fi	
+
+echo $COMPOSE_ARGS
 
 # Ensure we have the correct image and, if not, go get it
 if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
