@@ -11,17 +11,20 @@ if [ "$#" != 0 ] && [ "$#" != 1 ] && [ $# != 2 ]; then error-exit "$USAGE"; fi
 if [ "$#" == 1 ]; then 
 	case "$1" in
 		[d][o][w][n])
-			docker-compose $COMPOSE_ARGS down --remove-orphans
-			msg 'TCS Down'
+			docker-compose $COMPOSE_ARGS down --remove-orphans &> /dev/null
+			msg 'TCS ('$TCSENV') Down'
 			exit 0
 			;;
 		[d][e][v])
+			TCSENV=Development
 			COMPOSE_ARGS=$DEV_COMPOSE_ARGS
 			;;
 		[q][a])
+			TCSENV=QA
 			COMPOSE_ARGS=$QA_COMPOSE_ARGS
 			;;
 		[p][r][o][d])
+			TCSENV=Production
 			COMPOSE_ARGS=$PROD_COMPOSE_ARGS
 			;;
 		*)
@@ -30,12 +33,15 @@ if [ "$#" == 1 ]; then
 elif [ $# == 2 ]; then
 	case "$2" in
 		[d][e][v])
+			TCSENV=Development
 			COMPOSE_ARGS=$DEV_COMPOSE_ARGS
 			;;
 		[q][a])
+			TCSENV=QA
 			COMPOSE_ARGS=$QA_COMPOSE_ARGS
 			;;
 		[p][r][o][d])
+			TCSENV=Production
 			COMPOSE_ARGS=$PROD_COMPOSE_ARGS
 			;;
 		*)
@@ -44,19 +50,19 @@ elif [ $# == 2 ]; then
 	if [ $1 != 'down' ]; then 
 		error-exit "$USAGE"; 
 	else 
-		docker-compose $COMPOSE_ARGS down --remove-orphans; 
+		docker-compose $COMPOSE_ARGS down --remove-orphans &> /dev/null
+		msg 'TCS ('$TCSENV') Down'
 		exit 0; 
 	fi
 fi	
 
-echo $COMPOSE_ARGS
-
 # Ensure we have the correct image and, if not, go get it
 if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
-if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then exit 1; fi
+if ! docker pull ccbcadmin/tcs-image$TCS_VERSION 2>&1 >/dev/null; then exit 1; fi
 
+# Start the TCS containers
 docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
-msg 'TCS Up'
+msg 'TCS ('$TCSENV') Up'
 exit 0
