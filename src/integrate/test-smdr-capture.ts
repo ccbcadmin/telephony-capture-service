@@ -5,6 +5,7 @@ import 'rxjs/add/operator/map';
 
 import * as $ from '../share/constants';
 import { ClientSocket } from '../share/client-socket';
+import { Queue } from '../share/queue';
 
 const routineName = 'pbx-simulator';
 
@@ -21,10 +22,13 @@ const { str, num} = envalid;
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
+	DATABASE: str(),
+	DB_QUEUE: str()
 });
 
 let smdrFiles: string[] = [];
 let smdrFileNo = 0;
+let recordCount: number = 0;
 
 const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
@@ -37,7 +41,6 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 
 	let index: number = 0;
 	let next_index: number = 0;
-	let recordCount: number = 0;
 
 	const intervalId = setInterval(() => {
 		// Look for SMDR record boundaries until there are no more
@@ -74,9 +77,22 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 	}, 10);
 }
 
+const connection = {
+	host: 'localhost',
+	port: 5432,
+	database: env.DATABASE,
+	user: 'postgres'
+};
+
+const checkRecordCount = () => {
+	console.log('Record Count: ', recordCount);
+	process.exit(1);
+}
 const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
-		process.exit(0);
+
+		// Wait a bit and then confirm the count in the database
+		setTimeout(checkRecordCount, 3000);
 	}
 	else {
 		sendSmdrRecords(smdrFiles[smdrFileNo]);
@@ -86,20 +102,30 @@ const nextFile = () => {
 
 ee.on('next', nextFile);
 
-// Search the source directory looking for raw SMDR files
-dir.files('./sample-data/smdr-data/smdr-one-file', (err, files) => {
-	if (err) throw err;
+// Ensure the DB_QUEUE is empty
+const databaseQueue = new Queue(env.DB_QUEUE, () => true);
 
-	// Deliver the data in chronological order
-	files.sort();
+// Wait a bit to ensure the queue is empty, then proceed
+setTimeout(() => {
 
-	for (let file of files) {
-		let path = file.split('\\');
+	// Stop clearing the DB queue
+	databaseQueue.close();
 
-		// Only interested in SMDR files
-		if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
-			smdrFiles.push(file);
+	// Search the source directory looking for raw SMDR files
+	dir.files('./sample-data/smdr-data/smdr-one-file', (err, files) => {
+		if (err) throw err;
+
+		// Deliver the data in chronological order
+		files.sort();
+
+		for (let file of files) {
+			let path = file.split('\\');
+
+			// Only interested in SMDR files
+			if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
+				smdrFiles.push(file);
+			}
 		}
-	}
-	nextFile();
-});
+		nextFile();
+	});
+}, 2000);

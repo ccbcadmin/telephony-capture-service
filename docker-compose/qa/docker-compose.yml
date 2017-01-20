@@ -40,5 +40,7 @@ services:
     environment:
       - TCS_PORT=3458
       - TMS_PORT=6545
+      - DATABASE=qa
+      - DB_QUEUE=QA_DB_QUEUE
 
  

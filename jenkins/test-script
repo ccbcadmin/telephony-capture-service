@@ -5,21 +5,21 @@ export PATH=$PATH:./scripts
 
 # Prepare the QA environment
 cp jenkins/.tcs.env .
-cp jenkins/.tcs.version .
-. $WORKSPACE/.project.bash
+source $WORKSPACE/.project.bash
 
-# Select the test environment
+# Select the QA environment
 tcsenv QA
 
 # Ensure that any existing QA containers are down
 tcs down
 
-# Then start the new ones
+# Then restart using the correct image
 tcs
 
 # Testing begins
 
-# Test Description: Ensure that a stream of data makes it round-trip: 
+# TEST CASE DESCRIPTION 
+# Ensure that a stream of data makes it round-trip: 
 # input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
 # input_testdata and output_testdata must be identical
 TEST=test-pbx-to-tms-flow
@@ -30,7 +30,8 @@ else
 	exit 1
 fi
 
-# Test Description: Send a stream of data, shutdown rabbitmq, then restart it.
+# TEST CASE DESCRIPTION 
+# Send a stream of data, shutdown rabbitmq, then restart it.
 # Ensure no dataloss
 TEST=test-rabbit-interruption-part1
 if docker-compose $COMPOSE_ARGS run --rm --name QA-integrate --entrypoint bash integrate -c './lib/integrate/'$TEST'.js'; then
@@ -47,3 +48,5 @@ else
 	echo 'Failure: '$TEST
 	exit 1
 fi
+
+# TEST CASE DESCRIPTION 

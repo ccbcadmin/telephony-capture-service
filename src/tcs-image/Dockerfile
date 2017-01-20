@@ -77,7 +77,11 @@ RUN npm install
 
 # scoop up all the NodeJS code
 COPY ./lib /app/lib
+RUN chmod -R +x /app/lib
 COPY ./src /app/src
+
+# Also the sample data
+COPY ./sample-data /app/sample-data
 
 # Prep for barman
 COPY ./src/tcs-image/barman.conf /etc/
