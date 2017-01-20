@@ -51,8 +51,6 @@ export class Queue {
 				});
 
 			queueConnection.on("close", () => {
-				console.error("[AMQP] reconnecting");
-				process.exit(1);
 				});
  
 			this.connection = queueConnection;
@@ -100,6 +98,12 @@ export class Queue {
 
 	public close = () => {
 		console.log('Close queue connection');
+		this.retryConnectSubscription.unsubscribe();
+
+		// Stop listening to queue events
+		this.connection.removeListener ("close", () => {});
+		this.connection.removeListener ("error", () => {});
+
 		this.connection ? this.connection.close() : _.noop;
 	}
 }

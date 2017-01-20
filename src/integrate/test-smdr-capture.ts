@@ -34,7 +34,6 @@ const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
 const sendSmdrRecords = (smdrFileName: string): void => {
 
-	//let data = fs.readFileSync(smdrFileName).toString();
 	let data: Buffer = fs.readFileSync(smdrFileName);
 
 	process.stdout.write('Sending ' + smdrFileName + '  ');
@@ -51,7 +50,6 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 		} else {
 			++recordCount;
 			const nextMsg = data.slice(index, next_index + 2);
-			// process.stdout.write(nextMsg);
 
 			if (recordCount % 20 === 5)
 				process.stdout.write('\b-');
@@ -74,7 +72,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 				process.exit(-1);
 			}
 		}
-	}, 10);
+	}, 2);
 }
 
 const connection = {
@@ -86,8 +84,9 @@ const connection = {
 
 const checkRecordCount = () => {
 	console.log('Record Count: ', recordCount);
-	process.exit(1);
+	process.exit(0);
 }
+
 const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
 
@@ -103,12 +102,13 @@ const nextFile = () => {
 ee.on('next', nextFile);
 
 // Ensure the DB_QUEUE is empty
+console.log ('Clear DQ_QUEUE');
 const databaseQueue = new Queue(env.DB_QUEUE, () => true);
 
 // Wait a bit to ensure the queue is empty, then proceed
 setTimeout(() => {
 
-	// Stop clearing the DB queue
+	// Stop clearing the queue
 	databaseQueue.close();
 
 	// Search the source directory looking for raw SMDR files

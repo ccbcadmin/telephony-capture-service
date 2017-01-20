@@ -16,7 +16,7 @@ validate-backup_id $1 $2
 pg-status &> /dev/null
 
 # Remove the STANDBY container, before doing the recovery
-remove-pg-container $STANDBY_PG
+remove-core-container $STANDBY_PG
 
 # Do the recovery
 case "$#" in

@@ -1,0 +1,69 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+source ./scripts/bash-functions
+USAGE='Usage: jenkins dev|qa [debug]'
+NO_DEBUG='&> /dev/null'
+
+# 'execute-test-case' is the workhorse function to execute the various test cases
+execute-test-case () {
+	echo -n 'Test Case: '$1' ... '
+	if docker-compose $COMPOSE_ARGS run --rm --name $1 --entrypoint bash integrate -c \
+		'./lib/integrate/'$1'.js' ; then
+		echo 'succeeded'
+	else
+		echo 'failed.  Test execution aborted.'
+		exit 1
+	fi
+}
+
+# This script can only be run in the dev or qa environments
+if [ $# != 1 ] && [ $# != 2 ]; then error-exit "$USAGE"; fi
+if [ $1 != 'dev' ] && [ $1 != 'qa' ]; then error-exit "$USAGE"; fi
+if [ $# == 2 ]; then
+	if [ $2 != 'debug' ]; then
+		error-exit "$USAGE"; 
+	else
+		NO_DEBUG=''
+	fi
+fi
+	
+# Prepare the environment
+tcsenv $1
+export PATH=$PATH:./scripts
+./scripts/.project.bash
+
+echo -n 'Preparing test environment ... '
+# Ensure that any existing QA containers are down
+docker-compose $COMPOSE_ARGS down &>/dev/null
+
+# Then restart the containers using the correct image
+docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface &>/dev/null
+docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface &>/dev/null
+docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface &>/dev/null
+echo 'done'
+
+# TEST CASE DESCRIPTION 
+# Ensure that a stream of data makes it round-trip.
+# input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
+# input_testdata and output_testdata must be identical
+execute-test-case test-pbx-to-tms-flow
+
+# TEST CASE DESCRIPTION 
+# Send a stream of data, shutdown rabbitmq, then restart it.
+execute-test-case test-rabbit-interruption-part1
+
+# Now restart the RabbitMQ container
+if ! remove-core-container rabbitmq; then exit 1; fi
+if ! start-core-container rabbitmq; then exit 1; fi
+
+# TEST CASE DESCRIPTION 
+# After the restart of RabbitMQ, all expected data from part1 should be received.
+execute-test-case test-rabbit-interruption-part2
+
+# TEST CASE DESCRIPTION 
+# Send a file of SMDR messages through the TCS and ensure 
+# that the database has recorded all records in the SMDR table.
+execute-test-case test-smdr-capture
+
+echo 'All Test Cases executed successfully'

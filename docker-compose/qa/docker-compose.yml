@@ -42,5 +42,4 @@ services:
       - TMS_PORT=6545
       - DATABASE=qa
       - DB_QUEUE=QA_DB_QUEUE
-
- 
+      - TMS_QUEUE=QA_TMS_QUEUE

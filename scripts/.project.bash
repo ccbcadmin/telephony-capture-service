@@ -12,11 +12,11 @@ export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f docker-compose/docker-compos
 export COMPOSE_ARGS="$PROD_COMPOSE_ARGS"
 export TCSENV=Production
 
-# define various functions
-. ./scripts/bash-functions
-
 # Allow access to bash scripts
 export PATH=./scripts:$PATH
+
+# define various functions
+source scripts/bash-functions
 
 if [ $# -gt 1 ]; then echo "Usage : tcsproj [ TCS Version ]"; exit 1; fi
 

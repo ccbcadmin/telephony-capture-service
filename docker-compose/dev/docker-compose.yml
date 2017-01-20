@@ -56,5 +56,8 @@ services:
     environment:
       - TCS_PORT=3457
       - TMS_PORT=6544
+      - DATABASE=dev
+      - DB_QUEUE=DEV_DB_QUEUE
+      - TMS_QUEUE=DEV_TMS_QUEUE
     volumes:
       - ./lib:/app/lib

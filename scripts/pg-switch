@@ -14,7 +14,7 @@ postgres-rollback () {
 		msg 'Switch Failed - Rolling Back to '$FROM_PG;
 
 		# Remove the pg container whose startup failed
-		remove-pg-container $TO_PG
+		remove-core-container $TO_PG
 
 		# Adjust the ports back to what they were
 		set-pg-ports $FROM_PG
@@ -64,13 +64,13 @@ else
 fi
 
 # Ensure the target container is quiet
-remove-pg-container $TO_PG
+remove-core-container $TO_PG
 
 # Arrange for a possible rollback
 trap postgres-rollback EXIT;
 
 # Shutdown the outgoing container
-remove-pg-container $FROM_PG
+remove-core-container $FROM_PG
 
 if ! barman-recover-latest $FROM_PG $TO_PG; then error-exit 'Failed Database Recovery'; fi
 

@@ -5,6 +5,7 @@ import 'rxjs/add/operator/map';
 import * as $ from '../share/constants';
 import { ClientSocket } from '../share/client-socket';
 import { ServerSocket } from '../share/server-socket';
+import { Queue } from '../share/queue';
 
 const routineName = 'test-pbx-to-tms-flow';
 
@@ -35,7 +36,8 @@ process.on('SIGINT', () => {
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
-	TMS_PORT: num()
+	TMS_PORT: num(),
+	TMS_QUEUE: str()
 });
 
 // Load the buffer with random data
@@ -47,7 +49,13 @@ const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
 let masterIndex = 0;
 
+console.log ('Clear the TMS_QUEUE');
+const tmsQueue = new Queue(env.TMS_QUEUE, () => true);
+
 setTimeout(() => {
+
+	// Stop clearing the queue
+	tmsQueue.close();
 
 	const setIntervalId = setInterval(() => {
 
@@ -66,12 +74,10 @@ setTimeout(() => {
 		}
 
 		if (masterIndex === testSize) {
-
-			console.log("tx Complete");
 			clearInterval(setIntervalId);
 		}
 	}, 2);
-}, 1000);
+}, 3000);
 
 let rxIndex = 0;
 const dataCapture = (data: Buffer) => {
@@ -81,7 +87,6 @@ const dataCapture = (data: Buffer) => {
 
 	if (rxIndex === testSize) {
 		if (masterTxBuffer.equals(masterRxBuffer)) {
-			console.log('Test was successful');
 			process.exit(0);
 		}
 		else {

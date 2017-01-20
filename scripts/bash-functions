@@ -350,36 +350,14 @@ confirm-barman () {
     return 0
 }
 
-remove-container () {
+remove-core-container () {
 	# If there is no such container, then nothing to do
     if container-exists $1; then
         echo -n $PROGNAME': Removing Container '$1' ... '
         docker stop --time 10 $1 2>&1 >/dev/null
-	    docker-compose rm -f -v $1 &>/dev/null
+	    docker-compose $CORE_COMPOSE_ARGS rm -f -v $1 &> /dev/null
         echo 'done'
     fi
-}
-
-remove-pg-container () {
-	# If there is no such container, then nothing to do
-    if container-exists $1; then
-        echo -n $PROGNAME': Removing Container '$1' ... '
-        docker stop --time 10 $1 2>&1 >/dev/null
-	    docker-compose -f docker-compose/core/docker-compose.yml -p CORE rm -f -v $1 &> /dev/null
-        echo 'done'
-    fi
-}
-
-create-container () {
-    if docker-compose run -d --name $1 $1 2>&1 >/dev/null; then 
-        func-error $FUNCNAME $LINENO $1' Startup Failure';
-        return 1
-    else 
-        msg $1' Started'; 
-    fi
-    
-    enable-restart
-    return $?
 }
 
 set-pg-ports () {
@@ -405,7 +383,7 @@ start-container () {
 start-core-container () {
     echo -n $PROGNAME': Starting '$1' ... '
     source ./.tcs-pg-ports
-    if ! docker-compose -f docker-compose/core/docker-compose.yml -p core up -d $1 &> /dev/null; then
+    if ! docker-compose $CORE_COMPOSE_ARGS up -d $1 &> /dev/null; then
         return 1
     fi
 
@@ -430,12 +408,6 @@ start-pg-container () {
     if ! enable-barman-backups; then exit 1; fi
 
     return 0;
-}
-
-stop-container () {
-    docker-compose stop $1 &> /dev/null
-    msg $1' Container Stopped';
-    disable-restart $1
 }
 
 validate-pg-selection () {
