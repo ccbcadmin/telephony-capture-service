@@ -6,8 +6,9 @@ import 'rxjs/add/operator/map';
 import * as $ from '../share/constants';
 import { ClientSocket } from '../share/client-socket';
 import { ServerSocket } from '../share/server-socket';
+import { Queue } from '../share/queue';
 
-const routineName = 'test-pbx-to-tms-flow';
+const routineName = 'test-rabbit-interruption-part1';
 
 const _ = require('lodash');
 const net = require('net');
@@ -48,7 +49,13 @@ const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
 let masterIndex = 0;
 
+console.log ('Clear the TMS_QUEUE');
+const tmsQueue = new Queue(env.TMS_QUEUE, () => true);
+
 setTimeout(() => {
+
+	// Stop clearing the queue
+	tmsQueue.close();
 
 	const setIntervalId = setInterval(() => {
 

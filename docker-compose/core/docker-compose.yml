@@ -15,7 +15,7 @@ services:
     privileged: true
     network_mode: "host"
     environment:
-      - BACKUP_SCHEDULE
+      - BACKUP_SCHEDULE=*/42 * * * * *
     volumes:
       - postgres1_data:/pg1_data
       - postgres2_data:/pg2_data

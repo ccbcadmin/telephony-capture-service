@@ -43,15 +43,14 @@ export class Queue {
 				return;
 			}
 
-			queueConnection.on("error", (err) => {
+			queueConnection.addListener ('error', (err) => {
 				if (err.message !== "Connection closing") {
 					console.error("[AMQP] conn error", err.message);
 					process.exit(1);
 				}
 				});
 
-			queueConnection.on("close", () => {
-				});
+			queueConnection.addListener('close', () => {});
  
 			this.connection = queueConnection;
 
@@ -98,12 +97,9 @@ export class Queue {
 
 	public close = () => {
 		console.log('Close queue connection');
-		this.retryConnectSubscription.unsubscribe();
 
 		// Stop listening to queue events
-		this.connection.removeListener ("close", () => {});
-		this.connection.removeListener ("error", () => {});
-
-		this.connection ? this.connection.close() : _.noop;
+		this.connection ? this.connection.removeListener ('close', () => {}) : _.noop;
+		this.connection ? this.connection.removeListener ('error', () => {}) : _.noop;
 	}
 }

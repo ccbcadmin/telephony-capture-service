@@ -16,7 +16,6 @@ const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
 	DATABASE: str(),
 	DB_QUEUE: str(),
-	POSTGRES_PASSWORD: str()
 });
 
 interface SmdrRecord {

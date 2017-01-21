@@ -7,7 +7,7 @@ import * as $ from '../share/constants';
 import { ClientSocket } from '../share/client-socket';
 import { ServerSocket } from '../share/server-socket';
 
-const routineName = 'test-pbx-to-tms-flow';
+const routineName = 'test-rabbit-interruption-part2';
 
 const _ = require('lodash');
 const net = require('net');

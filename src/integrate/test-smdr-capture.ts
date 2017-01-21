@@ -102,7 +102,7 @@ const nextFile = () => {
 ee.on('next', nextFile);
 
 // Ensure the DB_QUEUE is empty
-console.log ('Clear DQ_QUEUE');
+console.log ('Clear DB_QUEUE');
 const databaseQueue = new Queue(env.DB_QUEUE, () => true);
 
 // Wait a bit to ensure the queue is empty, then proceed

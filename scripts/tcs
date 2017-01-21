@@ -57,8 +57,7 @@ elif [ $# == 2 ]; then
 fi	
 
 if [ $TCSENV != 'dev' ]; then
-	echo -n $PROGNAME:' Ensure the docker image is available ... '
-	# Ensure we have the correct image and, if not, go get it (unless development)
+	echo -n $PROGNAME:' Ensure the correct docker image is available ... '
 	if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
 	if ! docker pull ccbcadmin/tcs-image$TCS_VERSION 2>&1 >/dev/null; then exit 1; fi
 	echo done
@@ -68,5 +67,5 @@ fi
 docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface
 if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
 
-msg 'TCS ('$TCSENV') Up, Version: '$TCS_VERSION
+msg 'TCS ('$TCSENV') Up, Version'$TCS_VERSION
 exit 0

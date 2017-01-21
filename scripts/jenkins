@@ -8,7 +8,7 @@ NO_DEBUG='&> /dev/null'
 # 'execute-test-case' is the workhorse function to execute the various test cases
 execute-test-case () {
 	echo -n 'Test Case: '$1' ... '
-	if docker-compose $COMPOSE_ARGS run --rm --name $1 --entrypoint bash integrate -c \
+	if docker-compose $COMPOSE_ARGS run --rm --name $TCSENV_UPPER-$1 --entrypoint bash integrate -c \
 		'./lib/integrate/'$1'.js' ; then
 		echo 'succeeded'
 	else
@@ -27,11 +27,14 @@ if [ $# == 2 ]; then
 		NO_DEBUG=''
 	fi
 fi
-	
+
+# Uppercase the environment
+TCSENV_UPPER=$(echo $1 | awk '{print toupper($0)}')
+
 # Prepare the environment
-tcsenv $1
+tcsenv $1 &>/dev/null
 export PATH=$PATH:./scripts
-./scripts/.project.bash
+./scripts/project
 
 # Restart the TCS containers
 echo -n 'Preparing the '$1' environment ... '
@@ -64,4 +67,5 @@ execute-test-case test-rabbit-interruption-part2
 # that the database has recorded all records in the SMDR table.
 execute-test-case test-smdr-capture
 
+exit 0
 echo 'All Test Cases executed successfully'

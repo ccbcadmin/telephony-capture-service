@@ -83,6 +83,9 @@ COPY ./src /app/src
 # Also the sample data
 COPY ./sample-data /app/sample-data
 
+# And the docker-compose folder
+COPY ./docker-compose /app/docker-compose
+
 # Prep for barman
 COPY ./src/tcs-image/barman.conf /etc/
 RUN mkdir -p /etc/barman.d

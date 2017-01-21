@@ -89,7 +89,7 @@ msg () {
 
 change-pgdata-owner () {
     
-    if ! docker exec -it barman sh -c 'chown -R '$1'.'$1' /'$2'_data; exit $?;' 2>&1 >/dev/null; then 
+    if ! docker exec -it barman sh -c 'chown -R '$1'.'$1' /'$2'_data; exit $?;'; then 
         func-error $FUNCNAME $LINENO 'PGDATA Ownership Change Failed';
         return 1
     fi
