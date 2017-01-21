@@ -35,7 +35,6 @@ if [ $# -eq 1 ]; then
 fi
 
 # Load TCS environment variables
-. ./.tcs.env
 . ./.tcs.version
 
 echo 'TCS Version'$TCS_VERSION
