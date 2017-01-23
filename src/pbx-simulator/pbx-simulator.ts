@@ -21,7 +21,8 @@ const { str, num} = envalid;
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
-	PBX_SIMULATOR_SOURCE_DIRECTORY: str()
+	PBX_SIMULATOR_SOURCE_DIRECTORY: str(),
+	PBX_SIMULATOR_INPUT_FREQUENCY: num()
 });
 
 let smdrFiles: string[] = [];
@@ -74,7 +75,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 				process.exit(-1);
 			}
 		}
-	}, 10);
+	}, env.PBX_SIMULATOR_INPUT_FREQUENCY);
 }
 
 const nextFile = () => {

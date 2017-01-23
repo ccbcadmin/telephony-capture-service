@@ -33,6 +33,7 @@ services:
     container_name: DEV-pbx-simulator
     environment:
       - TCS_PORT=3457
+      - PBX_SIMULATOR_INPUT_FREQUENCY=10
     volumes:
       - ./lib:/app/lib
 

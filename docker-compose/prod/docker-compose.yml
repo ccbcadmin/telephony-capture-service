@@ -21,6 +21,8 @@ services:
  
   pbx-simulator:
     container_name: PROD-pbx-simulator
+    environment:
+      - PBX_SIMULATOR_INPUT_FREQUENCY=1000
  
   tms-interface:
     container_name: PROD-tms-interface
