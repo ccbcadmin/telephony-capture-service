@@ -28,6 +28,8 @@ services:
     container_name: PROD-tms-interface
     environment:
       - TMS_QUEUE=PROD_TMS_QUEUE
+      - TMS_HOST=localhost
+      - TMS_PORT=6543
 
   tms-simulator:
     container_name: PROD-tms-simulator
