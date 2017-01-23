@@ -4,7 +4,6 @@ PROGNAME=$(basename $0)
 USAGE='Usage: '$PROGNAME' -v|pg1|pg2|down'
 
 source ./scripts/bash-functions
-source ./.tcs-pg-ports
 
 cleanup () {
 	docker-compose $CORE_COMPOSE_ARGS down

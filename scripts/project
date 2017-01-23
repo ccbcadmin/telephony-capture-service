@@ -36,6 +36,8 @@ fi
 
 # Load TCS environment variables
 . ./.tcs.version
+if ! [ -f .tcs-pg-ports ]; then set-pg-ports pg1; fi
+source ./.tcs-pg-ports;
 
 echo 'TCS Version'$TCS_VERSION
 

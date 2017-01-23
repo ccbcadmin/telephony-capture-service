@@ -392,9 +392,6 @@ start-core-container () {
 
 start-pg-container () {
 
-    set-pg-ports $1
-    source ./.tcs-pg-ports
-
     # Ensure Postgres owns everything
     if ! change-pgdata-owner postgres $1; then exit 1; fi
 
