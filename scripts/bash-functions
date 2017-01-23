@@ -382,6 +382,7 @@ start-container () {
 
 start-core-container () {
     echo -n $PROGNAME': Starting '$1' ... '
+    
     source ./.tcs-pg-ports
     if ! docker-compose $CORE_COMPOSE_ARGS up -d $1 &> /dev/null; then
         return 1
@@ -392,6 +393,7 @@ start-core-container () {
 
 start-pg-container () {
 
+    source ./.tcs-pg-ports
     # Ensure Postgres owns everything
     if ! change-pgdata-owner postgres $1; then exit 1; fi
 

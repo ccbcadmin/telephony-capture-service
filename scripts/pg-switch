@@ -18,7 +18,8 @@ postgres-rollback () {
 
 		# Adjust the ports back to what they were
 		set-pg-ports $FROM_PG
-		
+		source ./.tcs-pg-ports
+
 		# Now start the incoming Postgres container
 		if ! start-core-container $FROM_PG; then
 			msg 'Unable to restart the original container'; 
