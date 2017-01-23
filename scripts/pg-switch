@@ -29,7 +29,7 @@ postgres-rollback () {
 			msg $FROM_PG' Container Started'
 		fi
 		
-		if ! alter-archive-command $TO_PG; then 
+		if ! alter-archive-command $FROM_PG; then 
 			msg 'WARNING: TCS is partially disabled';
 			exit 1
 		fi
