@@ -6,6 +6,8 @@ source ./scripts/bash-functions
 
 postgres-rollback () {
 
+	return 0
+	
 	# If neither pg container is running, then try to bring the original back to life
 	pg-status &> /dev/null
 
