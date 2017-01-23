@@ -2,10 +2,7 @@ Archive/
 coverage/
 node_modules/
 npm-debug.log
-smdr-data-*/
-SQL/
 docker-compose.env
 postgres_data/
-/.tcs.env
 /.tcs-pg-ports
 ~$*
