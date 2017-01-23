@@ -251,7 +251,7 @@ barman-recover-latest () {
 }
 
 barman-recover () {
-
+    
     echo -n $PROGNAME': Backup (latest) Recovery to '$2' ... '
 
     # barman needs ownership of the pgdata area

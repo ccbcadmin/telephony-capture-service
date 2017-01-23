@@ -20,8 +20,8 @@ remove-core-container $STANDBY_PG
 
 # Do the recovery
 case "$#" in
-	2)	if ! barman-recover $@; then error-exit 'Recovery Failure'; fi ;;
-	3)  if ! barman-pitr $@; then error-exit 'Recovery Failure'; fi ;;
+	2)	if ! barman-recover $STANDBY_PG $@; then error-exit 'Recovery Failure'; fi ;;
+	3)  if ! barman-pitr $STANDBY_PG $@; then error-exit 'Recovery Failure'; fi ;;
 	*)  error-exit 'Assertion Error @ '$LINENO ;;
 esac
 msg 'Recovery Successful'
