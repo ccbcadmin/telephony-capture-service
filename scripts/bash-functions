@@ -324,7 +324,6 @@ barman-pitr () {
 }
 
 barman-reset () {
-    sleep 3
 	if ! docker exec -it barman sh -c 'barman receive-wal --reset '$1'; exit $?;' &> /dev/null; then
         msg $1' Failed to Reset Stream Replication';      
     fi
