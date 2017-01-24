@@ -18,7 +18,7 @@ case "$1" in
 		exit 0
 		;;
 	[d][o][w][n])
-		docker-compose $STORES_COMPOSE_ARGS down &> /dev/null
+		docker-compose $STORES_COMPOSE_ARGS down
 		;;
 	[p][g][1] | [p][g][2])
 		# 5432 is the ACTIVE port, 5433 is STANDBY
