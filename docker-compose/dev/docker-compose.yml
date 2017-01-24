@@ -4,24 +4,24 @@ services:
 
   database-interface:
     container_name: DEV-database-interface
-    environment:
-      - DATABASE=dev
-      - DB_QUEUE=DEV_DB_QUEUE    
+    env_file: .env_dev
+    volumes:
+      - ./lib:/app/lib
+
+  integrate:
+    env_file: .env_dev
     volumes:
       - ./lib:/app/lib
 
   mangle:
     container_name: DEV-mangle
+    env_file: .env_dev
     volumes:
       - ./lib:/app/lib
 
   pbx-interface:
     container_name: DEV-pbx-interface
-    environment:
-      - TCS_PORT=3457
-      - TMS_ACTIVE=1        
-      - TMS_QUEUE=DEV_TMS_QUEUE     
-      - DB_QUEUE=DEV_DB_QUEUE
+    env_file: .env_dev
     depends_on:
       - tms-interface
       - database-interface
@@ -31,33 +31,18 @@ services:
 
   pbx-simulator:
     container_name: DEV-pbx-simulator
-    environment:
-      - TCS_PORT=3457
-      - PBX_SIMULATOR_INPUT_FREQUENCY=10
+    env_file: .env_dev
     volumes:
       - ./lib:/app/lib
 
   tms-interface:
     container_name: DEV-tms-interface
-    environment:
-      - TMS_QUEUE=DEV_TMS_QUEUE   
-      - TMS_PORT=6544  
+    env_file: .env_dev 
     volumes:
       - ./lib:/app/lib
 
   tms-simulator:
     container_name: DEV-tms-simulator
-    environment:
-      - TMS_PORT=6544
-    volumes:
-      - ./lib:/app/lib
-
-  integrate:
-    environment:
-      - TCS_PORT=3457
-      - TMS_PORT=6544
-      - DATABASE=dev
-      - DB_QUEUE=DEV_DB_QUEUE
-      - TMS_QUEUE=DEV_TMS_QUEUE
+    env_file: .env_dev
     volumes:
       - ./lib:/app/lib

@@ -4,30 +4,18 @@ services:
 
   database-interface:
     container_name: QA-database-interface
-    environment:
-      - DATABASE=qa
-      - DB_QUEUE=QA_DB_QUEUE
+    env_file: .env_qa
 
   pbx-interface:
     container_name: QA-pbx-interface
-    environment:
-      - TCS_PORT=3458
-      - TMS_ACTIVE=1 
-      - DB_QUEUE=QA_DB_QUEUE
-      - TMS_QUEUE=QA_TMS_QUEUE
- 
+    env_file: .env_qa
+
   tms-interface:
     container_name: QA-tms-interface
-    environment:
-      - TMS_QUEUE=QA_TMS_QUEUE
-      - TMS_PORT=6545
+    env_file: .env_qa
 
-integrate:
+  integrate:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     network_mode: "host"
-    environment:
-      - TCS_PORT=3458
-      - TMS_PORT=6545
-      - DATABASE=qa
-      - DB_QUEUE=QA_DB_QUEUE
-      - TMS_QUEUE=QA_TMS_QUEUE
+    env_file: .env_qa
+
