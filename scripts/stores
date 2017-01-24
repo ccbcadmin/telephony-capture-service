@@ -6,7 +6,7 @@ USAGE='Usage: '$PROGNAME' -v|pg1|pg2|down'
 source ./scripts/bash-functions
 
 cleanup () {
-	docker-compose $CORE_COMPOSE_ARGS down
+	docker-compose $CORE_COMPOSE_ARGS down 
 }
 
 # ensure input params validity
@@ -18,7 +18,7 @@ case "$1" in
 		exit 0
 		;;
 	[d][o][w][n])
-		docker-compose $CORE_COMPOSE_ARGS down
+		docker-compose $CORE_COMPOSE_ARGS down &> /dev/null
 		;;
 	[p][g][1] | [p][g][2])
 		# 5432 is the ACTIVE port, 5433 is STANDBY

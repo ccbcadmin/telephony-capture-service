@@ -67,9 +67,6 @@ source ./.tcs-pg-ports
 
 if ! barman-recover-latest $FROM_PG $TO_PG; then error-exit 'Failed Database Recovery'; fi
 
-# Ensure Postgres owns everything
-if ! change-pgdata-owner postgres $1; then exit 1; fi
-
 if ! start-active-pg-container $TO_PG; then exit 1; fi
 
 # No need for a cleanup
