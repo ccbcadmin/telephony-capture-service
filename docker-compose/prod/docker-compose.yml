@@ -25,7 +25,7 @@ services:
  
   pbx-simulator:
     container_name: PROD-pbx-simulator
-    env_file: .env
+    env_file: .prod_env
  
   tms-interface:
     container_name: PROD-tms-interface
