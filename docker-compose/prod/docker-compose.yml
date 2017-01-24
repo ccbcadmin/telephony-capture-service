@@ -38,3 +38,5 @@ services:
 
   tms-simulator:
     container_name: PROD-tms-simulator
+    environment:
+      - TMS_PORT=6543
