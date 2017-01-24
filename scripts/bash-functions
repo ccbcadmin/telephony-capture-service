@@ -182,23 +182,23 @@ enable-barman-backups () {
 
     pg-state &> /dev/null
 
-    # archive_command must be set to true
+    # archive_command set 'true'
     if ! alter-archive-command $1; then return 1; fi
 
     # Any partly done streaming is useless - discard
     if ! barman-clear-legacy-streaming $1; then return 1; fi
 
     # Ensure the Postgres replication slot exists
-    barman-create-slot $ACTIVE_PG;
+    barman-create-slot $1;
 
     # Do a master reset on Barman
-    if ! barman-reset $ACTIVE_PG; then return 1; fi
+    if ! barman-reset $1; then return 1; fi
 
     # Kick streaming to life
     if ! barman-cron; then return 1; fi
 
     # Now do a final sanity check
-    if ! barman-check $ACTIVE_PG; then return 1; fi
+    if ! barman-check $1; then return 1; fi
 
     echo 'done'
     return 0
@@ -419,7 +419,7 @@ start-active-pg-container () {
 
     sleep 5; # Allow for creation of new database
     
-    if ! enable-barman-backups; then return 1; fi
+    if ! enable-barman-backups $1; then return 1; fi
 
     return 0;
 }

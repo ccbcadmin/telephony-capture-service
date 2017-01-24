@@ -23,25 +23,11 @@ postgres-rollback () {
 		source ./.tcs-pg-ports
 
 		# Now start the incoming Postgres container
-		if ! start-core-container $FROM_PG; then
+		if ! start-active-pg-container $FROM_PG; then
 			msg 'Unable to restart the original container'; 
 			msg 'WARNING: TCS is partially disabled';
 			exit 1
-		else
-			msg $FROM_PG' Container Started'
 		fi
-		
-		if ! alter-archive-command $FROM_PG; then 
-			msg 'WARNING: TCS is partially disabled';
-			exit 1
-		fi
-
-	fi
-
-	if enable-barman-backups; then
-		msg 'Barman Backups Enabled';
-	else
-		error-exit 'Failed to Enable Barman Backups'
 	fi
 
 	pg-state
