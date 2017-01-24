@@ -5,19 +5,13 @@ services:
   database-interface:
     container_name: PROD-database-interface
     environment:
-      - DATABASE=prod
-      - DB_QUEUE=PROD_DB_QUEUE
 
   mangle:
     container_name: PROD-mangle
 
   pbx-interface:
     container_name: PROD-pbx-interface
-    environment:
-      - TCS_PORT=3456
-      - TMS_ACTIVE=1 
-      - DB_QUEUE=PROD_DB_QUEUE
-      - TMS_QUEUE=PROD_TMS_QUEUE
+    env_file: .prod_env
     depends_on:
       - tms-interface
       - database-interface
@@ -29,12 +23,8 @@ services:
  
   tms-interface:
     container_name: PROD-tms-interface
-    environment:
-      - TMS_QUEUE=PROD_TMS_QUEUE
-      - TMS_HOST=localhost
-      - TMS_PORT=6543
+    env_file: .prod_env
 
   tms-simulator:
     container_name: PROD-tms-simulator
-    environment:
-      - TMS_PORT=6543
+    env_file: .prod_env

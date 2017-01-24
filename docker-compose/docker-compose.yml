@@ -7,8 +7,6 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: "host"
-    environment:
-      - POSTGRES_PASSWORD
     command: ["./lib/database-interface/database-interface.js"]
   
   mangle:
@@ -22,10 +20,7 @@ services:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     restart: unless-stopped
     privileged: true
-    network_mode: "host"
-    environment:
-      - TCS_PORT=3456
-      - TMS_ACTIVE=1    
+    network_mode: "host" 
     depends_on:
       - tms-interface
       - database-interface
@@ -44,9 +39,6 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: "host"
-    environment:
-      - TMS_HOST
-      - TMS_PORT
     entrypoint: ["./lib/tms-interface/tms-interface.js"]
    
   tms-simulator:
@@ -54,7 +46,5 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: "host"
-    environment:
-      - TMS_PORT
     entrypoint: ["./lib/tms-simulator/tms-simulator.js"]
 
