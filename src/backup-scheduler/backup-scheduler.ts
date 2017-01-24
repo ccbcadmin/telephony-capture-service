@@ -11,18 +11,21 @@ const env = envalid.cleanEnv(process.env, {
 
 const exec = require('child_process').exec;
 
+const retryLogic = '--retry-time 3 --retry-sleep 10';
+
 // At startup, arbitrarily assume pg1
 let activePostgresContainer = 'pg1';  
 
 // Attempt to backup both pg1 and pg2
 const barmanBackup = () => {
-	console.log(`barman backup ${activePostgresContainer}`);
-	exec(`barman backup ${activePostgresContainer}`, error => {
+	console.log(`backup ${activePostgresContainer}`);
+	exec(`barman backup ${retryLogic} ${activePostgresContainer}`, error => {
 		if (error) {
-			// If here, then first backup attempt failed - try the other container
+			console.log (`Unable to backup ${activePostgresContainer}: ${error}`);
+			// If here, then first backup attempt failed - try the other pg container
 			activePostgresContainer = activePostgresContainer === 'pg1' ? 'pg2' : 'pg1';
 			console.log(`barman backup ${activePostgresContainer}`);
-			exec(`barman backup ${activePostgresContainer}`);
+			exec(`barman backup ${retryLogic} ${activePostgresContainer}`);
 		}
 	});
 }
