@@ -25,9 +25,7 @@ services:
  
   pbx-simulator:
     container_name: PROD-pbx-simulator
-    environment:
-      - PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data/smdr-data-002
-      - PBX_SIMULATOR_INPUT_FREQUENCY=1000
+    env_file: .env
  
   tms-interface:
     container_name: PROD-tms-interface
