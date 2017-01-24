@@ -7,6 +7,10 @@ services:
     environment:
       - DATABASE=prod
       - DB_QUEUE=PROD_DB_QUEUE
+    depends_on:
+      - tms-interface
+      - database-interface
+      - pbx-simulator
 
   mangle:
     container_name: PROD-mangle
