@@ -39,7 +39,6 @@ services:
       - ./sample-data/smdr-data:/smdr-data
     environment:
       - PBX_SIMULATOR_SOURCE_DIRECTORY
-      - TCS_PORT=3456
     entrypoint: ["./lib/pbx-simulator/pbx-simulator.js"]
 
   tms-interface:

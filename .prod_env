@@ -1,3 +1,4 @@
 # Production environment variables
 PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data/smdr-data-002
 PBX_SIMULATOR_INPUT_FREQUENCY=1000
+TCS_PORT=3456
