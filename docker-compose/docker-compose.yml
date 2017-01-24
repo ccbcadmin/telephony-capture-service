@@ -36,7 +36,7 @@ services:
     privileged: false
     network_mode: "host"
     volumes:
-      - /home/smdr-data:/smdr-data
+      - ./sample-data/smdr-data:/smdr-data
     environment:
       - PBX_SIMULATOR_SOURCE_DIRECTORY
       - TCS_PORT=3456
@@ -61,6 +61,3 @@ services:
       - TMS_PORT
     entrypoint: ["./lib/tms-simulator/tms-simulator.js"]
 
-  integrate:
-    image: ccbcadmin/tcs-image${TCS_VERSION}
-    network_mode: "host"

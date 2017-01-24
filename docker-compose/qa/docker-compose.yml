@@ -22,7 +22,9 @@ services:
       - TMS_QUEUE=QA_TMS_QUEUE
       - TMS_PORT=6545
 
-  integrate:
+integrate:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    network_mode: "host"
     environment:
       - TCS_PORT=3458
       - TMS_PORT=6545
