@@ -4,7 +4,6 @@ PROGNAME=$(basename $0)
 USAGE='Usage: '$PROGNAME' pg1|pg2 backup_id target_time'
 
 source ./scripts/bash-functions
-source ./.tcs-pg-ports
 
 if [ "$#" != 2 ] && [ "$#" != 3 ] ; then error-exit "$USAGE"; fi
 
@@ -13,7 +12,7 @@ validate-pg-selection $1 "$USAGE"
 validate-backup_id $1 $2
 
 # Get the pg statuses (Active or PITR)
-pg-status &> /dev/null
+pg-state &> /dev/null
 
 # Remove the STANDBY container, before doing the recovery
 remove-core-container $STANDBY_PG
@@ -26,9 +25,14 @@ case "$#" in
 esac
 msg 'Recovery Successful'
 
+source ./.tcs-pg-ports
+
+# Ensure Postgres owns everything
+if ! change-pgdata-owner postgres $1; then exit 1; fi
+
 # Finally bring up the STANDBY container to listen on port 5433
-if ! start-pg-container $STANDBY_PG; then exit 1; fi
+if ! start-core-container $STANDBY_PG; then exit 1; fi
 
 msg 'Standby Recovery to '$STANDBY_PG' Complete'
-pg-status
+pg-state
 exit 0

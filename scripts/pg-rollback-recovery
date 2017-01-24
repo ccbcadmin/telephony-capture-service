@@ -27,7 +27,7 @@ validate-pg-selection $1 "$USAGE"
 validate-backup_id $1 $2
 
 # Get the statuses of the Postgres containers
-pg-status &> /dev/null
+pg-state &> /dev/null
 
 # Shutdown the active Postgres container
 remove-core-container $ACTIVE_PG
@@ -40,7 +40,7 @@ case "$#" in
 esac
 
 # Now restart the Postgres container
-if ! start-pg-container $ACTIVE_PG; then exit 1; fi
+if ! start-active-pg-container $ACTIVE_PG; then exit 1; fi
 
 msg 'Rollback Recovery Complete'
 exit 0

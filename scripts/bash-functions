@@ -37,7 +37,7 @@ is-pg2-active () {
 # Returns:
 #   None
 #######################################
-pg-status () {
+pg-state () {
     
     if is-pg1-active; then
         local pg1_STATE='ACTIVE'
@@ -179,11 +179,27 @@ enable-barman-backups () {
 
     echo -n $PROGNAME': Enable Backups ... '
     # Various steps to ensure that barman is backing up the ACTIVE pg
-    pg-status &> /dev/null
+
+    pg-state &> /dev/null
+
+    # archive_command must be set to true
+    if ! alter-archive-command $1; then return 1; fi
+
+    # Any partly done streaming is useless - discard
+    if ! barman-clear-legacy-streaming $1; then return 1; fi
+
+    # Ensure the Postgres replication slot exists
     barman-create-slot $ACTIVE_PG;
+
+    # Do a master reset on Barman
     if ! barman-reset $ACTIVE_PG; then return 1; fi
+
+    # Kick streaming to life
     if ! barman-cron; then return 1; fi
+
+    # Now do a final sanity check
     if ! barman-check $ACTIVE_PG; then return 1; fi
+
     echo 'done'
     return 0
 }
@@ -391,9 +407,10 @@ start-core-container () {
     if enable-restart $1; then echo 'done'; return 0; else return 1; fi
 }
 
-start-pg-container () {
+start-active-pg-container () {
 
     source ./.tcs-pg-ports
+
     # Ensure Postgres owns everything
     if ! change-pgdata-owner postgres $1; then exit 1; fi
 
@@ -401,11 +418,8 @@ start-pg-container () {
     if ! start-core-container $1; then error-exit 'Failed to Start Container '$1; fi
 
     sleep 5; # Allow for creation of new database
-    if ! alter-archive-command $1; then exit 1; fi
-
-    if ! barman-clear-legacy-streaming $1; then exit 1; fi
-
-    if ! enable-barman-backups; then exit 1; fi
+    
+    if ! enable-barman-backups; then return 1; fi
 
     return 0;
 }

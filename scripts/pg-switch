@@ -9,7 +9,7 @@ postgres-rollback () {
 	return 0
 
 	# If neither pg container is running, then try to bring the original back to life
-	pg-status &> /dev/null
+	pg-state &> /dev/null
 
 	if [ -z "$ACTIVE_PG" ]; then
 
@@ -44,11 +44,11 @@ postgres-rollback () {
 		error-exit 'Failed to Enable Barman Backups'
 	fi
 
-	pg-status
+	pg-state
 }
 
 # Load $ACTIVE_PG and $STANDBY_PG with the following
-pg-status &> /dev/null
+pg-state &> /dev/null
 
 FROM_PG=$ACTIVE_PG
 TO_PG=$STANDBY_PG
@@ -81,7 +81,10 @@ source ./.tcs-pg-ports
 
 if ! barman-recover-latest $FROM_PG $TO_PG; then error-exit 'Failed Database Recovery'; fi
 
-if ! start-pg-container $TO_PG; then exit 1; fi
+# Ensure Postgres owns everything
+if ! change-pgdata-owner postgres $1; then exit 1; fi
+
+if ! start-active-pg-container $TO_PG; then exit 1; fi
 
 # No need for a cleanup
 trap '' EXIT;

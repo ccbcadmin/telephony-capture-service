@@ -45,19 +45,16 @@ case "$1" in
 			fi
 		fi
 
-		# Ensure Postgres owns everything
-		if ! change-pgdata-owner postgres $1; then exit 1; fi
-
 		# Start the selected Postgres container
 		if ! container-exists $1; then
-			if ! start-pg-container $1; then 
-				error-exit 'Failed to Start Container '$1; 
+			if ! start-active-pg-container $1; then 
+				error-exit $1' Failed to Start Container';
 			fi
 		fi
 
 		if ! container-exists rabbitmq; then
 			if ! start-core-container rabbitmq; then
-				msg 'rabbitmq Container Started';
+				error-exit 'rabbitmq Failed to Start Container';
 			fi
 		fi
 
