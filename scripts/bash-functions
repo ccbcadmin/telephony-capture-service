@@ -268,7 +268,7 @@ barman-recover-latest () {
 
 barman-recover () {
     
-    echo -n $PROGNAME': Backup Recovery to '$2' ... '
+    echo -n $PROGNAME': Backup Recovery to '$1' ... '
 
     # barman needs ownership of the pgdata area
     if ! change-pgdata-owner barman $1; then return 1; fi
@@ -276,22 +276,13 @@ barman-recover () {
     # Tweak unix permissions
     change-pgdata-permissions $1
 
+    if [ "$#" != 3 ]; then func-error $FUNCNAME $LINENO 'Incorrect number of parameters'
+
     # Do the recovery
-    if [ "$#" == 2 ]; then
-        docker exec -it barman sh -c 'barman recover '$1' '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'
-        if [ $? != 0 ]; then 
-            func-error $FUNCNAME $LINENO $1' Recovery Failure';
-            return 1
-        else 
-            msg $1' Recovery Successful'; 
-        fi
-    elif [ "$#" == 3 ]; then
-        if ! docker exec -it barman sh -c 'barman recover '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
+    if ! docker exec -it barman sh -c 'barman recover '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
             func-error $FUNCNAME $LINENO  $1' Recovery Failure';
             return 1
         fi
-    else
-        func-error $FUNCNAME $LINENO 'Incorrect number of parameters'
     fi
 
     # Ownership now passed to postgres
