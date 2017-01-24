@@ -16,7 +16,6 @@ services:
     depends_on:
       - tms-interface
       - database-interface
-      - pbx-simulator
  
   pbx-simulator:
     container_name: PROD-pbx-simulator
