@@ -6,7 +6,7 @@ USAGE='Usage: '$PROGNAME' -v|pg1|pg2|down'
 source ./scripts/bash-functions
 
 cleanup () {
-	docker-compose $CORE_COMPOSE_ARGS down 
+	docker-compose $STORES_COMPOSE_ARGS down 
 }
 
 # ensure input params validity
@@ -18,7 +18,7 @@ case "$1" in
 		exit 0
 		;;
 	[d][o][w][n])
-		docker-compose $CORE_COMPOSE_ARGS down &> /dev/null
+		docker-compose $STORES_COMPOSE_ARGS down &> /dev/null
 		;;
 	[p][g][1] | [p][g][2])
 		# 5432 is the ACTIVE port, 5433 is STANDBY
@@ -40,7 +40,7 @@ case "$1" in
 		trap cleanup EXIT
 
 		if ! container-exists barman; then
-			if ! start-core-container barman; then
+			if ! start-stores-container barman; then
 				error-exit 'Failed to Start Container barman'; 
 			fi
 		fi
@@ -53,13 +53,13 @@ case "$1" in
 		fi
 
 		if ! container-exists rabbitmq; then
-			if ! start-core-container rabbitmq; then
+			if ! start-stores-container rabbitmq; then
 				error-exit 'rabbitmq Failed to Start Container';
 			fi
 		fi
 
 		if ! container-exists jenkins; then
-			if ! start-core-container jenkins; then
+			if ! start-stores-container jenkins; then
 				error-exit 'jenkins Failed to Start Container';
 			fi
 		fi

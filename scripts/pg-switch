@@ -16,7 +16,7 @@ postgres-rollback () {
 		msg 'Switch Failed - Rolling Back to '$FROM_PG;
 
 		# Remove the pg container whose startup failed
-		remove-core-container $TO_PG
+		remove-stores-container $TO_PG
 
 		# Adjust the ports back to what they were
 		set-pg-ports $FROM_PG
@@ -53,13 +53,13 @@ else
 fi
 
 # Ensure the target container is quiet
-remove-core-container $TO_PG
+remove-stores-container $TO_PG
 
 # Arrange for a possible rollback
 trap postgres-rollback EXIT;
 
 # Shutdown the outgoing container
-remove-core-container $FROM_PG
+remove-stores-container $FROM_PG
 
 # Switch the Active / Standby Ports
 set-pg-ports $TO_PG

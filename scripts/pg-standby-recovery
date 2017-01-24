@@ -15,7 +15,7 @@ validate-backup_id $1 $2
 pg-state &> /dev/null
 
 # Remove the STANDBY container, before doing the recovery
-remove-core-container $STANDBY_PG
+remove-stores-container $STANDBY_PG
 
 # Do the recovery
 case "$#" in
@@ -31,7 +31,7 @@ source ./.tcs-pg-ports
 if ! change-pgdata-owner postgres $1; then exit 1; fi
 
 # Finally bring up the STANDBY container to listen on port 5433
-if ! start-core-container $STANDBY_PG; then exit 1; fi
+if ! start-stores-container $STANDBY_PG; then exit 1; fi
 
 msg 'Standby Recovery to '$STANDBY_PG' Complete'
 pg-state

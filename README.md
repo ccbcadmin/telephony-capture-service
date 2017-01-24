@@ -55,7 +55,7 @@ TCS
 │   │   └── backup-scheduler.ts                         
 │   ├── tcs-image                                         Postgres image specialized for the TCS.
 │   │   ├── barman                                        Barman configuration files.
-│   │   │   ├── barman.conf                               The core barman configuration file
+│   │   │   ├── barman.conf                               The basic barman configuration file
 │   │   │   ├── pg1.conf                                  barman config file for the 1st Postgres container
 │   │   │   └── pg2.conf                                  barman config file for the 2nd Postgres container
 │   │   └── Dockerfile                                    Dockerfile to build the TCS image.

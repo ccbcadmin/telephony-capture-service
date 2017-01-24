@@ -3,4 +3,4 @@
 PROGNAME=$(basename $0)
 
 source ./.tcs-pg-ports
-docker-compose $CORE_COMPOSE_ARGS build
+docker-compose $STORES_COMPOSE_ARGS build

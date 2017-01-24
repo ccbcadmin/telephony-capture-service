@@ -30,7 +30,7 @@ validate-backup_id $1 $2
 pg-state &> /dev/null
 
 # Shutdown the active Postgres container
-remove-core-container $ACTIVE_PG
+remove-stores-container $ACTIVE_PG
 
 # Do the recovery
 case "$#" in
