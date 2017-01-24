@@ -4,10 +4,11 @@ services:
 
   database-interface:
     container_name: PROD-database-interface
-    environment:
+    env_file: .prod_env
 
   mangle:
     container_name: PROD-mangle
+    env_file: .prod_env
 
   pbx-interface:
     container_name: PROD-pbx-interface
