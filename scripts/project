@@ -85,7 +85,7 @@ pbx-simulator ()
     if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1;
     fi    
-    docker-compose $PROD_COMPOSE_ARGS run --rm --name PROD-pbx-simulator pbx-simulator
+    docker-compose $PROD_COMPOSE_ARGS run -d --name PROD-pbx-simulator pbx-simulator
 }
 
 tms-simulator ()
