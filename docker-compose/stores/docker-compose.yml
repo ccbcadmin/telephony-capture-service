@@ -14,8 +14,7 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: "host"
-    environment:
-      - BACKUP_SCHEDULE=*/42 * * * * *
+    env_file: .env_prod
     volumes:
       - postgres1_data:/pg1_data
       - postgres2_data:/pg2_data
