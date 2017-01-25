@@ -1,1 +1,50 @@
 version: '2'
+
+services:
+
+  database-interface:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"
+    command: ["./lib/database-interface/database-interface.js"]
+  
+  mangle:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    privileged: false
+    volumes:
+      - /home/smdr-data:/smdr-data
+    command: ["./lib/mangle/mangle.js"]
+
+  pbx-interface:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host" 
+    depends_on:
+      - tms-interface
+      - database-interface
+    entrypoint: ["./lib/pbx-interface/pbx-interface.js"]
+
+  pbx-simulator:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    privileged: false
+    network_mode: "host"
+    volumes:
+      - ./sample-data/smdr-data:/smdr-data
+    entrypoint: ["./lib/pbx-simulator/pbx-simulator.js"]
+
+  tms-interface:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"
+    entrypoint: ["./lib/tms-interface/tms-interface.js"]
+   
+  tms-simulator:
+    image: ccbcadmin/tcs-image${TCS_VERSION}
+    restart: unless-stopped
+    privileged: true
+    network_mode: "host"
+    entrypoint: ["./lib/tms-simulator/tms-simulator.js"]
+
