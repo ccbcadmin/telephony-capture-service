@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: "host"
-    env_file: .env_prod
+    env_file: ./env_PROD/env
     volumes:
       - postgres1_data:/pg1_data
       - postgres2_data:/pg2_data
