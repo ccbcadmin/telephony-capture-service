@@ -4,27 +4,27 @@ services:
 
   database-interface:
     container_name: PROD-database-interface
-    env_file: .env_prod
+    env_file: ./env_PROD/env
 
   mangle:
     container_name: PROD-mangle
-    env_file: .env_prod
+    env_file: ./env_PROD/env
 
   pbx-interface:
     container_name: PROD-pbx-interface
-    env_file: .env_prod
+    env_file: ./env_PROD/env
     depends_on:
       - tms-interface
       - database-interface
  
   pbx-simulator:
     container_name: PROD-pbx-simulator
-    env_file: .env_prod
+    env_file: ./env_PROD/env
  
   tms-interface:
     container_name: PROD-tms-interface
-    env_file: .env_prod
+    env_file: ./env_PROD/env
 
   tms-simulator:
     container_name: PROD-tms-simulator
-    env_file: .env_prod
+    env_file: ./env_PROD/env

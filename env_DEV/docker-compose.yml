@@ -4,25 +4,25 @@ services:
 
   database-interface:
     container_name: DEV-database-interface
-    env_file: .env_dev
+    env_file: ./env_DEV/env
     volumes:
       - ./lib:/app/lib
 
   integrate:
     image: ccbcadmin/tcs-image${TCS_VERSION}
-    env_file: .env_dev
+    env_file: ./env_DEV/env
     volumes:
       - ./lib:/app/lib
 
   mangle:
     container_name: DEV-mangle
-    env_file: .env_dev
+    env_file: ./env_DEV/env
     volumes:
       - ./lib:/app/lib
 
   pbx-interface:
     container_name: DEV-pbx-interface
-    env_file: .env_dev
+    env_file: ./env_DEV/env
     depends_on:
       - tms-interface
       - database-interface
@@ -32,18 +32,18 @@ services:
 
   pbx-simulator:
     container_name: DEV-pbx-simulator
-    env_file: .env_dev
+    env_file: ./env_DEV/env
     volumes:
       - ./lib:/app/lib
 
   tms-interface:
     container_name: DEV-tms-interface
-    env_file: .env_dev 
+    env_file: ./env_DEV/env 
     volumes:
       - ./lib:/app/lib
 
   tms-simulator:
     container_name: DEV-tms-simulator
-    env_file: .env_dev
+    env_file: ./env_DEV/env
     volumes:
       - ./lib:/app/lib
