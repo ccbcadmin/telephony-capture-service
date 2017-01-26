@@ -31,7 +31,6 @@ services:
       - /home/smdr-data/dev/smdr-data-001:/smdr-data-001
       - ./lib:/app/lib
 
-
   pbx-simulator:
     container_name: DEV-pbx-simulator
     env_file: ./env_DEV/env

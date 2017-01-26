@@ -3,6 +3,7 @@
 import * as $ from '../share/constants';
 import { ServerSocket } from '../share/server-socket';
 import { Queue } from '../share/queue';
+const moment = require('moment');
 
 const fs = require('fs');
 
@@ -85,10 +86,5 @@ replayQueue = new Queue('PROD_REPLAY_QUEUE', null, 10);
 // Start listening for incoming messages
 new ServerSocket(routineName, env.TCS_PORT, dataSink);
 
-fs.stat('./smdr-data-001', (error) => {
-	console.log('errno: ', JSON.stringify(error, null, 4));
-	if (error.code === 'ENOENT') {
-		console.log('created directory');
-		fs.mkdirSync('./smdr-data-001');
-	}
-});
+let t = moment();
+console.log ('t: ', t);
