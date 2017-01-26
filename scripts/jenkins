@@ -46,12 +46,17 @@ docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface &>/de
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface &>/dev/null
 
 # TEST CASE DESCRIPTION 
+# Send a file of SMDR messages through the TCS and ensure 
+# that the database has recorded all records in the SMDR table.
+execute-test-case test-smdr-capture
+
+exit 0
+
+# TEST CASE DESCRIPTION 
 # Ensure that a stream of data makes it round-trip.
 # input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
 # input_testdata and output_testdata must be identical
 execute-test-case test-pbx-to-tms-flow
-
-exit 0
 
 # TEST CASE DESCRIPTION 
 # Send a stream of data, shutdown rabbitmq, then restart it.
@@ -64,11 +69,6 @@ if ! start-stores-container rabbitmq; then exit 1; fi
 # TEST CASE DESCRIPTION 
 # After the restart of RabbitMQ, all expected data from part1 should be received.
 execute-test-case test-rabbit-interruption-part2
-
-# TEST CASE DESCRIPTION 
-# Send a file of SMDR messages through the TCS and ensure 
-# that the database has recorded all records in the SMDR table.
-execute-test-case test-smdr-capture
 
 exit 0
 echo 'All Test Cases executed successfully'
