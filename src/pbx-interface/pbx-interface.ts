@@ -46,17 +46,18 @@ const processSmdrMessages = (data: Buffer) => {
 	// If a CRLF is found, then we have a message
 	const crLfIndexOf = unprocessedData.indexOf($.CRLF);
 
-
 	// If no CRLF, then nothing to do
 	if (crLfIndexOf < 0) {
 		leftOver = Buffer.alloc(unprocessedData.length);
 		unprocessedData.copy(leftOver);
 	}
 	else {
-		// Messages to be picked up by database-interface
-		databaseQueue.sendToQueue(unprocessedData.slice(0, crLfIndexOf + 2));
+		const smdrMessage = unprocessedData.slice(0, crLfIndexOf + 2);
+		databaseQueue.sendToQueue(smdrMessage);
 
-		fs.appendFile('/smdr-data-001/rw000000.001', unprocessedData.slice(0, crLfIndexOf + 2), (err) => {
+		// Save a copy of each SMDR message to a file
+		const saveFileName = '/smdr-data-001/rw' + moment().format('YYMMDD') + '.001';
+		fs.appendFile(saveFileName, smdrMessage, (err) => {
 			if (err) throw err;
 		});
 
@@ -83,24 +84,3 @@ databaseQueue = new Queue(env.DB_QUEUE);
 
 // Start listening for incoming messages
 new ServerSocket(routineName, env.TCS_PORT, dataSink);
-
-const timeToMonthEnd = (): number => moment().add(1, 'months').startOf('month').valueOf() - moment().valueOf();
-
-const closeOffMonthlyFile = () => {
-	console.log('Start of New Month');
-
-	fs.stat('/smdr-data-001/rw000000.001', (error) => {
-
-		// If this file exists, then rename to the last day of the previous month
-		const newFileName = 'rw' + moment().subtract(1, 'days').format('YYMMDD') + '.001';
-		fs.rename('/smdr-data-001/rw000000.001', newFileName, function (err) {
-			if (err) console.log('ERROR: ' + err);
-		});
-	});
-
-	// Schedule again for next month
-	setTimeout(closeOffMonthlyFile, timeToMonthEnd());
-}
-
-// Some tidying up required at start of each month
-setTimeout(closeOffMonthlyFile, timeToMonthEnd());
