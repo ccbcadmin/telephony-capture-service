@@ -83,8 +83,11 @@ COPY ./src /app/src
 # Also the sample data
 COPY ./sample-data /app/sample-data
 
-# And the docker-compose folder
-COPY ./docker-compose /app/docker-compose
+# And the docker-compose folder and env information
+COPY ./docker-compose.yml /app/docker-compose
+COPY env_QA /app
+COPY env_DEV /app
+COPY env_PROD /app
 
 # Prep for barman
 COPY ./src/tcs-image/barman.conf /etc/
