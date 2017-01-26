@@ -433,3 +433,34 @@ validate-backup_id () {
         error-exit 'Unknown '$1' backup_id '$2; 
     fi
 }
+
+mangle () 
+{
+    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
+
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
+        return 1;
+    fi
+     
+    docker-compose $COMPOSE_ARGS run --rm --name $TCSENV'-mangle' -e MANGLE_SOURCE_DIRECTORY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
+}
+
+pbx-simulator ()
+{
+    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
+
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
+        return 1;
+    fi    
+    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' pbx-simulator
+}
+
+tms-simulator ()
+{
+    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
+
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
+        return 1;
+    fi
+    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-simulator' --no-build --remove-orphans tms-simulator
+}

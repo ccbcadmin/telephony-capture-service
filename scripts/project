@@ -37,56 +37,5 @@ source ./.tcs-pg-ports;
 
 echo 'TCS Version'$TCS_VERSION
 
-# Application aliases
-alias build-dev='docker-compose '"$DEV_COMPOSE_ARGS"' build'
-alias build-qa='docker-compose '"$QA_COMPOSE_ARGS"' build'
-alias build-prod='docker-compose '"$PROD_COMPOSE_ARGS"' build'
-alias run-tmssim='docker-compose '"$DEV_COMPOSE_ARGS"' run -d --name DEV-tms-simulator tms-simulator'
-alias run-mangle='docker-compose '"$DEV_COMPOSE_ARGS"' run --rm --name DEV-mangle \
-    -e MANGLE_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 \
-    -e MANGLE_TARGET_DIRECTORY=/smdr-data/smdr-data-003 \
-    mangle'
-alias run-pbxsim='docker-compose '"$DEV_COMPOSE_ARGS"' run --rm --name DEV-pbx-simulator \
-    -e PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data/smdr-data-002 \
-    pbx-simulator'
-alias pg1-exec='docker exec -it pg1 /bin/bash'
-alias pg2-exec='docker exec -it pg2 /bin/bash'
-
-# Aliases to manage Docker
-alias rm-containers='docker rm $(docker ps -q)'
-alias rm-images='docker rmi $(docker images -q)'
-alias rm-exited='docker rm $(docker ps -a -f status=exited -q)'
-alias rm-dangling-volumes='docker volume rm $(docker volume ls -f dangling=true -q) >> /dev/null'
-alias ls-exited='docker ps -aq -f status=exited'
-alias barman-exec='docker exec -it barman /bin/bash'
-
-mangle () 
-{
-    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
-
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        return 1;
-    fi
-     
-    docker-compose $COMPOSE_ARGS run --rm --name $TCSENV'-mangle' -e MANGLE_SOURCE_DIRECTORY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
-}
-
-pbx-simulator ()
-{
-    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
-
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        return 1;
-    fi    
-    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' pbx-simulator
-}
-
-tms-simulator ()
-{
-    if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
-
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        return 1;
-    fi
-    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-simulator' --no-build --remove-orphans tms-simulator
-}
+# Load some project-specific aliases
+source ./scripts/aliases
