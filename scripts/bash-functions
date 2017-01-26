@@ -110,6 +110,12 @@ change-pgdata-permissions () {
 tcsenv () {
     local USAGE='Usage: tcsenv [dev|qa|prod]'
 
+    # exports for docker-compose
+    export STORES_COMPOSE_ARGS=' -f docker-compose.yml -f env_STORES/docker-compose.yml -p stores '
+    export DEV_COMPOSE_ARGS=' -f docker-compose.yml -f env_DEV/docker-compose.yml -p dev '
+    export QA_COMPOSE_ARGS=' -f docker-compose.yml  -f env_QA/docker-compose.yml -p qa '
+    export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f env_PROD/docker-compose.yml -p prod '
+
     if [ "$#" == 0 ]; then
         echo $TCSENV
         return 0
