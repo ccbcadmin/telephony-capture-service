@@ -86,5 +86,5 @@ replayQueue = new Queue('PROD_REPLAY_QUEUE', null, 10);
 // Start listening for incoming messages
 new ServerSocket(routineName, env.TCS_PORT, dataSink);
 
-let t = moment();
+let t = moment().add (1, 'days').startOf ();
 console.log ('t: ', t);
