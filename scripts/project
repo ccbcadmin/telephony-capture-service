@@ -9,7 +9,7 @@ export PATH=./scripts:$PATH
 source scripts/bash-functions
 
 # Default to production
-tcsenv prod
+tcsenv prod &>/dev/null
 
 if [ $# -gt 1 ]; then echo "Usage : tcsproj [ TCS Version ]"; exit 1; fi
 
@@ -31,7 +31,7 @@ if [ $# -eq 1 ]; then
 fi
 
 # Load TCS environment variables
-. ./.tcs.version
+source ./.tcs.version
 if ! [ -f .tcs-pg-ports ]; then set-pg-ports pg1; fi
 source ./.tcs-pg-ports;
 
