@@ -28,7 +28,7 @@ services:
       - database-interface
       - tms-simulator
     volumes:
-      - /home/smdr-data-001:/smdr-data-001
+      - /home/smdr-data/smdr-data-001:/smdr-data-001
       - ./lib:/app/lib
 
 
