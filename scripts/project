@@ -75,7 +75,7 @@ mangle ()
         return 1;
     fi
      
-    docker-compose $PROD_COMPOSE_ARGS run --rm --name mangle -e MANGLE_SOURCE_DIRECTORY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
+    docker-compose $COMPOSE_ARGS run --rm --name $TCSENV'-mangle' -e MANGLE_SOURCE_DIRECTORY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
 }
 
 pbx-simulator ()
@@ -85,7 +85,7 @@ pbx-simulator ()
     if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1;
     fi    
-    docker-compose $PROD_COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' pbx-simulator
+    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' pbx-simulator
 }
 
 tms-simulator ()
@@ -95,5 +95,5 @@ tms-simulator ()
     if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1;
     fi
-    docker-compose $PROD_COMPOSE_ARGS up -d --no-build --remove-orphans tms-simulator
+    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-simulator' --no-build --remove-orphans tms-simulator
 }

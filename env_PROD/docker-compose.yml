@@ -15,7 +15,7 @@ services:
       - /etc/localtime:/etc/localtime
 
   pbx-interface:
-    container_name: PROD-pbx-interface
+    container_name: ${TCSENV}-pbx-interface
     env_file: ./env_PROD/env
     depends_on:
       - tms-interface
