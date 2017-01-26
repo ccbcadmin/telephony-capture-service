@@ -66,6 +66,7 @@ setTimeout(() => {
 			data[index] = masterTxBuffer[masterIndex];
 		}
 
+		console.log ('Master Index: ', masterIndex);
 		if (tcsSocket.write(data) === false) {
 			console.log('Link to TCS unavailable ... aborting.');
 			process.exit(1);
