@@ -4,3 +4,6 @@ PROGNAME=$(basename $0)
 
 source ./.tcs-pg-ports
 docker-compose $STORES_COMPOSE_ARGS build
+
+docker push 'ccbcadmin/tcs-image'$TCS_VERSION
+docker push 'ccbcadmin/tcs-jenkins'$TCS_VERSION
