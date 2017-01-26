@@ -8,6 +8,7 @@ import { ClientSocket } from '../share/client-socket';
 import { Queue } from '../share/queue';
 
 const routineName = 'pbx-simulator';
+const pgp = require('pg-promise')();
 
 const _ = require('lodash');
 const net = require('net');
@@ -82,8 +83,15 @@ const connection = {
 	user: 'postgres'
 };
 
+const db = pgp(connection);
+
 const checkRecordCount = () => {
 	console.log('Record Count: ', recordCount);
+
+	let result;
+	db.query.one('select count(*) from smdr;', result);
+
+	console.log ('Result is: ', result);
 	process.exit(0);
 }
 

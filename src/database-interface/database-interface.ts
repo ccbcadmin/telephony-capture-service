@@ -205,7 +205,6 @@ const dataSink = (msg): boolean => {
 				console.log('Database Insert Failure: ', err);
 				return false;
 			});
-
 	}
 	return true;
 }
