@@ -88,11 +88,15 @@ const db = pgp(connection);
 const checkRecordCount = () => {
 	console.log('Record Count: ', recordCount);
 
-	let result = -1;
-	db.one('select count(*) from smdr;', result);
-
-	console.log ('Result is: ', result);
-	process.exit(0);
+	db.one('select count(*) from smdr;')
+		.then(answer => {
+			console.log(answer);
+			process.exit(0);
+		})
+		.catch(error => {
+			console.log(error);
+			process.exit(1);
+		});
 }
 
 const nextFile = () => {
@@ -110,7 +114,7 @@ const nextFile = () => {
 ee.on('next', nextFile);
 
 // Ensure the DB_QUEUE is empty
-console.log ('Clear DB_QUEUE');
+console.log('Clear DB_QUEUE');
 const databaseQueue = new Queue(env.DB_QUEUE, () => true);
 
 // Wait a bit to ensure the queue is empty, then proceed
