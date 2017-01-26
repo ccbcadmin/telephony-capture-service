@@ -86,9 +86,9 @@ replayQueue = new Queue('PROD_REPLAY_QUEUE', null, 10);
 new ServerSocket(routineName, env.TCS_PORT, dataSink);
 
 fs.stat('./smdr-data-001', (error) => {
-	console.log ('errno: ', error);
+	console.log('errno: ', error);
 	if (error.code === 'ENOENT') {
+		console.log('created directory');
 		fs.mkdirSync('./smdr-data-001');
-		console.log ('created directory');
 	}
 });
