@@ -89,10 +89,10 @@ COPY ./docker-compose /app/docker-compose
 # Prep for barman
 COPY ./src/tcs-image/barman.conf /etc/
 RUN mkdir -p /etc/barman.d
+RUN mkdir -p /var/lib/barman
+RUN chown -R barman.barman /var/lib/barman
 COPY ./src/tcs-image/pg1.conf /etc/barman.d/
 COPY ./src/tcs-image/pg2.conf /etc/barman.d/
-COPY ./src/tcs-image/barman-entrypoint.sh /
-COPY ./src/tcs-image/barman-cron-backup /etc/cron.d/
 RUN mkdir -p /pg1_data
 RUN mkdir -p /pg2_data
 RUN chown barman /pg1_data
