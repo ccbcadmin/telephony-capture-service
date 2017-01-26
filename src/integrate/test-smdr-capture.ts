@@ -88,7 +88,7 @@ const db = pgp(connection);
 const checkRecordCount = () => {
 	console.log('Record Count: ', recordCount);
 
-	let result;
+	let result = -1;
 	db.one('select count(*) from smdr;', result);
 
 	console.log ('Result is: ', result);
