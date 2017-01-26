@@ -3,7 +3,7 @@ version: '2'
 services:
 
   database-interface:
-    container_name: DEV-database-interface
+    container_name: ${TCSENV}-database-interface
     env_file: ./env_DEV/env
     volumes:
       - /etc/localtime:/etc/localtime
@@ -17,14 +17,14 @@ services:
       - ./lib:/app/lib
 
   mangle:
-    container_name: DEV-mangle
+    container_name: ${TCSENV}-mangle
     env_file: ./env_DEV/env
     volumes:
       - /etc/localtime:/etc/localtime
       - ./lib:/app/lib
 
   pbx-interface:
-    container_name: DEV-pbx-interface
+    container_name: ${TCSENV}-pbx-interface
     env_file: ./env_DEV/env
     depends_on:
       - tms-interface
@@ -36,7 +36,7 @@ services:
       - ./lib:/app/lib
 
   pbx-simulator:
-    container_name: DEV-pbx-simulator
+    container_name: ${TCSENV}-pbx-simulator
     env_file: ./env_DEV/env
     volumes:
       - /etc/localtime:/etc/localtime
@@ -44,14 +44,14 @@ services:
       - ./sample-data/smdr-data:/smdr-data
 
   tms-interface:
-    container_name: DEV-tms-interface
+    container_name: ${TCSENV}-tms-interface
     env_file: ./env_DEV/env 
     volumes:
       - /etc/localtime:/etc/localtime
       - ./lib:/app/lib
 
   tms-simulator:
-    container_name: DEV-tms-simulator
+    container_name: ${TCSENV}-tms-simulator
     env_file: ./env_DEV/env
     volumes:
       - /etc/localtime:/etc/localtime
