@@ -29,7 +29,6 @@ services:
     depends_on:
       - tms-interface
       - database-interface
-      - tms-simulator
     volumes:
       - /etc/localtime:/etc/localtime
       - /home/smdr-data/dev/smdr-data-001:/smdr-data-001
