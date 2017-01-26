@@ -30,8 +30,6 @@ services:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     privileged: false
     network_mode: "host"
-    volumes:
-      - ./sample-data/smdr-data:/smdr-data
     entrypoint: ["./lib/pbx-simulator/pbx-simulator.js"]
 
   tms-interface:

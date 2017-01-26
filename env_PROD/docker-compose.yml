@@ -16,6 +16,8 @@ services:
     depends_on:
       - tms-interface
       - database-interface
+    volumes:
+      - /home/smdr-data/prod/smdr-data-001:/smdr-data-001
  
   pbx-simulator:
     container_name: PROD-pbx-simulator

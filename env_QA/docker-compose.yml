@@ -9,6 +9,8 @@ services:
   pbx-interface:
     container_name: QA-pbx-interface
     env_file: ./env_QA/env
+    volumes:
+      - /home/smdr-data/qa/smdr-data-001:/smdr-data-001
 
   tms-interface:
     container_name: QA-tms-interface
