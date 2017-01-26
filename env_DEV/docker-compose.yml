@@ -28,7 +28,9 @@ services:
       - database-interface
       - tms-simulator
     volumes:
+      - /home/smdr-data-001:/smdr-data-001
       - ./lib:/app/lib
+
 
   pbx-simulator:
     container_name: DEV-pbx-simulator

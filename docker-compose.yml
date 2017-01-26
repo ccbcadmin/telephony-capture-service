@@ -32,7 +32,6 @@ services:
     network_mode: "host"
     volumes:
       - ./sample-data/smdr-data:/smdr-data
-      - /home/smdr-data-001:/smdr-data-001
     entrypoint: ["./lib/pbx-simulator/pbx-simulator.js"]
 
   tms-interface:
