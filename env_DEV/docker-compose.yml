@@ -6,18 +6,21 @@ services:
     container_name: DEV-database-interface
     env_file: ./env_DEV/env
     volumes:
+      - /etc/localtime:/etc/localtime
       - ./lib:/app/lib
 
   integrate:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     env_file: ./env_DEV/env
     volumes:
+      - /etc/localtime:/etc/localtime
       - ./lib:/app/lib
 
   mangle:
     container_name: DEV-mangle
     env_file: ./env_DEV/env
     volumes:
+      - /etc/localtime:/etc/localtime
       - ./lib:/app/lib
 
   pbx-interface:
@@ -36,6 +39,7 @@ services:
     container_name: DEV-pbx-simulator
     env_file: ./env_DEV/env
     volumes:
+      - /etc/localtime:/etc/localtime
       - ./lib:/app/lib
       - ./sample-data/smdr-data:/smdr-data
 
@@ -43,10 +47,12 @@ services:
     container_name: DEV-tms-interface
     env_file: ./env_DEV/env 
     volumes:
+      - /etc/localtime:/etc/localtime
       - ./lib:/app/lib
 
   tms-simulator:
     container_name: DEV-tms-simulator
     env_file: ./env_DEV/env
     volumes:
+      - /etc/localtime:/etc/localtime
       - ./lib:/app/lib

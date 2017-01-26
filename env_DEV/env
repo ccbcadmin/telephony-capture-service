@@ -1,5 +1,5 @@
 # Development environment variables
-DATABASE=prod
+DATABASE=dev
 DB_QUEUE=DEV_DB_QUEUE
 PBX_SIMULATOR_SOURCE_DIRECTORY=/smdr-data/smdr-data-002
 PBX_SIMULATOR_INPUT_FREQUENCY=100

@@ -1,4 +1,4 @@
-# Production environment variables
+# QA environment variables
 DATABASE=qa
 DB_QUEUE=QA_DB_QUEUE
 TCS_PORT=3458

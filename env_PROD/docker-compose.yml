@@ -5,10 +5,14 @@ services:
   database-interface:
     container_name: PROD-database-interface
     env_file: ./env_PROD/env
+    volumes:
+      - /etc/localtime:/etc/localtime
 
   mangle:
     container_name: PROD-mangle
     env_file: ./env_PROD/env
+    volumes:
+      - /etc/localtime:/etc/localtime
 
   pbx-interface:
     container_name: PROD-pbx-interface
@@ -18,15 +22,23 @@ services:
       - database-interface
     volumes:
       - /home/smdr-data/prod/smdr-data-001:/smdr-data-001
+      - /etc/localtime:/etc/localtime
  
   pbx-simulator:
     container_name: PROD-pbx-simulator
     env_file: ./env_PROD/env
+    volumes:
+      - /etc/localtime:/etc/localtime
+      - /home/smdr-data/prod:/smdr-data
  
   tms-interface:
     container_name: PROD-tms-interface
     env_file: ./env_PROD/env
+    volumes:
+      - /etc/localtime:/etc/localtime
 
   tms-simulator:
     container_name: PROD-tms-simulator
     env_file: ./env_PROD/env
+    volumes:
+      - /etc/localtime:/etc/localtime
