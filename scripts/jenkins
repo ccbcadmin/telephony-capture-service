@@ -28,14 +28,14 @@ if [ $# == 2 ]; then
 	fi
 fi
 
-# Uppercase the environment for display purposes
-TCSENV_UPPER=$(echo $1 | awk '{print toupper($0)}')
-
 # Prepare the environment
-tcsenv $1 &>/dev/null
 export PATH=$PATH:./scripts
 . ./.tcs.version
 ./scripts/project
+tcsenv $1 &>/dev/null
+TCSENV_UPPER=$(echo $1 | awk '{print toupper($0)}')
+
+
 
 
 echo 'TCS_VERSION: '$TCS_VERSION
@@ -47,6 +47,8 @@ docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface &>/dev/nul
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface &>/dev/null
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface &>/dev/null
 echo 'done'
+
+echo 'COMPOSE_ARGS: '$COMPOSE_ARGS
 
 # TEST CASE DESCRIPTION 
 # Ensure that a stream of data makes it round-trip.
