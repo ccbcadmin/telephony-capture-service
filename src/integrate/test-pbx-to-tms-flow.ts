@@ -50,7 +50,8 @@ const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 let masterIndex = 0;
 
 console.log ('Clear the TMS_QUEUE');
-const tmsQueue = new Queue(env.TMS_QUEUE, () => true);
+const tmsQueue = new Queue(env.TMS_QUEUE);
+tmsQueue.purge ();
 
 setTimeout(() => {
 

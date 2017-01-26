@@ -102,11 +102,14 @@ export class Queue {
 		}
 	}
 
+	public purge = () => {
+		this.channel.purgeQueue();
+	}
 	public close = () => {
 		console.log('Close queue connection');
 
 		// Stop listening to queue events
-		this.connection ? this.connection.removeListener('close', () => { }) : _.noop;
-		this.connection ? this.connection.removeListener('error', () => { }) : _.noop;
+		// this.connection ? this.connection.removeListener('close', () => { }) : _.noop;
+		// this.connection ? this.connection.removeListener('error', () => { }) : _.noop;
 	}
 }
