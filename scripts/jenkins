@@ -34,7 +34,7 @@ TCSENV_UPPER=$(echo $1 | awk '{print toupper($0)}')
 # Prepare the environment
 tcsenv $1 &>/dev/null
 export PATH=$PATH:./scripts
-./scripts/project
+source ./scripts/project
 
 echo 'TCS_VERSION: '$TCS_VERSION
 
