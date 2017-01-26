@@ -103,9 +103,10 @@ export class Queue {
 	}
 
 	public purge = () => {
+		console.log (`Queue ${this.queueName} Purged`);
 		this.channel.purgeQueue();
 	}
-	
+
 	public close = () => {
 		console.log('Close queue connection');
 
