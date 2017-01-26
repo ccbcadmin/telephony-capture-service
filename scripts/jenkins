@@ -44,6 +44,8 @@ docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface &>/dev/nul
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface &>/dev/null
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface &>/dev/null
 
+sleep 4
+
 # TEST CASE DESCRIPTION 
 # Ensure that a stream of data makes it round-trip.
 # input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
