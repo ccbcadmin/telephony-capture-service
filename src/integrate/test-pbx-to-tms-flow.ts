@@ -51,9 +51,11 @@ let masterIndex = 0;
 
 console.log ('Clear the TMS_QUEUE');
 const tmsQueue = new Queue(env.TMS_QUEUE);
-tmsQueue.purge ();
 
 setTimeout(() => {
+
+	// Ensure nothing hanging around from a previous test
+	tmsQueue.purge ();
 
 	const setIntervalId = setInterval(() => {
 
