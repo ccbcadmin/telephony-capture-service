@@ -29,7 +29,7 @@ services:
     env_file: ./env_PROD/env
     volumes:
       - /etc/localtime:/etc/localtime
-      - /home/smdr-data/prod:/smdr-data
+      - ./sample-data/smdr-data:/smdr-data
  
   tms-interface:
     container_name: PROD-tms-interface
