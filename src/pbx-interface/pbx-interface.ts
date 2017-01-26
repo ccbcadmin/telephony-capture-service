@@ -87,7 +87,7 @@ new ServerSocket(routineName, env.TCS_PORT, dataSink);
 
 fs.stat('./smdr-data-001', (error) => {
 	console.log ('errno: ', error);
-	if (error.errno === -2) {
+	if (error.code === 'ENOENT') {
 		fs.mkdirSync('./smdr-data-001');
 		console.log ('created directory');
 	}
