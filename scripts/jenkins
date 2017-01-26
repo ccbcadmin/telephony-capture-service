@@ -8,7 +8,7 @@ NO_DEBUG='&> /dev/null'
 # 'execute-test-case' is the workhorse function to execute the various test cases
 execute-test-case () {
 	echo -n 'Test Case: '$1' ... '
-	if docker-compose $COMPOSE_ARGS run --rm --name $TCSENV_UPPER-$1 --entrypoint bash integrate -c \
+	if docker-compose $COMPOSE_ARGS run --rm --name $TCSENV-$1 --entrypoint bash integrate -c \
 		'./lib/integrate/'$1'.js' ; then
 		echo 'succeeded'
 	else
@@ -16,6 +16,12 @@ execute-test-case () {
 		exit 1
 	fi
 }
+
+# Allow access to bash scripts
+export PATH=./scripts:$PATH
+
+# define some useful functions
+source scripts/bash-functions
 
 # This script can only be run in the dev or qa environments
 if [ $# != 1 ] && [ $# != 2 ]; then error-exit "$USAGE"; fi
@@ -27,21 +33,10 @@ if [ $# == 2 ]; then
 		NO_DEBUG=''
 	fi
 fi
+tcsenv $1
 
-echo -n 'Prepare the '$1' environment ... '
-
-# Allow access to bash scripts
-export PATH=./scripts:$PATH
-
-# define various functions
-source scripts/bash-functions
-
-# Default to qa
-tcsenv qa
-
-. ./.tcs.version
-TCSENV_UPPER=$(echo $1 | awk '{print toupper($0)}')
-
+# Note what version is being tested
+source ./.tcs.version
 echo 'TCS_VERSION: '$TCS_VERSION
 
 # Restart the TCS containers
@@ -49,15 +44,14 @@ docker-compose $COMPOSE_ARGS down &>/dev/null
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface &>/dev/null
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface &>/dev/null
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface &>/dev/null
-echo 'done'
-
-echo 'COMPOSE_ARGS: '$COMPOSE_ARGS
 
 # TEST CASE DESCRIPTION 
 # Ensure that a stream of data makes it round-trip.
 # input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
 # input_testdata and output_testdata must be identical
 execute-test-case test-pbx-to-tms-flow
+
+exit 0
 
 # TEST CASE DESCRIPTION 
 # Send a stream of data, shutdown rabbitmq, then restart it.
