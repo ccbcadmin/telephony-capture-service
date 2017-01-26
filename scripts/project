@@ -1,5 +1,3 @@
-#!/bin/bash
-
 PROGNAME=$(basename $0)
 
 # exports for docker-compose
