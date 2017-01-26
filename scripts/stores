@@ -39,6 +39,11 @@ case "$1" in
 		# Clean things up if things go awry
 		trap cleanup EXIT
 
+		# Barman must own its play area
+        if ! docker-compose $STORES_COMPOSE_ARGS run --entrypoint bash barman -c 'chown -R barman.barman /var/lib/barman; exit $?;'; then 
+			error-exit 'Failed to config barman ownership';
+		fi
+
 		if ! container-exists barman; then
 			if ! start-stores-container barman; then
 				error-exit 'Failed to Start Container barman'; 
