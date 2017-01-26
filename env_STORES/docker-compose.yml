@@ -16,9 +16,10 @@ services:
     network_mode: "host"
     env_file: ./env_PROD/env
     volumes:
+      - /etc/localtime:/etc/localtime
       - postgres1_data:/pg1_data
       - postgres2_data:/pg2_data
-      - ~/barman_home:/var/lib/barman
+      - /home/barman:/var/lib/barman
     command: ["node", "./lib/backup-scheduler/backup-scheduler.js"]
 
   pg1:
@@ -28,6 +29,7 @@ services:
     privileged: true
     network_mode: "host"  
     volumes:
+      - /etc/localtime:/etc/localtime
       - postgres1_data:/var/lib/postgresql/data
     entrypoint: ["/docker-entrypoint.sh"]
     environment:
@@ -41,6 +43,7 @@ services:
     privileged: true
     network_mode: "host"  
     volumes:
+      - /etc/localtime:/etc/localtime
       - postgres2_data:/var/lib/postgresql/data
     entrypoint: ["/docker-entrypoint.sh"]
     environment:
@@ -57,6 +60,7 @@ services:
     privileged: true
     network_mode: "host"
     volumes:
+      - /etc/localtime:/etc/localtime
       - jenkins_data:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
 
@@ -67,6 +71,7 @@ services:
     privileged: true
     network_mode: "host"
     volumes:
+      - /etc/localtime:/etc/localtime
       - rabbitmq_data:/var/lib/rabbitmq
 
   tcs-image:
