@@ -37,6 +37,7 @@ services:
     env_file: ./env_DEV/env
     volumes:
       - ./lib:/app/lib
+      - ./sample-data/smdr-data:/smdr-data
 
   tms-interface:
     container_name: DEV-tms-interface
