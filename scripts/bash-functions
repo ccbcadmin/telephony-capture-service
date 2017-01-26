@@ -164,7 +164,7 @@ alter-archive-command () {
             func-error $FUNCNAME $LINENO $1' Failed to Alter archive_command';
             continue
         fi
-        
+        sleep 3
         if ! docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres; exit $?;'; then 
             func-error $FUNCNAME $LINENO $1' Failed to Reload Postgres';
             continue
