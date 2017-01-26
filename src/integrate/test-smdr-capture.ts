@@ -89,7 +89,7 @@ const checkRecordCount = () => {
 	console.log('Record Count: ', recordCount);
 
 	let result;
-	db.query.one('select count(*) from smdr;', result);
+	db.one('select count(*) from smdr;', result);
 
 	console.log ('Result is: ', result);
 	process.exit(0);
