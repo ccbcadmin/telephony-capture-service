@@ -28,17 +28,23 @@ if [ $# == 2 ]; then
 	fi
 fi
 
-# Prepare the environment
-export PATH=$PATH:./scripts
+echo -n 'Prepare the '$1' environment ... '
+
+# Allow access to bash scripts
+export PATH=./scripts:$PATH
+
+# define various functions
+source scripts/bash-functions
+
+# Default to qa
+tcsenv qa
+
 . ./.tcs.version
-./scripts/project $TCS_VERSION
-tcsenv $1 &>/dev/null
 TCSENV_UPPER=$(echo $1 | awk '{print toupper($0)}')
 
 echo 'TCS_VERSION: '$TCS_VERSION
 
 # Restart the TCS containers
-echo -n 'Preparing the '$1' environment ... '
 docker-compose $COMPOSE_ARGS down &>/dev/null
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface &>/dev/null
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface &>/dev/null

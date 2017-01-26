@@ -1,20 +1,15 @@
+#!/bin/bash
+
 PROGNAME=$(basename $0)
-
-# exports for docker-compose
-export STORES_COMPOSE_ARGS=' -f docker-compose.yml -f env_STORES/docker-compose.yml -p stores '
-export DEV_COMPOSE_ARGS=' -f docker-compose.yml -f env_DEV/docker-compose.yml -p dev '
-export QA_COMPOSE_ARGS=' -f docker-compose.yml  -f env_QA/docker-compose.yml -p qa '
-export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f env_PROD/docker-compose.yml -p prod '
-
-# Production environment is the default
-export COMPOSE_ARGS="$PROD_COMPOSE_ARGS"
-export TCSENV=prod
 
 # Allow access to bash scripts
 export PATH=./scripts:$PATH
 
 # define various functions
 source scripts/bash-functions
+
+# Default to production
+tcsenv prod
 
 if [ $# -gt 1 ]; then echo "Usage : tcsproj [ TCS Version ]"; exit 1; fi
 
