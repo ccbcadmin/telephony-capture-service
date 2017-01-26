@@ -55,9 +55,6 @@ tmsQueue.purge ();
 
 setTimeout(() => {
 
-	// Stop clearing the queue
-	tmsQueue.close();
-
 	const setIntervalId = setInterval(() => {
 
 		// Vary message lengths from 0 to 99, but truncate the last one
@@ -78,7 +75,7 @@ setTimeout(() => {
 			clearInterval(setIntervalId);
 		}
 	}, 2);
-}, 3000);
+}, 2000);
 
 let rxIndex = 0;
 const dataCapture = (data: Buffer) => {
