@@ -33,8 +33,7 @@ if [ $# == 2 ]; then
 		NO_DEBUG=''
 	fi
 fi
-tcsenv $1 &>/dev/null
-
+tcsenv $1
 # Note what version is being tested
 source ./.tcs.version
 echo 'TCS_VERSION: '$TCS_VERSION
