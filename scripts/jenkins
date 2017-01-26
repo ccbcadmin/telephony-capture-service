@@ -36,6 +36,8 @@ tcsenv $1 &>/dev/null
 export PATH=$PATH:./scripts
 ./scripts/project
 
+echo 'TCS_VERSION: '$TCS_VERSION
+
 # Restart the TCS containers
 echo -n 'Preparing the '$1' environment ... '
 docker-compose $COMPOSE_ARGS down &>/dev/null
