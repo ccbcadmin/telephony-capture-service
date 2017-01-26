@@ -4,6 +4,8 @@ import * as $ from '../share/constants';
 import { ServerSocket } from '../share/server-socket';
 import { Queue } from '../share/queue';
 
+const fs = require('fs');
+
 const routineName = 'pbx-interface';
 console.log(`Restarting ${routineName}`);
 
@@ -82,3 +84,11 @@ replayQueue = new Queue('PROD_REPLAY_QUEUE', null, 10);
 
 // Start listening for incoming messages
 new ServerSocket(routineName, env.TCS_PORT, dataSink);
+
+fs.stat('./smdr-data-001', (errno) => {
+	console.log ('errno: ', errno);
+	if (errno === -2) {
+		fs.mkdirSync('./smdr-data-001');
+		console.log ('created directory');
+	}
+});
