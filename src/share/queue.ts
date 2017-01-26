@@ -13,13 +13,15 @@ export class Queue {
 	private queueName: string;
 	private messageCounter = 0;
 	private consumer;
+	private maxLength;
 	private retryConnectTimer$ = Observable.interval(1000).take(15).startWith();
 	private retryConnectSubscription;
 
-	constructor(queueName: string, consumer = null) {
+	constructor(queueName: string, consumer = null, maxLength = null) {
 
 		this.queueName = queueName;
 		this.consumer = consumer;
+		this.maxLength = maxLength;
 		this.connection = null;
 
 		this.retryConnectSubscription = this.retryConnectTimer$.subscribe(
@@ -43,15 +45,15 @@ export class Queue {
 				return;
 			}
 
-			queueConnection.addListener ('error', (err) => {
+			queueConnection.addListener('error', (err) => {
 				if (err.message !== "Connection closing") {
 					console.error("[AMQP] conn error", err.message);
 					process.exit(1);
 				}
-				});
+			});
 
-			queueConnection.addListener('close', () => {});
- 
+			queueConnection.addListener('close', () => { });
+
 			this.connection = queueConnection;
 
 			// Stop the retrys - we are connected
@@ -66,7 +68,12 @@ export class Queue {
 
 				console.log(`Channel to Message Broker for ${this.queueName} Created`);
 
-				channel.assertQueue(this.queueName, { durable: true });
+				if (this.maxLength) {
+					channel.assertQueue(this.queueName, { durable: true, maxLength: this.maxLength });
+				}
+				else {
+					channel.assertQueue(this.queueName, { durable: true });
+				}
 				this.channel = channel;
 
 				if (this.consumer) {
@@ -99,7 +106,7 @@ export class Queue {
 		console.log('Close queue connection');
 
 		// Stop listening to queue events
-		this.connection ? this.connection.removeListener ('close', () => {}) : _.noop;
-		this.connection ? this.connection.removeListener ('error', () => {}) : _.noop;
+		this.connection ? this.connection.removeListener('close', () => { }) : _.noop;
+		this.connection ? this.connection.removeListener('error', () => { }) : _.noop;
 	}
 }

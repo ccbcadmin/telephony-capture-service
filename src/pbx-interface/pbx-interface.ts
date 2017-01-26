@@ -32,6 +32,7 @@ process.on('SIGINT', () => {
 
 let tmsQueue;
 let databaseQueue;
+let replayQueue;
 
 let leftOver = Buffer.alloc(0);
 
@@ -50,7 +51,13 @@ const queueSmdrMessages = (data: Buffer) => {
 		unprocessedData.copy(leftOver);
 	}
 	else {
+		// Messages to be picked up by database-interface
 		databaseQueue.sendToQueue(unprocessedData.slice(0, crLfIndexOf + 2));
+
+		// Messages saved in a circular replay queue
+		replayQueue.sendToQueue(unprocessedData.slice(0, crLfIndexOf + 2));
+
+		// Get ready for the next message reception
 		leftOver = Buffer.alloc(unprocessedData.length - (crLfIndexOf + 2));
 		unprocessedData.copy(leftOver, 0, crLfIndexOf + 2);
 	}
@@ -70,6 +77,8 @@ tmsQueue = env.TMS_ACTIVE ? new Queue(env.TMS_QUEUE) : null;
 
 // Always need the database queue
 databaseQueue = new Queue(env.DB_QUEUE);
+
+replayQueue = new Queue('PROD_REPLAY_QUEUE', null, 10);
 
 // Start listening for incoming messages
 new ServerSocket(routineName, env.TCS_PORT, dataSink);
