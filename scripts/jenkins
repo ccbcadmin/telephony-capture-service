@@ -28,13 +28,15 @@ if [ $# == 2 ]; then
 	fi
 fi
 
-# Uppercase the environment
+# Uppercase the environment for display purposes
 TCSENV_UPPER=$(echo $1 | awk '{print toupper($0)}')
 
 # Prepare the environment
 tcsenv $1 &>/dev/null
 export PATH=$PATH:./scripts
-source ./scripts/project
+. ./.tcs.version
+./scripts/project
+
 
 echo 'TCS_VERSION: '$TCS_VERSION
 
