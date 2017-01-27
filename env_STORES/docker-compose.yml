@@ -34,7 +34,7 @@ services:
     entrypoint: ["/docker-entrypoint.sh"]
     environment:
       - POSTGRES_PASSWORD
-    command: ["postgres", "-p", $PG1_PORT]
+    command: ["postgres", "-p", "5432"]
 
   pg2:
     image: ccbcadmin/tcs-image${TCS_VERSION}
@@ -48,7 +48,7 @@ services:
     entrypoint: ["/docker-entrypoint.sh"]
     environment:
       - POSTGRES_PASSWORD
-    command: ["postgres", "-p", $PG2_PORT]
+    command: ["postgres", "-p", "5433"]
 
   jenkins:
     build:

@@ -378,19 +378,6 @@ remove-stores-container () {
     return 0
 }
 
-set-pg-ports () {
-    if [ $1 == 'pg1' ]; then
-	    echo 'export PG1_PORT=5432; export PG2_PORT=5433;' > .tcs-pg-ports
-        return 0
-    elif [ $1 == 'pg2' ]; then
-	    echo 'export PG1_PORT=5433; export PG2_PORT=5432;' > .tcs-pg-ports
-        return 0
-    else
-        func-error $FUNCNAME $LINENO 'Invalid pg Selection '$1
-        return 1;
-    fi
-}
-
 start-container () {
     if ! docker start $1 2>&1 >/dev/null; then return 1; fi
 
