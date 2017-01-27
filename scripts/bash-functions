@@ -200,6 +200,7 @@ enable-barman-backups () {
     # Do a master reset on Barman
     if ! barman-reset; then return 1; fi
 
+    echo 'Here 1'
     # Kick streaming to life
     if ! barman-cron; then return 1; fi
 
