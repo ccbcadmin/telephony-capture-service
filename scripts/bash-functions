@@ -307,6 +307,7 @@ barman-clear-legacy-streaming () {
 }
 
 barman-enable-streaming () {
+    return 0
     if ! docker exec -it barman sh -c 'cp /etc/barman.d/'$1'.conf_hold /etc/barman.d/'$1'.conf; exit $?;'; then
         func-error $FUNCNAME $LINENO 'Attempt to enable '$1' streaming failed';
         return 1
@@ -314,6 +315,7 @@ barman-enable-streaming () {
 }
 
 barman-disable-streaming () {
+    return 0
     if ! docker exec -it barman sh -c 'rm /etc/barman.d/'$1'.conf; exit $?;'; then
         func-error $FUNCNAME $LINENO 'Attempt to disable '$1' streaming failed';
         return 1
