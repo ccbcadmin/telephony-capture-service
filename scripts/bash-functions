@@ -204,7 +204,7 @@ enable-barman-backups () {
     if ! barman-cron; then return 1; fi
 
     # Now do a final sanity check
-    if ! barman-check pg1; then return 1; fi
+    if ! barman-check; then return 1; fi
 
     echo 'done'
     return 0
