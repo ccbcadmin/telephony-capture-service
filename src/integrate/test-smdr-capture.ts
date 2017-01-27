@@ -115,7 +115,7 @@ ee.on('next', nextFile);
 
 const databaseQueue = new Queue(env.DB_QUEUE);
 
-db.none('delete * from smdr;')
+db.none('delete from smdr;')
 	.then(delete_answer => {
 		console.log('delete_answer: ', delete_answer);
 		process.exit(0);
