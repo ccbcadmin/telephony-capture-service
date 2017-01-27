@@ -304,6 +304,20 @@ barman-clear-legacy-streaming () {
     fi
 }
 
+barman-enable-streaming () {
+    if ! docker exec -it barman sh -c 'cp /etc/barman.d/'$1'.conf_hold /etc/barman.d/'$1'.conf; exit $?;'; then
+        func-error $FUNCNAME $LINENO 'Unable to enable '$1' streaming';
+        return 1
+    fi
+}
+
+barman-disable-streaming () {
+    if ! docker exec -it barman sh -c 'rm /etc/barman.d/'$1'.conf; exit $?;'; then
+        func-error $FUNCNAME $LINENO 'Unable to disable '$1' streaming';
+        return 1
+    fi
+}
+
 barman-pitr () {
 
     echo -n $PROGNAME': Point-In-Time Recovery to '$1' ... '
