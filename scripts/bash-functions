@@ -192,13 +192,13 @@ enable-barman-backups () {
     if ! alter-archive-command pg1; then return 1; fi
 
     # Any partly done streaming is useless - discard
-    if ! barman-clear-legacy-streaming pg1; then return 1; fi
+    if ! barman-clear-legacy-streaming; then return 1; fi
 
     # Ensure the Postgres replication slot exists
-    if [ ! barman-create-slot; then return 1; fi
+    if ! barman-create-slot; then return 1; fi
 
     # Do a master reset on Barman
-    if ! barman-reset pg1; then return 1; fi
+    if ! barman-reset; then return 1; fi
 
     # Kick streaming to life
     if ! barman-cron; then return 1; fi
@@ -300,7 +300,7 @@ barman-recover () {
 }
 
 barman-clear-legacy-streaming () {
-    if ! docker exec -it barman sh -c 'rm -rf /var/lib/barman/'$1'/streaming/*; exit $?;'; then
+    if ! docker exec -it barman sh -c 'rm -rf /var/lib/barman/pg1/streaming/*; exit $?;'; then
         func-error $FUNCNAME $LINENO 'Unable to clear legacy streaming';
         return 1
     fi
@@ -340,7 +340,7 @@ barman-pitr () {
 
 barman-reset () {
 	if ! docker exec -it barman sh -c 'barman receive-wal --reset pg1; exit $?;' &> /dev/null; then
-        msg $1' Failed to Reset Stream Replication';      
+        msg 'Failed to Reset Stream Replication';      
     fi
 }
 
