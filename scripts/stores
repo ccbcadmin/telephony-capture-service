@@ -45,26 +45,26 @@ fi
 
 if ! container-exists barman; then
 	if ! start-stores-container barman; then
-		error-exit 'Failed to Start Container barman'; 
+		error-exit 'Failed to Start barman'; 
 	fi
 fi
 
 # Start the selected Postgres container
 if ! container-exists pg1; then
 	if ! start-active-pg-container; then 
-		error-exit 'Failed to Start Container '$1;
+		error-exit 'Failed to Start pg1'
 	fi
 fi
 
 if ! container-exists rabbitmq; then
 	if ! start-stores-container rabbitmq; then
-		error-exit 'Failed to Start Container rabbitmq';
+		error-exit 'Failed to Start rabbitmq';
 	fi
 fi
 
 if ! container-exists jenkins; then
 	if ! start-stores-container jenkins; then
-		error-exit 'Failed to Start Container jenkins';
+		error-exit 'Failed to Start jenkins';
 	fi
 fi
 
