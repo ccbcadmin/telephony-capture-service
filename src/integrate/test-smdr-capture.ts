@@ -92,11 +92,12 @@ const checkRecordCount = () => {
 		.then(response => {
 			console.log(response.count);
 			if (response.count == smdrMsgsSent) {
-				console.log (`Test Passed: ${smdrMsgsSent} messages sent and received`);
+				console.log(`Test Passed: ${smdrMsgsSent} messages sent and received`);
 				process.exit(0);
 			}
 			else {
-				console.log (`Inconsistency detected: ${smdrMsgsSent} messages sent and ${response.count} received`);
+				console.log(`Inconsistency detected: ${smdrMsgsSent} messages sent and ${response.count} received`);
+				process.exit(1);
 			}
 		})
 		.catch(error => {
