@@ -188,8 +188,6 @@ enable-barman-backups () {
 
     pg-state &> /dev/null
     
-    if ! barman-enable-streaming pg1; then return 1; fi
-
     # archive_command set 'true'
     if ! alter-archive-command pg1; then return 1; fi
 
