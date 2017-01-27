@@ -195,7 +195,7 @@ enable-barman-backups () {
     if ! barman-clear-legacy-streaming pg1; then return 1; fi
 
     # Ensure the Postgres replication slot exists
-    barman-create-slot pg1;
+    if [ ! barman-create-slot; then return 1; fi
 
     # Do a master reset on Barman
     if ! barman-reset pg1; then return 1; fi
