@@ -29,7 +29,7 @@ const env = envalid.cleanEnv(process.env, {
 
 let smdrFiles: string[] = [];
 let smdrFileNo = 0;
-let recordCount: number = 0;
+let smdrMsgsSent: number = 0;
 
 const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
@@ -45,20 +45,20 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 	const intervalId = setInterval(() => {
 		// Look for SMDR record boundaries until there are no more
 		if ((next_index = data.indexOf($.CRLF, index)) < 0) {
-			process.stdout.write(`\bis complete.  ${recordCount} SMDR records sent.\r\n`);
+			process.stdout.write(`\bis complete.  ${smdrMsgsSent} SMDR records sent.\r\n`);
 			clearInterval(intervalId);
 			ee.emit('next');
 		} else {
-			++recordCount;
+			++smdrMsgsSent;
 			const nextMsg = data.slice(index, next_index + 2);
 
-			if (recordCount % 20 === 5)
+			if (smdrMsgsSent % 20 === 5)
 				process.stdout.write('\b-');
-			else if (recordCount % 20 === 10)
+			else if (smdrMsgsSent % 20 === 10)
 				process.stdout.write('\b\\');
-			else if (recordCount % 20 === 15)
+			else if (smdrMsgsSent % 20 === 15)
 				process.stdout.write('\b|');
-			else if (recordCount % 20 === 0)
+			else if (smdrMsgsSent % 20 === 0)
 				process.stdout.write('\b/');
 
 			index = next_index + 2;
@@ -86,12 +86,18 @@ const connection = {
 const db = pgp(connection);
 
 const checkRecordCount = () => {
-	console.log('Record Count: ', recordCount);
+	console.log('SMDR Messages Sent: ', smdrMsgsSent);
 
 	db.one('select count(*) from smdr;')
-		.then(answer => {
-			console.log(answer);
-			process.exit(0);
+		.then(response => {
+			console.log(response.count);
+			if (response.count === smdrMsgsSent) {
+				console.log (`Test Passed: ${smdrMsgsSent} messages sent and received`);
+				process.exit(0);
+			}
+			else {
+				console.log (`Inconsistency detected: ${smdrMsgsSent} messages send and ${response.count} received`);
+			}
 		})
 		.catch(error => {
 			console.log('Postgres query failed:\n', JSON.stringify(error));
