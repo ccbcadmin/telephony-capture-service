@@ -50,8 +50,8 @@ if ! container-exists barman; then
 fi
 
 # Start the selected Postgres container
-if ! container-exists $1; then
-	if ! start-active-pg-container pg1; then 
+if ! container-exists pg1; then
+	if ! start-active-pg-container; then 
 		error-exit 'Failed to Start Container '$1;
 	fi
 fi
