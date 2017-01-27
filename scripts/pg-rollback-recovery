@@ -30,7 +30,8 @@ validate-backup_id $1 $2
 pg-state &> /dev/null
 
 # Shutdown the active Postgres container
-remove-stores-container $ACTIVE_PG
+if ! barman-disable-streaming $ACTIVE_PG; exit 1; fi
+if ! remove-stores-container $ACTIVE_PG; exit 1; fi
 
 # Do the recovery
 case "$#" in

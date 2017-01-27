@@ -187,6 +187,8 @@ enable-barman-backups () {
     # Various steps to ensure that barman is backing up the ACTIVE pg
 
     pg-state &> /dev/null
+    
+    if ! barman-enable-streaming $1; then return 1; fi
 
     # archive_command set 'true'
     if ! alter-archive-command $1; then return 1; fi
@@ -306,14 +308,14 @@ barman-clear-legacy-streaming () {
 
 barman-enable-streaming () {
     if ! docker exec -it barman sh -c 'cp /etc/barman.d/'$1'.conf_hold /etc/barman.d/'$1'.conf; exit $?;'; then
-        func-error $FUNCNAME $LINENO 'Unable to enable '$1' streaming';
+        func-error $FUNCNAME $LINENO 'Attempt to enable '$1' streaming failed';
         return 1
     fi
 }
 
 barman-disable-streaming () {
     if ! docker exec -it barman sh -c 'rm /etc/barman.d/'$1'.conf; exit $?;'; then
-        func-error $FUNCNAME $LINENO 'Unable to disable '$1' streaming';
+        func-error $FUNCNAME $LINENO 'Attempt to disable '$1' streaming failed';
         return 1
     fi
 }
@@ -385,6 +387,7 @@ remove-stores-container () {
 	    docker-compose $STORES_COMPOSE_ARGS rm -f -v $1 &> /dev/null
         echo 'done'
     fi
+    return 0
 }
 
 set-pg-ports () {
@@ -423,10 +426,10 @@ start-active-pg-container () {
     source ./.tcs-pg-ports
 
     # Ensure Postgres owns everything
-    if ! change-pgdata-owner postgres $1; then exit 1; fi
+    if ! change-pgdata-owner postgres $1; then return 1; fi
 
     # Now start the incoming Postgres container
-    if ! start-stores-container $1; then error-exit 'Failed to Start Container '$1; fi
+    if ! start-stores-container $1; then func-error 'Failed to Start Container '$1; fi
 
     sleep 5; # Allow for creation of new database
     

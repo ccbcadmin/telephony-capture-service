@@ -58,6 +58,9 @@ remove-stores-container $TO_PG
 # Arrange for a possible rollback
 trap postgres-rollback EXIT;
 
+# Let barman know
+if ! barman-disable-streaming $FROM_PG; then exit 1; fi
+
 # Shutdown the outgoing container
 remove-stores-container $FROM_PG
 
