@@ -86,17 +86,16 @@ const connection = {
 const db = pgp(connection);
 
 const checkRecordCount = () => {
-	console.log('SMDR Messages Sent: ', smdrMsgsSent);
 
 	db.one('select count(*) from smdr;')
 		.then(response => {
 			console.log(response.count);
 			if (response.count == smdrMsgsSent) {
-				console.log(`Test Passed: ${smdrMsgsSent} messages sent and received`);
+				console.log(`Passed: ${smdrMsgsSent} messages sent and received`);
 				process.exit(0);
 			}
 			else {
-				console.log(`Inconsistency detected: ${smdrMsgsSent} messages sent and ${response.count} received`);
+				console.log(`Failed: ${smdrMsgsSent} messages sent and ${response.count} received`);
 				process.exit(1);
 			}
 		})
