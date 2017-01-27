@@ -113,15 +113,24 @@ const nextFile = () => {
 
 ee.on('next', nextFile);
 
-// Ensure the DB_QUEUE is empty
-console.log('Clear DB_QUEUE');
-const databaseQueue = new Queue(env.DB_QUEUE, () => true);
+const databaseQueue = new Queue(env.DB_QUEUE);
+
+db.none('delete * from smdr;')
+	.then(delete_answer => {
+		console.log('delete_answer: ', delete_answer);
+		process.exit(0);
+	})
+	.catch(error => {
+		console.log('delere error: ', error);
+		process.exit(1);
+	});
 
 // Wait a bit to ensure the queue is empty, then proceed
 setTimeout(() => {
 
-	// Stop clearing the queue
-	databaseQueue.close();
+	// Ensure that we are starting with a clean sheet
+	databaseQueue.purge();
+
 
 	// Search the source directory looking for raw SMDR files
 	dir.files('./sample-data/smdr-data/smdr-one-file', (err, files) => {
