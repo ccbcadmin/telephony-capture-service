@@ -15,24 +15,22 @@ validate-backup_id $1 $2
 pg-state &> /dev/null
 
 # Remove the STANDBY container, before doing the recovery
-remove-stores-container $STANDBY_PG
+remove-stores-container pg2
 
 # Do the recovery
 case "$#" in
-	2)	if ! barman-recover $STANDBY_PG $@; then error-exit 'Recovery Failure'; fi ;;
-	3)  if ! barman-pitr $STANDBY_PG $@; then error-exit 'Recovery Failure'; fi ;;
+	2)	if ! barman-recover pg2 $@; then error-exit 'Recovery Failure'; fi ;;
+	3)  if ! barman-pitr pg2 $@; then error-exit 'Recovery Failure'; fi ;;
 	*)  error-exit 'Assertion Error @ '$LINENO ;;
 esac
 msg 'Recovery Successful'
 
-source ./.tcs-pg-ports
-
 # Ensure Postgres owns everything
-if ! change-pgdata-owner postgres $1; then exit 1; fi
+if ! change-pgdata-owner postgres pg2; then exit 1; fi
 
 # Finally bring up the STANDBY container to listen on port 5433
-if ! start-stores-container $STANDBY_PG; then exit 1; fi
+if ! start-stores-container pg2; then exit 1; fi
 
-msg 'Standby Recovery to '$STANDBY_PG' Complete'
+msg 'Standby Recovery to pg2 Complete'
 pg-state
 exit 0

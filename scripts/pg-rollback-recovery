@@ -30,18 +30,18 @@ validate-backup_id $1 $2
 pg-state &> /dev/null
 
 # Shutdown the active Postgres container
-if ! barman-disable-streaming $ACTIVE_PG; exit 1; fi
-if ! remove-stores-container $ACTIVE_PG; exit 1; fi
+if ! barman-disable-streaming pg1; exit 1; fi
+if ! remove-stores-container pg1; exit 1; fi
 
 # Do the recovery
 case "$#" in
-	2)	if ! barman-recover $ACTIVE_PG $@; then error-exit 'Recovery Failure'; fi ;;
-	3)  if ! barman-pitr $ACTIVE_PG $@; then error-exit 'Recover Failure'; fi ;;
+	2)	if ! barman-recover pg1 $@; then error-exit 'Recovery Failure'; fi ;;
+	3)  if ! barman-pitr pg1 $@; then error-exit 'Recover Failure'; fi ;;
 	*)  error-exit 'Assertion Error @ '$LINENO ;;
 esac
 
 # Now restart the Postgres container
-if ! start-active-pg-container $ACTIVE_PG; then exit 1; fi
+if ! start-active-pg-container; then exit 1; fi
 
 msg 'Rollback Recovery Complete'
 exit 0

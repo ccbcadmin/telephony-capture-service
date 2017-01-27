@@ -84,7 +84,7 @@ COPY ./src /app/src
 COPY ./sample-data /app/sample-data
 
 # And the docker-compose folder and env information
-COPY ./docker-compose.yml /app/docker-compose
+COPY ./docker-compose.yml /app/
 COPY env_QA /app
 COPY env_DEV /app
 COPY env_PROD /app
@@ -95,13 +95,13 @@ RUN mkdir -p /etc/barman.d
 RUN mkdir -p /var/lib/barman
 RUN chown -R barman.barman /var/lib/barman
 COPY ./src/tcs-image/pg1.conf /etc/barman.d/
-COPY ./src/tcs-image/pg2.conf /etc/barman.d/
+# COPY ./src/tcs-image/pg2.conf /etc/barman.d/
 RUN mkdir -p /pg1_data
 RUN mkdir -p /pg2_data
-RUN chown barman /pg1_data
-RUN chown barman /pg2_data
-RUN chmod 755 /pg1_data
-RUN chmod 755 /pg2_data
+RUN chown barman.barman /pg1_data
+RUN chown barman.barman /pg2_data
+RUN chmod 775 /pg1_data
+RUN chmod 775 /pg2_data
 
 # Give us an editor too
 ENV TERM xterm

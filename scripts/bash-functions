@@ -250,6 +250,7 @@ barman-check () {
 }
 
 barman-create-slot () {
+
     if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 
 	docker exec -it barman sh -c 'barman receive-wal --create-slot pg1; exit $?;' &> /dev/null
@@ -257,6 +258,7 @@ barman-create-slot () {
 }
 
 barman-cron () {
+    
 	docker exec -it barman sh -c 'barman cron 2>&1 >/dev/null; exit $?;'
 	return $?
 }
