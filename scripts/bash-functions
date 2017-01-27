@@ -166,18 +166,18 @@ alter-archive-command () {
     for i in {1..10}
     do
         sleep 2
-        if ! docker exec -it $1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres; exit $?;'; then 
-            func-error $FUNCNAME $LINENO $1' Failed to Alter archive_command';
+        if ! docker exec -it pg1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres; exit $?;'; then 
+            func-error $FUNCNAME $LINENO 'pg1 Failed to Alter archive_command';
             continue
         fi
         sleep 3
-        if ! docker exec -it $1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres; exit $?;'; then 
-            func-error $FUNCNAME $LINENO $1' Failed to Reload Postgres';
+        if ! docker exec -it pg1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres; exit $?;'; then 
+            func-error $FUNCNAME $LINENO 'pg1 Failed to Reload Postgres';
             continue
         fi
         return 0
     done
-    func-error $FUNCNAME $LINENO $1' Unable to Alter archive_command';
+    func-error $FUNCNAME $LINENO 'pg1 Unable to Alter archive_command';
     return 1
 }
 
@@ -188,25 +188,25 @@ enable-barman-backups () {
 
     pg-state &> /dev/null
     
-    if ! barman-enable-streaming $1; then return 1; fi
+    if ! barman-enable-streaming pg1; then return 1; fi
 
     # archive_command set 'true'
-    if ! alter-archive-command $1; then return 1; fi
+    if ! alter-archive-command pg1; then return 1; fi
 
     # Any partly done streaming is useless - discard
-    if ! barman-clear-legacy-streaming $1; then return 1; fi
+    if ! barman-clear-legacy-streaming pg1; then return 1; fi
 
     # Ensure the Postgres replication slot exists
-    barman-create-slot $1;
+    barman-create-slot pg1;
 
     # Do a master reset on Barman
-    if ! barman-reset $1; then return 1; fi
+    if ! barman-reset pg1; then return 1; fi
 
     # Kick streaming to life
     if ! barman-cron; then return 1; fi
 
     # Now do a final sanity check
-    if ! barman-check $1; then return 1; fi
+    if ! barman-check pg1; then return 1; fi
 
     echo 'done'
     return 0
@@ -226,7 +226,7 @@ func-error () {
 
 barman-check () {
 	
-    if [ $# != 1 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
+    if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 
     for i in {1..10}
     do
@@ -237,13 +237,15 @@ barman-check () {
     done
 
     # If barman configuration fails, report why
-    docker exec -it barman sh -c 'barman check '$1'; exit $?;'
+    docker exec -it barman sh -c 'barman check pg1; exit $?;'
     msg $1' Stream Replication Activation Failed';
     return 1
 }
 
 barman-create-slot () {
-	docker exec -it barman sh -c 'barman receive-wal --create-slot '$1'; exit $?;' &> /dev/null
+    if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
+
+	docker exec -it barman sh -c 'barman receive-wal --create-slot pg1; exit $?;' &> /dev/null
 }
 
 barman-cron () {
@@ -306,22 +308,6 @@ barman-clear-legacy-streaming () {
     fi
 }
 
-barman-enable-streaming () {
-    return 0
-    if ! docker exec -it barman sh -c 'cp /etc/barman.d/'$1'.conf_hold /etc/barman.d/'$1'.conf; exit $?;'; then
-        func-error $FUNCNAME $LINENO 'Attempt to enable '$1' streaming failed';
-        return 1
-    fi
-}
-
-barman-disable-streaming () {
-    return 0
-    if ! docker exec -it barman sh -c 'rm /etc/barman.d/'$1'.conf; exit $?;'; then
-        func-error $FUNCNAME $LINENO 'Attempt to disable '$1' streaming failed';
-        return 1
-    fi
-}
-
 barman-pitr () {
 
     echo -n $PROGNAME': Point-In-Time Recovery to '$1' ... '
@@ -355,7 +341,7 @@ barman-pitr () {
 }
 
 barman-reset () {
-	if ! docker exec -it barman sh -c 'barman receive-wal --reset '$1'; exit $?;' &> /dev/null; then
+	if ! docker exec -it barman sh -c 'barman receive-wal --reset pg1; exit $?;' &> /dev/null; then
         msg $1' Failed to Reset Stream Replication';      
     fi
 }
@@ -425,17 +411,17 @@ start-stores-container () {
 
 start-active-pg-container () {
 
-    source ./.tcs-pg-ports
+    if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; fi
 
     # Ensure Postgres owns everything
-    if ! change-pgdata-owner postgres $1; then return 1; fi
+    if ! change-pgdata-owner postgres pg1; then return 1; fi
 
     # Now start the incoming Postgres container
-    if ! start-stores-container $1; then func-error 'Failed to Start Container '$1; fi
+    if ! start-stores-container pg1; then func-error 'Failed to Start Container pg1'; fi
 
     sleep 5; # Allow for creation of new database
     
-    if ! enable-barman-backups $1; then return 1; fi
+    if ! enable-barman-backups pg1; then return 1; fi
 
     return 0;
 }

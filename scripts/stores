@@ -10,72 +10,69 @@ cleanup () {
 }
 
 # ensure input params validity
-if [ "$#" != 1 ]; then error-exit "$USAGE"; fi
-
-case "$1" in
-	[-][v])
+if [ "$#" != 0 ] && [ $# != 1 ]; then error-exit "$USAGE"; fi
+if [ $# == 1 ]; then
+	if [ $1 == 'down' ]; then
+		docker-compose $STORES_COMPOSE_ARGS down;
+		exit 0
+	elif [ $1 == '-v' ]; then
 		echo 'TCS Version'$TCS_VERSION
 		exit 0
-		;;
-	[d][o][w][n])
-		docker-compose $STORES_COMPOSE_ARGS down
-		;;
-	[p][g][1] | [p][g][2])
-		# 5432 is the ACTIVE port, 5433 is STANDBY
-		set-pg-ports $1
-		source ./.tcs-pg-ports
+	else
+		error-exit "$USAGE"; 
+	fi
+fi
 
-		# Ensure we have the correct image and, if not, go get it
-		if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
+# 5432 is the ACTIVE port, 5433 is STANDBY
+set-pg-ports $1
+source ./.tcs-pg-ports
 
-		# Ensure tcs-image is up-to-date
-		echo -n $PROGNAME': Ensure tcs-image is current ... '
-		if docker pull ccbcadmin/tcs-image$TCS_VERSION 2>&1 >/dev/null; then 
-			echo 'done'; 
-		else
-			error-exit 'failed';
-		fi
+# Ensure we have the correct image and, if not, go get it
+if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
 
-		# Clean things up if things go awry
-		trap cleanup EXIT
+# Ensure tcs-image is up-to-date
+echo -n $PROGNAME': Ensure tcs-image is current ... '
+if docker pull ccbcadmin/tcs-image$TCS_VERSION 2>&1 >/dev/null; then 
+	echo 'done'; 
+else
+	error-exit 'failed';
+fi
 
-		# Barman must own its home area
-        if ! docker-compose $STORES_COMPOSE_ARGS run --rm --entrypoint bash barman -c \
-			'chown -R barman.barman /var/lib/barman &>/dev/null; exit $?;'; then 
-			error-exit 'Failed to config barman ownership';
-		fi
+# Clean things up if things go awry
+trap cleanup EXIT
 
-		if ! container-exists barman; then
-			if ! start-stores-container barman; then
-				error-exit 'Failed to Start Container barman'; 
-			fi
-		fi
+# Barman must own its home area
+if ! docker-compose $STORES_COMPOSE_ARGS run --rm --entrypoint bash barman -c \
+	'chown -R barman.barman /var/lib/barman &>/dev/null; exit $?;'; then 
+	error-exit 'Failed to config barman ownership';
+fi
 
-		# Start the selected Postgres container
-		if ! container-exists $1; then
-			if ! start-active-pg-container $1; then 
-				error-exit 'Failed to Start Container '$1;
-			fi
-		fi
+if ! container-exists barman; then
+	if ! start-stores-container barman; then
+		error-exit 'Failed to Start Container barman'; 
+	fi
+fi
 
-		if ! container-exists rabbitmq; then
-			if ! start-stores-container rabbitmq; then
-				error-exit 'Failed to Start Container rabbitmq';
-			fi
-		fi
+# Start the selected Postgres container
+if ! container-exists $1; then
+	if ! start-active-pg-container pg1; then 
+		error-exit 'Failed to Start Container '$1;
+	fi
+fi
 
-		if ! container-exists jenkins; then
-			if ! start-stores-container jenkins; then
-				error-exit 'Failed to Start Container jenkins';
-			fi
-		fi
+if ! container-exists rabbitmq; then
+	if ! start-stores-container rabbitmq; then
+		error-exit 'Failed to Start Container rabbitmq';
+	fi
+fi
 
-		# No need for a cleanup
-		trap '' EXIT;
+if ! container-exists jenkins; then
+	if ! start-stores-container jenkins; then
+		error-exit 'Failed to Start Container jenkins';
+	fi
+fi
 
-		exit 0
-		;;
-	*) error-exit "$USAGE";
-		;;
-esac
+# No need for a cleanup
+trap '' EXIT;
 
+exit 0
