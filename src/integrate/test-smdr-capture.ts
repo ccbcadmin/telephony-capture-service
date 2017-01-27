@@ -91,12 +91,12 @@ const checkRecordCount = () => {
 	db.one('select count(*) from smdr;')
 		.then(response => {
 			console.log(response.count);
-			if (response.count === smdrMsgsSent) {
+			if (response.count == smdrMsgsSent) {
 				console.log (`Test Passed: ${smdrMsgsSent} messages sent and received`);
 				process.exit(0);
 			}
 			else {
-				console.log (`Inconsistency detected: ${smdrMsgsSent} messages send and ${response.count} received`);
+				console.log (`Inconsistency detected: ${smdrMsgsSent} messages sent and ${response.count} received`);
 			}
 		})
 		.catch(error => {
