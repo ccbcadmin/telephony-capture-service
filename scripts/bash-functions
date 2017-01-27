@@ -163,6 +163,8 @@ enable-restart () {
 
 alter-archive-command () {
         
+    if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
+
     for i in {1..10}
     do
         sleep 2
@@ -189,7 +191,9 @@ enable-barman-backups () {
     pg-state &> /dev/null
     
     # archive_command set 'true'
-    if ! alter-archive-command pg1; then return 1; fi
+    if ! alter-archive-command; then return 1; fi
+
+    echo 'Here 1'
 
     # Any partly done streaming is useless - discard
     if ! barman-clear-legacy-streaming; then return 1; fi
