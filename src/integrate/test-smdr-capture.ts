@@ -94,7 +94,7 @@ const checkRecordCount = () => {
 			process.exit(0);
 		})
 		.catch(error => {
-			console.log(error);
+			console.log('Postgres query failed:\n', JSON.stringify(error));
 			process.exit(1);
 		});
 }
@@ -113,21 +113,21 @@ const nextFile = () => {
 
 ee.on('next', nextFile);
 
+// Connect to DB_QUEUE only to purge it
 const databaseQueue = new Queue(env.DB_QUEUE);
 
 db.none('delete from smdr;')
 	.then(() => _.noop)
 	.catch(error => {
-		console.log('delete error: ', error);
+		console.log('database purge error: ', JSON.stringify(error));
 		process.exit(1);
 	});
 
 // Wait a bit to ensure the queue is empty, then proceed
 setTimeout(() => {
 
-	// Ensure that we are starting with a clean sheet
+	// Start from a clean sheet
 	databaseQueue.purge();
-
 
 	// Search the source directory looking for raw SMDR files
 	dir.files('./sample-data/smdr-data/smdr-one-file', (err, files) => {
