@@ -362,7 +362,7 @@ pull-tcs-image () {
 }
 
 pull-tcs-jenkins () {
-    echo -n $PROGNAME': Ensure tcs-jenkins is current... '
+    echo -n $PROGNAME': Ensure tcs-jenkins is current ... '
     if ! docker pull ccbcadmin/tcs-jenkins$TCS_VERSION 2>&1 >/dev/null; then 
         return 1
     else
@@ -432,12 +432,9 @@ start-pg1 () {
 
 start-jenkins () {
 
-    if ! pull-tcs-jenkins; then return 1; fi;
-
     if ! container-exists jenkins && [ $TCSENV == 'qa' ]; then
-	    if ! start-stores-container jenkins; then
-		    return 1;
-	    fi
+        if ! pull-tcs-jenkins; then return 1; fi;
+	    if ! start-stores-container jenkins; then return 1; fi
     fi
     return 0;
 }
