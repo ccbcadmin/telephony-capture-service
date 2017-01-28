@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME=$(basename $0)
-USAGE='Usage: '$PROGNAME' pg1|pg2 backup_id target_time'
+USAGE='Usage: '$PROGNAME' backup_id target_time'
 
 source ./scripts/bash-functions
 
@@ -9,7 +9,7 @@ if [ "$#" != 1 ] && [ "$#" != 2 ] ; then error-exit "$USAGE"; fi
 
 validate-pg-selection $1 "$USAGE"
 
-validate-backup_id $1 $2
+validate-backup_id $1
 
 # Get the pg statuses (Active or PITR)
 pg-state &> /dev/null

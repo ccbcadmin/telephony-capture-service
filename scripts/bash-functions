@@ -431,7 +431,9 @@ validate-pg-selection () {
 }
 
 validate-backup_id () {
-    if ! docker exec -it barman sh -c 'barman list-backup --minimal '$1' | grep -w '$2'; exit $?;' &> /dev/null; then 
+    if [ $# != 1 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; fi
+
+    if ! docker exec -it barman sh -c 'barman list-backup --minimal pg1 | grep -w '$1'; exit $?;' &> /dev/null; then 
         error-exit 'Unknown '$1' backup_id '$2; 
     fi
 }
