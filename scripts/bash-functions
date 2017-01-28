@@ -332,7 +332,7 @@ barman-reset () {
 }
 
 container-exists () {
-    docker inspect --format='{{.State.Running}}' $1
+    docker inspect --format='{{.State.Running}}' $1 &> /dev/null;
     return $?
 }
 
