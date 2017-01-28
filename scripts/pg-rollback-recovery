@@ -19,17 +19,17 @@ case $yno in
         ;;
 esac
 
-if [ "$#" != 1 ] && [ "$#" != 2 ] ; then error-exit "$USAGE"; fi
+if [ "$#" != 1 ] && [ "$#" != 2 ]; then error-exit "$USAGE"; fi
 
-validate-backup_id $1
+if ! validate-backup_id $1; then return 1; fi
 
-# Shutdown the active Postgres container
+# Shutdown the operational Postgres container
 if ! remove-stores-container pg1; exit 1; fi
 
 # Do the recovery
 case "$#" in
 	1)	if ! barman-recover pg1 $1; then error-exit 'Recovery Failure'; fi ;;
-	2)  if ! barman-pitr pg1 $1 $2; then error-exit 'Recover Failure'; fi ;;
+	2)  if ! barman-pitr pg1 $1 $2; then error-exit 'Recovery Failure'; fi ;;
 	*)  error-exit 'Assertion Error @ '$LINENO ;;
 esac
 
