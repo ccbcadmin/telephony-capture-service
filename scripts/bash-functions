@@ -89,6 +89,8 @@ msg () {
 
 change-pgdata-owner () {
     
+    if [ $# != 2 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
+
     if ! docker exec -it barman sh -c 'chown -R '$1'.'$1' /'$2'_data; exit $?;'; then 
         func-error $FUNCNAME $LINENO 'PGDATA Ownership Change Failed';
         return 1
