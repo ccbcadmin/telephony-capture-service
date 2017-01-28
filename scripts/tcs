@@ -3,6 +3,10 @@
 PROGNAME=$(basename $0)
 source ./scripts/bash-functions
 
+cleanup () {
+	docker-compose $COMPOSE_ARGS down 
+}
+
 USAGE='Usage: tcs [down] [dev|qa|prod]';
 
 if [ "$#" != 0 ] && [ "$#" != 1 ] && [ $# != 2 ]; then error-exit "$USAGE"; fi
@@ -72,10 +76,8 @@ if ! start-barman; then exit 1; fi
 if ! start-pg1; then exit 1; fi
 if ! start-rabbitmq; then exit 1; fi
 if ! start-jenkins; then exit 1; fi
-
-# Start the TCS containers
-docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface
-if [ $? != 0 ]; then error-exit 'Failed to Start TCS Containers'; fi
+if ! start-tcs; then exit 1; fi
 
 msg 'TCS ('$TCSENV') Up, Version'$TCS_VERSION
-exit 0
+
+clean-exit

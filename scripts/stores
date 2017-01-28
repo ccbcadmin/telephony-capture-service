@@ -29,7 +29,4 @@ if ! start-barman; then exit 1; fi
 if ! start-pg1; then exit 1; fi
 if ! start-rabbitmq; then exit 1; fi
 if ! start-jenkins; then exit 1; fi
-
-# No need to cleanup
-trap '' EXIT;
-exit 0
+clean-exit;

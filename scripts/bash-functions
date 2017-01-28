@@ -157,6 +157,10 @@ alter-archive-command () {
     return 1
 }
 
+clean-exit () {
+    trap '' EXIT; 
+    exit 0;
+}
 enable-barman-backups () {
 
     echo -n $PROGNAME': Enable Backups ... '
@@ -196,6 +200,7 @@ error-exit () {
 
 func-error () {
     msg 'Error in function: '$1', Line '$2': '"$3"
+    return 0
 }
 
 barman-check () {
@@ -264,7 +269,7 @@ barman-recover () {
     if ! change-pgdata-owner barman $1; then return 1; fi
 
     # Tweak unix permissions
-    change-pgdata-permissions $1
+    if ! change-pgdata-permissions $1; then return 1; fi
 
     # Do the recovery
     if ! docker exec -it barman sh -c 'barman recover pg1 '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
@@ -283,6 +288,7 @@ barman-clear-legacy-streaming () {
         func-error $FUNCNAME $LINENO 'Unable to clear legacy streaming';
         return 1
     fi
+    return 0
 }
 
 barman-pitr () {
@@ -319,8 +325,10 @@ barman-pitr () {
 
 barman-reset () {
 	if ! docker exec -it barman sh -c 'barman receive-wal --reset pg1; exit $?;' &> /dev/null; then
-        func-error $FUNCNAME $LINENO 'Failed to Reset Stream Replication';      
+        func-error $FUNCNAME $LINENO 'Failed to Reset Stream Replication'; 
+        return 1     
     fi
+    return 0
 }
 
 container-exists () {
@@ -395,6 +403,7 @@ start-barman () {
             error-exit 'Failed to Start barman'; 
         fi
     fi
+    return 0
 }
 
 start-pg1 () {
@@ -435,6 +444,14 @@ start-rabbitmq () {
     return 0;
 }
 
+start-tcs () {
+    if ! docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface; then
+        func-error $FUNCNAME $LINENO 'Failed to Start TCS Containers'; 
+        return 1
+    else
+        return 0   
+    fi
+}
 
 validate-pg-selection () {
     if [ "$1" != 'pg1' ] && [ "$1" != 'pg2' ]; then
@@ -444,11 +461,13 @@ validate-pg-selection () {
 }
 
 validate-backup_id () {
-    if [ $# != 1 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; fi
+    if [ $# != 1 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 
     if ! docker exec -it barman sh -c 'barman list-backup --minimal pg1 | grep -w '$1'; exit $?;' &> /dev/null; then 
-        error-exit 'Unknown '$1' backup_id '$2; 
+        func-error $FUNCNAME $LINENO 'Unknown '$1' backup_id '$2;
+        return 1
     fi
+    return 0
 }
 
 mangle () 
@@ -456,10 +475,11 @@ mangle ()
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
 
     if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        return 1;
+        return 1
     fi
      
     docker-compose $COMPOSE_ARGS run --rm --name $TCSENV'-mangle' -e MANGLE_SOURCE_DIRECTORY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
+    return $?
 }
 
 pbx-simulator ()
@@ -470,6 +490,7 @@ pbx-simulator ()
         return 1;
     fi    
     docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' pbx-simulator
+    return $?
 }
 
 tms-simulator ()
@@ -480,4 +501,5 @@ tms-simulator ()
         return 1;
     fi
     docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-tms-simulator' tms-simulator
+    return $?
 }
