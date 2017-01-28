@@ -284,7 +284,7 @@ barman-recover-latest () {
 
 barman-recover () {
     
-    if [ "$#" != 2 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'
+    if [ "$#" != 2 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; fi
 
     echo -n $PROGNAME': Backup Recovery to '$1' ... '
 
@@ -298,7 +298,6 @@ barman-recover () {
     if ! docker exec -it barman sh -c 'barman recover pg1 '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
             func-error $FUNCNAME $LINENO  $1' Recovery Failure';
             return 1
-        fi
     fi
 
     # Ownership now passed to postgres
