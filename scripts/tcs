@@ -77,5 +77,5 @@ if ! start-rabbitmq; then exit 1; fi
 if ! start-jenkins; then exit 1; fi
 if ! start-tcs; then exit 1; fi
 
-msg 'TCS ('$TCSENV') Up, Version'$TCS_VERSION
+echo 'TCS Up, Operating Environment:$'TCSENV_LONG_FROM' Version'$TCS_VERSION
 clean-exit

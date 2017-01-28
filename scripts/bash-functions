@@ -98,20 +98,23 @@ tcsenv () {
             [dD][eE][vV])
                 export COMPOSE_ARGS=$DEV_COMPOSE_ARGS
                 export TCSENV=dev
+                export TCSENV_LONG_FORM=Development
                 ;;
             [qQ][aA])
                 export COMPOSE_ARGS=$QA_COMPOSE_ARGS
                 export TCSENV=qa
+                export TCSENV_LONG_FORM=QA
                 ;;
             [pP][rR][oO][dD])
                 export COMPOSE_ARGS=$PROD_COMPOSE_ARGS
                 export TCSENV=prod
+                export TCSENV_LONG_FORM=Production
                 ;;
             *) echo $USAGE
                 return 1
                 ;;
         esac
-        echo $TCSENV
+        echo $TCSENV_LONG_FORM
         return 0
     else
         echo $USAGE
