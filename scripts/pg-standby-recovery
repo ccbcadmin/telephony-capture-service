@@ -7,8 +7,6 @@ source ./scripts/bash-functions
 
 if [ "$#" != 1 ] && [ "$#" != 2 ] ; then error-exit "$USAGE"; fi
 
-validate-pg-selection $1 "$USAGE"
-
 validate-backup_id $1
 
 # Get the pg statuses (Active or PITR)
