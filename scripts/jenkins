@@ -69,5 +69,5 @@ if ! start-stores-container rabbitmq; then exit 1; fi
 # After the restart of RabbitMQ, all expected data from part1 should be received.
 execute-test-case test-rabbit-interruption-part2
 
-exit 0
 echo 'All Test Cases executed successfully'
+exit 0

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 #######################################
-# Cleanup files from the backup dir
 # Globals:
 #   None
 # Arguments:
@@ -15,7 +14,6 @@ is-pg1-active () {
 }
 
 #######################################
-# Cleanup files from the backup dir
 # Globals:
 #   None
 # Arguments:
@@ -24,14 +22,13 @@ is-pg1-active () {
 #   == 0 => pg2 is ACTIVE; != 0 => pg2 is not ACTIVE
 #######################################
 is-pg2-active () {
-	docker exec -it pg2 sh -c 'psql -c "select version();" -U postgres; exit $?;' &>/dev/null
+	docker exec -it pg2 sh -c 'psql -c "select version();" -p 5433 -U postgres; exit $?;' &>/dev/null
 	return $?
 }
 
 #######################################
-# Cleanup files from the backup dir
 # Globals:
-#   Exports $ACTIVE_PG and $STANDBY_PG if either is ACTIVE
+#   None
 # Arguments:
 #   None
 # Returns:
@@ -41,8 +38,6 @@ pg-state () {
     
     if is-pg1-active; then
         local pg1_STATE='ACTIVE'
-    elif is-pg1-standby; then
-        local pg1_STATE='STANDBY'
     elif container-exists pg1; then
         local pg1_STATE='STOPPED'
     else
@@ -51,36 +46,13 @@ pg-state () {
 
     if is-pg2-active; then
         local pg2_STATE='ACTIVE'
-    elif is-pg2-standby; then
-        local pg2_STATE='STANDBY'
     elif container-exists pg2; then
         local pg2_STATE='STOPPED'
     else
         local pg2_STATE='GONE'
     fi;
 
-    if [ $pg1_STATE == 'ACTIVE' ]; then
-        ACTIVE_PG='pg1'
-        STANDBY_PG='pg2'
-    elif [ $pg2_STATE == 'ACTIVE' ]; then
-        ACTIVE_PG='pg2'
-        STANDBY_PG='pg1'
-    else  # If neither, then unset both
-        unset ACTIVE_PG
-        unset STANDBY_PG
-    fi;
-
     msg 'pg1: '$pg1_STATE', pg2: '$pg2_STATE
-}
-
-is-pg1-standby () {
-	docker exec -it pg1 sh -c 'psql -c "select version();" -p 5433 -U postgres; exit $?;' &>/dev/null
-	return $?
-}
-
-is-pg2-standby () {
-	docker exec -it pg2 sh -c 'psql -c "select version();" -p 5433 -U postgres; exit $?;' &>/dev/null
-	return $?
 }
 
 msg () {
@@ -108,7 +80,7 @@ change-pgdata-permissions () {
 }
 
 # Define the environment (DEV, QA, or PROD)
-# If no parameter provided, then it is a request to diplay the current environment
+# If no parameter provided, then it is a request to display the current environment
 tcsenv () {
     local USAGE='Usage: tcsenv [dev|qa|prod]'
 
@@ -347,7 +319,7 @@ barman-pitr () {
 
 barman-reset () {
 	if ! docker exec -it barman sh -c 'barman receive-wal --reset pg1; exit $?;' &> /dev/null; then
-        msg 'Failed to Reset Stream Replication';      
+        func-error $FUNCNAME $LINENO 'Failed to Reset Stream Replication';      
     fi
 }
 
@@ -383,17 +355,9 @@ remove-stores-container () {
     return 0
 }
 
-start-container () {
-    if ! docker start $1 2>&1 >/dev/null; then return 1; fi
-
-    enable-restart $1
-    return $?
-}
-
 start-stores-container () {
     echo -n $PROGNAME': Starting '$1' ... '
 
-    source ./.tcs-pg-ports
     if ! docker-compose $STORES_COMPOSE_ARGS up -d $1 &> /dev/null; then
         return 1
     fi

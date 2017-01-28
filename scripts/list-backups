@@ -3,5 +3,5 @@
 PROGNAME=$(basename $0)
 source ./scripts/bash-functions
 
-docker exec -it barman sh -c 'barman list-backup all' | grep -v FAILED | grep -v OBSOLETE
+docker exec -it barman sh -c 'barman list-backup pg1' | grep -v FAILED | grep -v OBSOLETE
 exit $?

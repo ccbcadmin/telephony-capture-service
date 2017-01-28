@@ -2,12 +2,10 @@
 
 PROGNAME=$(basename $0)
 
-source ./.tcs-pg-ports
-echo 'Building Images...'
-if ! docker-compose $STORES_COMPOSE_ARGS build; then
-	echo 'Build Aborted';
-	exit 1;
-fi
+echo -n 'Building Images ... '
+if ! docker-compose $STORES_COMPOSE_ARGS build; then exit 1; fi
+if ! docker push 'ccbcadmin/tcs-image'$TCS_VERSION; then exit 1; fi
+if ! docker push 'ccbcadmin/tcs-jenkins'$TCS_VERSION; then exit 1; fi
 
-docker push 'ccbcadmin/tcs-image'$TCS_VERSION
-docker push 'ccbcadmin/tcs-jenkins'$TCS_VERSION
+echo done
+exit 0

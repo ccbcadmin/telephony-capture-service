@@ -4,12 +4,8 @@ PROGNAME=$(basename $0)
 
 source ./scripts/bash-functions
 
-if is-pg2-active == 0; then
-	echo 'pg2 ACTIVE'
-	docker exec -it pg2 psql --username postgres -p 5432 -d prod
-elif is-pg2-standby == 0; then
-	echo 'pg2 STANDBY'
-	docker exec -it pg2 psql --username postgres -p 5433 -d prod
+if is-pg2-standby == 0; then
+	docker exec -it pg2 psql --username postgres -p 5433 -d $TCSENV
 elif container-exists pg2; then
 	echo 'pg2 STOPPED'
 else

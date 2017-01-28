@@ -2,6 +2,5 @@ Archive/
 coverage/
 node_modules/
 npm-debug.log
-/.tcs-pg-ports
 /smdr-data-001
 ~$*
