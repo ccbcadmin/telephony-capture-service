@@ -331,9 +331,9 @@ container-exists () {
 }
 
 is-multi-environment () {
-    if container-exists dev-pbx-interface && container-exits qa-pbx-interface; then return 0; fi
-    if container-exists dev-pbx-interface && container-exits prod-pbx-interface; then return 0; fi
-    if container-exists qa-pbx-interface && container-exits prod-pbx-interface; then return 0; fi
+    if container-exists dev-pbx-interface && container-exists qa-pbx-interface; then return 0; fi
+    if container-exists dev-pbx-interface && container-exists prod-pbx-interface; then return 0; fi
+    if container-exists qa-pbx-interface && container-exists prod-pbx-interface; then return 0; fi
     return 1;
 }
 
