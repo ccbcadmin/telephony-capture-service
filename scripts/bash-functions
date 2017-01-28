@@ -395,13 +395,13 @@ start-barman () {
     # Barman must own its home area
     if ! docker-compose $STORES_COMPOSE_ARGS run --rm --entrypoint bash barman -c \
         'chown -R barman.barman /var/lib/barman &>/dev/null; exit $?;'; then 
-        func-error 'Failed to config barman ownership';
+        func-error $FUNCNAME $LINENO 'Failed to config barman ownership';
         return 1
     fi
 
     if ! container-exists barman; then
         if ! start-stores-container barman; then
-            error-exit 'Failed to Start barman'; 
+            func-error $FUNCNAME $LINE 'Failed to Start barman';
         fi
     fi
     return 0
