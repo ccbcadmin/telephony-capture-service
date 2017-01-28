@@ -16,7 +16,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="QA Context Diagram.svg">
+   sodipodi:docname="Context Diagram - QA.svg">
   <defs
      id="defs4">
     <marker
@@ -305,30 +305,29 @@
      transform="translate(0,-308.26772)"
      style="display:inline">
     <g
-       id="g4313"
-       transform="translate(700.77942,148.35215)">
+       id="g4499">
       <ellipse
          ry="43.941635"
          rx="49.497475"
-         cy="296.26303"
-         cx="71.720825"
+         cy="444.61517"
+         cx="772.50024"
          id="path3338"
          style="fill:#cccccc" />
       <text
          sodipodi:linespacing="125%"
          id="text4170"
-         y="296.7681"
-         x="66.99054"
+         y="448.52264"
+         x="772.51489"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          xml:space="preserve"><tspan
            sodipodi:role="line"
            id="tspan6154"
-           x="66.99054"
-           y="296.7681">pg1 / pg2</tspan><tspan
+           x="772.51489"
+           y="448.52264">pg1</tspan><tspan
            sodipodi:role="line"
            id="tspan6156"
-           x="66.99054"
-           y="315.5181" /></text>
+           x="772.51489"
+           y="467.27264" /></text>
     </g>
     <g
        id="g4293"
@@ -456,8 +455,7 @@
        id="path4236"
        inkscape:connector-type="polyline"
        inkscape:connector-curvature="14"
-       inkscape:connection-start="#g4293"
-       inkscape:connection-end="#g4313" />
+       inkscape:connection-start="#g4293" />
     <g
        style="display:inline"
        id="g4222-8"
@@ -536,8 +534,7 @@
        id="path11425"
        inkscape:connector-type="polyline"
        inkscape:connector-curvature="0"
-       inkscape:connection-start="#g4416"
-       inkscape:connection-end="#g4313" />
+       inkscape:connection-start="#g4416" />
     <flowRoot
        xml:space="preserve"
        id="flowRoot11947"
