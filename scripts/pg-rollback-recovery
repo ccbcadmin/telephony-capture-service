@@ -21,8 +21,6 @@ esac
 
 if [ "$#" != 1 ] && [ "$#" != 2 ] ; then error-exit "$USAGE"; fi
 
-validate-pg-selection $1 "$USAGE"
-
 validate-backup_id $1
 
 # Shutdown the active Postgres container
