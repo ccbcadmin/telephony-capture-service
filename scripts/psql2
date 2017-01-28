@@ -11,3 +11,4 @@ elif container-exists pg2; then
 else
 	echo 'pg2 GONE'
 fi
+exit 0
