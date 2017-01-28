@@ -234,7 +234,7 @@ barman-check () {
     do
         sleep 2
         if docker exec -it barman sh -c 'ps -ef | grep pg_receivexlog | grep -v grep; exit $?;' &> /dev/null; then
-            echo 'Replication Streaming Active'
+            echo 'Streaming Replication Active'
             return 0
         fi
     done
