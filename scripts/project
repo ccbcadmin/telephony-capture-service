@@ -30,7 +30,7 @@ if [ $# -eq 1 ]; then
     fi
 fi
 
-# Load TCS environment variables
+# export the version
 source ./.tcs.version
 
 echo 'TCS Version'$TCS_VERSION
