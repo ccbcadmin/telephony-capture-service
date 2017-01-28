@@ -224,16 +224,17 @@ barman-check () {
 
 barman-create-slot () {
 
-    if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
-
 	docker exec -it barman sh -c 'barman receive-wal --create-slot pg1; exit $?;' &> /dev/null
     return 0
 }
 
 barman-cron () {
 
-	docker exec -it barman sh -c 'barman cron 2>&1 >/dev/null; exit $?;'
-	return $?
+	if docker exec -it barman sh -c 'barman cron 2>&1 >/dev/null; exit $?;'; then
+        return 0;
+	else
+        return 1;
+    fi
 }
 
 barman-recover-latest () {
@@ -247,15 +248,25 @@ barman-recover-latest () {
     if ! change-pgdata-permissions $2; then return 1; fi
 
     # Use barman to recover the latest backup for the selected pg container
-    docker exec -it barman sh -c 'barman recover '$1' latest /'$2'_data 2>&1 >/dev/null; exit $?;'
-    if [ $? != 0 ]; then 
-        func-error $FUNCNAME $LINENO  $2' Recovery Failure';
+    if ! docker exec -it barman sh -c 'barman recover pg1 latest /pg1_data 2>&1 >/dev/null; exit $?;'
+        func-error $FUNCNAME $LINENO 'Latest Recovery Failure';
         return 1
+    else
+        return 0
     fi
 
     # Ownership now passed to postgres
-    if ! change-pgdata-owner postgres $2; then return 1; fi
+    if ! change-pgdata-owner postgres pg1; then return 1; fi
+    
     echo 'done'
+    return 0
+}
+
+barman-clear-legacy-streaming () {
+    if ! docker exec -it barman sh -c 'rm -rf /var/lib/barman/pg1/streaming/*; exit $?;'; then
+        func-error $FUNCNAME $LINENO 'Unable to clear legacy streaming';
+        return 1
+    fi
     return 0
 }
 
@@ -283,19 +294,11 @@ barman-recover () {
     return 0   
 }
 
-barman-clear-legacy-streaming () {
-    if ! docker exec -it barman sh -c 'rm -rf /var/lib/barman/pg1/streaming/*; exit $?;'; then
-        func-error $FUNCNAME $LINENO 'Unable to clear legacy streaming';
-        return 1
-    fi
-    return 0
-}
-
 barman-pitr () {
 
     echo -n $PROGNAME': Point-In-Time Recovery to '$1' ... '
 
-    if [ "$#" != 3 ] && [ "$#" != 4 ] ; then func-error $FUNCNAME $LINENO 'Incorrect number of parameters'; return 1; fi
+    if [ "$#" != 3 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; fi
 
     # barman needs ownership of the pgdata area
     if ! change-pgdata-owner barman $1; then return 1; fi
@@ -304,18 +307,9 @@ barman-pitr () {
     if ! change-pgdata-permissions $1; then return 1; fi
 
     # Do the recovery
-    case "$#" in
-        3) if ! docker exec -it barman sh -c 'barman recover --target-time '$2' pg1 '$1' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
-            return 1
-            fi
-            ;;
-        4) if ! docker exec -it barman sh -c 'barman recover --target-time '$4' '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'; 
-            then return 1; fi
-            ;;
-        *)  func-error $FUNCNAME $LINENO 'Assertion Error'
-            return 1
-            ;;
-    esac
+    if ! docker exec -it barman sh -c 'barman recover --target-time '$3' pg1 '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
+        return 1
+    fi
 
     # Ownership passed to postgres
     if ! change-pgdata-owner postgres $1; then return 1; fi
@@ -335,6 +329,7 @@ container-exists () {
     docker inspect --format='{{.State.Running}}' $1 &> /dev/null;
     return $?
 }
+
 
 confirm-barman () {
     # Minimally barman must be running
