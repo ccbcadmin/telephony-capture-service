@@ -33,6 +33,7 @@ case "$#" in
 	*)  error-exit 'Assertion Error @ '$LINENO ;;
 esac
 
+echo 'Here 1'
 # Now restart the Postgres container
 if ! start-active-pg-container; then exit 1; fi
 
