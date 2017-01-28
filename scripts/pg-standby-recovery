@@ -29,5 +29,5 @@ if ! change-pgdata-owner postgres pg2; then exit 1; fi
 # Finally bring up the STANDBY container to listen on port 5433
 if ! start-stores-container pg2; then exit 1; fi
 
-msg 'Standby Recovery to pg2 Complete'
+msg 'Standby Recovery Complete'
 exit 0
