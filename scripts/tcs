@@ -62,14 +62,7 @@ fi
 
 if [ -z ${TCS_VERSION+x} ]; then error-exit 'TCS_VERSION undefined'; fi
 
-if [ $TCSENV != 'dev' ]; then
-	echo -n $PROGNAME:' Ensure the correct docker image is available ... '
-	if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
-	if ! docker pull ccbcadmin/tcs-image$TCS_VERSION 2>&1 >/dev/null; then exit 1; fi
-	echo done
-fi
-
-if ! pull-images; then exit 1; fi
+if ! pull-tcs-image; then exit 1; fi
 
 trap cleanup EXIT
 if ! start-barman; then exit 1; fi
@@ -79,5 +72,4 @@ if ! start-jenkins; then exit 1; fi
 if ! start-tcs; then exit 1; fi
 
 msg 'TCS ('$TCSENV') Up, Version'$TCS_VERSION
-
 clean-exit
