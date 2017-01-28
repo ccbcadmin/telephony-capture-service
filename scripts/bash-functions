@@ -330,6 +330,9 @@ container-exists () {
     return $?
 }
 
+is-multi-environment () {
+    if container-exists dev-pbx-interface && container-exits qa-pbx-interface; then return 1;
+}
 
 confirm-barman () {
     # Minimally barman must be running

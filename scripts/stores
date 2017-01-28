@@ -1,32 +1,10 @@
 #!/bin/bash
 
 PROGNAME=$(basename $0)
-USAGE='Usage: '$PROGNAME' [down]'
+USAGE='Usage: '$PROGNAME
 
 source ./scripts/bash-functions
 
-cleanup () {
-	docker-compose $STORES_COMPOSE_ARGS down 
-}
+if [ "$#" != 0 ]; then error-exit "$USAGE"; fi
 
-# ensure input params validity
-if [ "$#" != 0 ] && [ $# != 1 ]; then error-exit "$USAGE"; fi
-if [ $# == 1 ]; then
-	if [ $1 == 'down' ]; then
-		docker-compose $STORES_COMPOSE_ARGS down;
-		exit 0
-	else
-		error-exit "$USAGE"; 
-	fi
-fi
-
-if [ -z ${TCS_VERSION+x} ]; then error-exit 'TCS_VERSION undefined'; fi
-
-if ! pull-images; then exit 1; fi
-
-trap cleanup EXIT
-if ! start-barman; then exit 1; fi
-if ! start-pg1; then exit 1; fi
-if ! start-rabbitmq; then exit 1; fi
-if ! start-jenkins; then exit 1; fi
-clean-exit;
+docker-compose $STORES_COMPOSE_ARGS down 
