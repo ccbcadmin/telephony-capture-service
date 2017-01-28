@@ -332,7 +332,7 @@ barman-reset () {
 }
 
 container-exists () {
-    docker inspect --format='{{.State.Running}}' $1 &> /dev/null
+    docker inspect --format='{{.State.Running}}' $1
     return $?
 }
 
@@ -395,7 +395,8 @@ start-barman () {
     # Barman must own its home area
     if ! docker-compose $STORES_COMPOSE_ARGS run --rm --entrypoint bash barman -c \
         'chown -R barman.barman /var/lib/barman &>/dev/null; exit $?;'; then 
-        error-exit 'Failed to config barman ownership';
+        func-error 'Failed to config barman ownership';
+        return 1
     fi
 
     if ! container-exists barman; then
