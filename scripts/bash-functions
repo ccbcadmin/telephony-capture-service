@@ -344,6 +344,20 @@ confirm-barman () {
     return 0
 }
 
+pull-images () {
+    echo $PROGNAME': Ensure tcs-image is current...'
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then 
+        return 1;
+    fi
+
+    echo $PROGNAME': Ensure tcs-jenkins is current...'
+    if ! docker pull ccbcadmin/tcs-jenkins$TCS_VERSION; then 
+        return 1;
+    fi  
+
+    return 0
+}
+
 remove-stores-container () {
 	# If there is no such container, then nothing to do
     if container-exists $1; then
@@ -365,22 +379,66 @@ start-stores-container () {
     if enable-restart $1; then echo 'done'; return 0; else return 1; fi
 }
 
-start-active-pg-container () {
+start-barman () {
 
-    if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; fi
+    # Barman must own its home area
+    if ! docker-compose $STORES_COMPOSE_ARGS run --rm --entrypoint bash barman -c \
+        'chown -R barman.barman /var/lib/barman &>/dev/null; exit $?;'; then 
+        error-exit 'Failed to config barman ownership';
+    fi
 
-    # Ensure Postgres owns everything
-    if ! change-pgdata-owner postgres pg1; then return 1; fi
+    if ! container-exists barman; then
+        if ! start-stores-container barman; then
+            error-exit 'Failed to Start barman'; 
+        fi
+    fi
+}
 
-    # Now start the incoming Postgres container
-    if ! start-stores-container pg1; then func-error 'Failed to Start Container pg1'; fi
+if ! container-exists pg1; then
+	if ! start-active-pg-container; then 
+		error-exit 'Failed to Start pg1'
+	fi
+fi
 
-    sleep 5; # Allow for creation of new database
-    
-    if ! enable-barman-backups pg1; then return 1; fi
 
+start-pg1 () {
+
+    if ! container-exists pg1; then
+
+        if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; fi
+
+        # Ensure Postgres owns everything
+        if ! change-pgdata-owner postgres pg1; then return 1; fi
+
+        # Now start the incoming Postgres container
+        if ! start-stores-container pg1; then func-error 'Failed to Start Container pg1'; fi
+
+        sleep 5; # Allow for creation of new database
+        
+        if ! enable-barman-backups pg1; then return 1; fi
+
+    fi
     return 0;
 }
+
+start-jenkins () {
+    if ! container-exists jenkins; then
+	    if ! start-stores-container jenkins; then
+		    return 1;
+	    fi
+    fi
+    return 0;
+}
+
+start-rabbitmq () {
+    if ! container-exists rabbitmq; then
+	    if ! start-stores-container rabbitmq; then
+		    return 1;
+	    fi
+    fi
+    return 0;
+}
+
 
 validate-pg-selection () {
     if [ "$1" != 'pg1' ] && [ "$1" != 'pg2' ]; then

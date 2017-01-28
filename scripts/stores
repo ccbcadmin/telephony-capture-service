@@ -23,52 +23,16 @@ if [ $# == 1 ]; then
 	fi
 fi
 
-# Ensure we have the correct image and, if not, go get it
-if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; exit 1; fi
+if [ -z ${TCS_VERSION+x} ]; then error-exit 'TCS_VERSION undefined'; fi
 
-# Ensure tcs-image is up-to-date
-echo -n $PROGNAME': Ensure tcs-image is current ... '
-if docker pull ccbcadmin/tcs-image$TCS_VERSION 2>&1 >/dev/null; then 
-	echo 'done'; 
-else
-	error-exit 'failed';
-fi
+if ! pull-images; then exit 1; fi
 
-# Clean things up if things go awry
 trap cleanup EXIT
+if ! start-barman; then exit 1; fi
+if ! start-pg1; then exit 1; fi
+if ! start-rabbitmq; then exit 1; fi
+if ! start-jenkins; then exit 1; fi
 
-# Barman must own its home area
-if ! docker-compose $STORES_COMPOSE_ARGS run --rm --entrypoint bash barman -c \
-	'chown -R barman.barman /var/lib/barman &>/dev/null; exit $?;'; then 
-	error-exit 'Failed to config barman ownership';
-fi
-
-if ! container-exists barman; then
-	if ! start-stores-container barman; then
-		error-exit 'Failed to Start barman'; 
-	fi
-fi
-
-# Start the selected Postgres container
-if ! container-exists pg1; then
-	if ! start-active-pg-container; then 
-		error-exit 'Failed to Start pg1'
-	fi
-fi
-
-if ! container-exists rabbitmq; then
-	if ! start-stores-container rabbitmq; then
-		error-exit 'Failed to Start rabbitmq';
-	fi
-fi
-
-if ! container-exists jenkins; then
-	if ! start-stores-container jenkins; then
-		error-exit 'Failed to Start jenkins';
-	fi
-fi
-
-# No need for a cleanup
+# No need to cleanup
 trap '' EXIT;
-
 exit 0

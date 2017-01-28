@@ -1,1 +1,0 @@
-export PG1_PORT=5432; export PG2_PORT=5433;
