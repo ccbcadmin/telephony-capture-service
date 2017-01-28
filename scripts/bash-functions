@@ -308,7 +308,7 @@ barman-recover () {
     fi
 
     # Ownership now passed to postgres
-    if ! change-pgdata-owner postgres $2; then return 1; fi
+    if ! change-pgdata-owner postgres $1; then return 1; fi
     echo 'done'
     return 0   
 }
