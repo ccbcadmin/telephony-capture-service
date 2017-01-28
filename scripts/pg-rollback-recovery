@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME=$(basename $0)
-USAGE='Usage: '$PROGNAME' pg1|pg2 backup_id [target_time]'
+USAGE='Usage: '$PROGNAME' backup_id [target_time]'
 
 source ./scripts/bash-functions
 source ./.tcs-pg-ports
@@ -20,7 +20,7 @@ case $yno in
         ;;
 esac
 
-if [ "$#" != 2 ] && [ "$#" != 3 ] ; then error-exit "$USAGE"; fi
+if [ "$#" != 1 ] && [ "$#" != 2 ] ; then error-exit "$USAGE"; fi
 
 validate-pg-selection $1 "$USAGE"
 
@@ -30,7 +30,6 @@ validate-backup_id $1 $2
 pg-state &> /dev/null
 
 # Shutdown the active Postgres container
-if ! barman-disable-streaming pg1; exit 1; fi
 if ! remove-stores-container pg1; exit 1; fi
 
 # Do the recovery

@@ -258,7 +258,7 @@ barman-create-slot () {
 }
 
 barman-cron () {
-    
+
 	docker exec -it barman sh -c 'barman cron 2>&1 >/dev/null; exit $?;'
 	return $?
 }
@@ -296,10 +296,10 @@ barman-recover () {
     # Tweak unix permissions
     change-pgdata-permissions $1
 
-    if [ "$#" != 3 ]; then func-error $FUNCNAME $LINENO 'Incorrect number of parameters'
+    if [ "$#" != 2 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'
 
     # Do the recovery
-    if ! docker exec -it barman sh -c 'barman recover '$2' '$3' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
+    if ! docker exec -it barman sh -c 'barman recover pg1 '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
             func-error $FUNCNAME $LINENO  $1' Recovery Failure';
             return 1
         fi
@@ -332,7 +332,7 @@ barman-pitr () {
 
     # Do the recovery
     case "$#" in
-        3) if ! docker exec -it barman sh -c 'barman recover --target-time '$3' '$1' '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
+        3) if ! docker exec -it barman sh -c 'barman recover --target-time '$2' pg1 '$1' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
             return 1
             fi
             ;;

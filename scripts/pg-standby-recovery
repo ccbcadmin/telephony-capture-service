@@ -5,7 +5,7 @@ USAGE='Usage: '$PROGNAME' pg1|pg2 backup_id target_time'
 
 source ./scripts/bash-functions
 
-if [ "$#" != 2 ] && [ "$#" != 3 ] ; then error-exit "$USAGE"; fi
+if [ "$#" != 1 ] && [ "$#" != 2 ] ; then error-exit "$USAGE"; fi
 
 validate-pg-selection $1 "$USAGE"
 
