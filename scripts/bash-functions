@@ -411,7 +411,7 @@ start-pg1 () {
 
     if ! container-exists pg1; then
 
-        if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; fi
+        if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 
         # Ensure Postgres owns everything
         if ! change-pgdata-owner postgres pg1; then return 1; fi
