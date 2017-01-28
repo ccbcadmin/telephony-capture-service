@@ -195,22 +195,15 @@ enable-barman-backups () {
     # archive_command set 'true'
     if ! alter-archive-command; then return 1; fi
 
-    echo 'Here 2'
-
     # Any partly done streaming is useless - discard
     if ! barman-clear-legacy-streaming; then return 1; fi
-
-    echo 'Here 3'
 
     # Ensure the Postgres replication slot exists
     if ! barman-create-slot; then return 1; fi
 
-    echo 'Here 4'
-
     # Do a master reset on Barman
     if ! barman-reset; then return 1; fi
 
-    echo 'Here 1'
     # Kick streaming to life
     if ! barman-cron; then return 1; fi
 

@@ -18,7 +18,7 @@ remove-stores-container pg2
 # Do the recovery
 case "$#" in
 	1)	if ! barman-recover pg2 $1; then error-exit 'Recovery Failure'; fi ;;
-	2)  if ! barman-pitr pg2 $@; then error-exit 'Recovery Failure'; fi ;;
+	2)  if ! barman-pitr pg2 $1 $2; then error-exit 'Recovery Failure'; fi ;;
 	*)  error-exit 'Assertion Error @ '$LINENO ;;
 esac
 msg 'Recovery Successful'
