@@ -431,8 +431,8 @@ start-pg1 () {
 }
 
 start-jenkins () {
-    
-    if ! pull-tcs-jenkins; return 1; fi;
+
+    if ! pull-tcs-jenkins; then return 1; fi;
 
     if ! container-exists jenkins && [ $TCSENV == 'qa' ]; then
 	    if ! start-stores-container jenkins; then
