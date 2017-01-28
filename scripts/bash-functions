@@ -345,14 +345,14 @@ confirm-barman () {
 }
 
 pull-images () {
-    echo $PROGNAME': Ensure tcs-image is current ...'
+    echo -n $PROGNAME': Ensure tcs-image is current ...'
     if ! docker pull ccbcadmin/tcs-image$TCS_VERSION 2>&1 >/dev/null; then 
         return 1;
     else
         echo done
     fi
 
-    echo $PROGNAME': Ensure tcs-jenkins is current...'
+    echo -n $PROGNAME': Ensure tcs-jenkins is current...'
     if ! docker pull ccbcadmin/tcs-jenkins$TCS_VERSION 2>&1 >/dev/null; then 
         return 1;
     else
