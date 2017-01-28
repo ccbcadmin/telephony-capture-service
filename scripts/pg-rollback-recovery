@@ -24,7 +24,7 @@ if [ "$#" != 1 ] && [ "$#" != 2 ]; then error-exit "$USAGE"; fi
 if ! validate-backup_id $1; then return 1; fi
 
 # Shutdown the operational Postgres container
-if ! remove-stores-container pg1; exit 1; fi
+if ! remove-stores-container pg1; then exit 1; fi
 
 # Do the recovery
 case "$#" in
