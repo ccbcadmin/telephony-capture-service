@@ -15,6 +15,11 @@ if [ "$#" != 0 ] && [ "$#" != 1 ] && [ $# != 2 ]; then error-exit "$USAGE"; fi
 if [ "$#" == 1 ]; then 
 	case "$1" in
 		[d][o][w][n])
+			if is-multi-environment; then
+				msg 'Stores containers not shutdown - other operating environments active'
+			else
+				docker-compose $STORES_COMPOSE_ARGS down --remove-orphans
+			fi
 			docker-compose $COMPOSE_ARGS down --remove-orphans &> /dev/null
 			msg 'TCS ('$TCSENV') Down'
 			exit 0
@@ -65,6 +70,7 @@ if [ -z ${TCS_VERSION+x} ]; then error-exit 'TCS_VERSION undefined'; fi
 if ! pull-tcs-image; then exit 1; fi
 
 trap cleanup EXIT
+
 if ! start-barman; then exit 1; fi
 if ! start-pg1; then exit 1; fi
 if ! start-rabbitmq; then exit 1; fi
