@@ -248,7 +248,7 @@ barman-recover-latest () {
     if ! change-pgdata-permissions $2; then return 1; fi
 
     # Use barman to recover the latest backup for the selected pg container
-    if ! docker exec -it barman sh -c 'barman recover pg1 latest /pg1_data 2>&1 >/dev/null; exit $?;' then
+    if ! docker exec -it barman sh -c 'barman recover pg1 latest /pg1_data 2>&1 >/dev/null; exit $?;'; then
         func-error $FUNCNAME $LINENO 'Latest Recovery Failure';
         return 1
     else
