@@ -394,13 +394,6 @@ start-barman () {
     fi
 }
 
-if ! container-exists pg1; then
-	if ! start-active-pg-container; then 
-		error-exit 'Failed to Start pg1'
-	fi
-fi
-
-
 start-pg1 () {
 
     if ! container-exists pg1; then
