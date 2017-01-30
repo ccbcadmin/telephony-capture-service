@@ -17,7 +17,7 @@ services:
     env_file: ./env_PROD/env
     volumes:
       - /etc/localtime:/etc/localtime
-      - /etc/barman.conf:./barman.conf
+      - /etc/barman.conf:$PWD/barman.conf
       - postgres1_data:/pg1_data
       - postgres2_data:/pg2_data
       - /home/barman:/var/lib/barman
