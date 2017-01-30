@@ -21,7 +21,7 @@ if [ "$#" == 1 ]; then
 				docker-compose $STORES_COMPOSE_ARGS down --remove-orphans
 			fi
 			docker-compose $COMPOSE_ARGS down --remove-orphans &> /dev/null
-			msg 'TCS ('$TCSENV') Down'
+			echo 'TCS Down, Operating Environment:'$TCSENV_LONG_FORM', Version'$TCS_VERSION
 			exit 0
 			;;
 		[d][e][v])
