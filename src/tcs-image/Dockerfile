@@ -90,7 +90,7 @@ COPY env_DEV /app
 COPY env_PROD /app
 
 # Prep for barman
-COPY ./src/tcs-image/barman.conf /etc/
+COPY ./src/tcs-image/barman.conf /etc/barman/
 RUN mkdir -p /etc/barman.d
 RUN mkdir -p /var/lib/barman
 RUN chown -R barman.barman /var/lib/barman
