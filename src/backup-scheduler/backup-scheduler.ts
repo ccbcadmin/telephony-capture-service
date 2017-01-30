@@ -22,8 +22,6 @@ const barmanBackup = () => {
 	});
 }
 
-// exec('barman cron');
-
 process.on('SIGTERM', () => {
 	console.log(`\r${routineName}: Terminated`);
 	process.exit(0);
@@ -42,5 +40,5 @@ setTimeout(() => {
 	const spawn = require('child_process').spawn;
 	exec('cron');
 	require('node-schedule').scheduleJob(env.BACKUP_SCHEDULE, barmanBackup);
-	
+
 }, 5000);
