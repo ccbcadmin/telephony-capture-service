@@ -94,7 +94,7 @@ COPY ./src/tcs-image/barman.conf /etc/
 RUN mkdir -p /etc/barman.d
 RUN mkdir -p /var/lib/barman
 RUN chown -R barman.barman /var/lib/barman
-COPY ./src/tcs-image/pg1.conf /etc/barman.d/
+# COPY ./src/tcs-image/pg1.conf /etc/barman.d/
 # COPY ./src/tcs-image/pg2.conf /etc/barman.d/
 RUN mkdir -p /pg1_data
 RUN mkdir -p /pg2_data
