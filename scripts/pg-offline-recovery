@@ -12,7 +12,7 @@ validate-backup_id $1
 # Get the pg statuses (Active or PITR)
 pg-state &> /dev/null
 
-# Remove the STANDBY container, before doing the recovery
+# Remove the offline container, before doing the recovery
 remove-stores-container pg2
 
 # Do the recovery
@@ -26,8 +26,8 @@ msg 'Recovery Successful'
 # Ensure Postgres owns everything
 if ! change-pgdata-owner postgres pg2; then exit 1; fi
 
-# Finally bring up the STANDBY container to listen on port 5433
+# Finally bring up the offline container to listen on port 5433
 if ! start-stores-container pg2; then exit 1; fi
 
-msg 'Standby Recovery Complete'
+msg 'Offline Recovery Complete'
 exit 0
