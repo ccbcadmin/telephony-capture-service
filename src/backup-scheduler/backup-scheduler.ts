@@ -40,6 +40,6 @@ process.on('SIGINT', () => {
 console.log(`${routineName}: Started`);
 
 // Let everything stabilize and then trigger the backup schedule
-setInterval(() => {
+setTimeout(() => {
 	require('node-schedule').scheduleJob(env.BACKUP_SCHEDULE, barmanBackup);
  }, 5000);
