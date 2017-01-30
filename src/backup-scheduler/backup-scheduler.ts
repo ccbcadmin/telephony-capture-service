@@ -17,6 +17,9 @@ const barmanBackup = () => {
 		if (error) {
 			console.log(`Unable to backup pg1: JSON.stringify(${error},null,4)`);
 		}
+		else {
+			console.log ('Backup Successful');
+		}
 	});
 }
 
