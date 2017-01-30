@@ -145,12 +145,12 @@ alter-archive-command () {
     for i in {1..10}
     do
         sleep 2
-        if ! docker exec -it pg1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres; exit $?;'; then 
+        if ! docker exec -it pg1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres 2>&1 >/dev/null; exit $?;'; then 
             func-error $FUNCNAME $LINENO 'pg1 Failed to Alter archive_command';
             continue
         fi
         sleep 3
-        if ! docker exec -it pg1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres; exit $?;'; then 
+        if ! docker exec -it pg1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres 2>&1 >/dev/null; exit $?;'; then 
             func-error $FUNCNAME $LINENO 'pg1 Failed to Reload Postgres';
             continue
         fi
