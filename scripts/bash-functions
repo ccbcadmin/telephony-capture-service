@@ -145,12 +145,12 @@ alter-archive-command () {
     for i in {1..10}
     do
         sleep 2
-        if ! docker exec -it pg1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres &>/dev/null; exit $?;'; then 
+        if ! docker exec -it pg1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres; exit $?;'; then 
             func-error $FUNCNAME $LINENO 'pg1 Failed to Alter archive_command';
             continue
         fi
         sleep 3
-        if ! docker exec -it pg1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres &>/dev/null; exit $?;'; then 
+        if ! docker exec -it pg1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres; exit $?;'; then 
             func-error $FUNCNAME $LINENO 'pg1 Failed to Reload Postgres';
             continue
         fi
@@ -417,8 +417,6 @@ start-barman () {
 start-pg1 () {
 
     if ! container-exists pg1; then
-
-        if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 
         # Ensure Postgres owns everything
         if ! change-pgdata-owner postgres pg1; then return 1; fi

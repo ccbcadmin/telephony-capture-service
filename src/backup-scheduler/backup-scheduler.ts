@@ -14,16 +14,13 @@ const exec = require('child_process').exec;
 const barmanBackup = () => {
 	exec(`barman backup pg1`, error => {
 		if (error) {
-			console.log(`Unable to backup pg1: `, JSON.stringify(error,null,4));
+			console.log(`Unable to backup pg1: `, JSON.stringify(error, null, 4));
 		}
 		else {
-			console.log ('Backup Successful');
+			console.log('Backup Successful');
 		}
 	});
 }
-
-const spawn = require('child_process').spawn;
-exec('cron');
 
 // exec('barman cron');
 
@@ -41,5 +38,9 @@ console.log(`${routineName}: Started`);
 
 // Let everything stabilize and then trigger the backup schedule
 setTimeout(() => {
+
+	const spawn = require('child_process').spawn;
+	exec('cron');
 	require('node-schedule').scheduleJob(env.BACKUP_SCHEDULE, barmanBackup);
- }, 5000);
+	
+}, 5000);
