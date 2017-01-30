@@ -91,6 +91,8 @@ COPY env_PROD /app
 
 # Prep for barman
 COPY ./src/tcs-image/barman.conf /etc/
+RUN rm -rf /etc/barman.d
+# RUN mkdir -p /etc/barman.d
 RUN mkdir -p /var/lib/barman
 RUN chown -R barman.barman /var/lib/barman
 RUN mkdir -p /pg1_data
