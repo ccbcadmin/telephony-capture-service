@@ -20,7 +20,7 @@ services:
       - ./env_PROD:/etc/barman.d
       - postgres1_data:/pg1_data
       - postgres2_data:/pg2_data
-      - ${BARMAN_HOME}:/var/lib/barman
+      - $BARMAN_HOME:/var/lib/barman
     command: ["node", "./lib/backup-scheduler/backup-scheduler.js"]
 
   pg1:
