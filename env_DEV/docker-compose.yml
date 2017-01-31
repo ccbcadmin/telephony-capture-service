@@ -43,7 +43,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime
       - ./lib:/app/lib
-      - ./sample-data/smdr-data:/smdr-data
+      - $SMDR_DATA_DEV:/smdr-data
 
   tms-interface:
     container_name: ${TCSENV}-tms-interface
