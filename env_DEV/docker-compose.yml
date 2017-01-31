@@ -41,7 +41,7 @@ services:
       - TCS_PORT:3457
     env_file: 
       - .env
-      - ./env_DEV/env
+#     - ./env_DEV/env
     volumes:
       - /etc/localtime:/etc/localtime
       - ./lib:/app/lib
