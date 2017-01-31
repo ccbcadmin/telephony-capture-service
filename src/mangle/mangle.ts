@@ -73,7 +73,7 @@ const replicateSmdrFile = (smdrFileName: string) => {
 	let filePart = smdrFileName.split(pathSeparator());
 	const inputFileNameParts = filePart[filePart.length - 1].split('.');
 	const outputFile = `${inputFileNameParts[0]}.${zeroPad(Number(inputFileNameParts[1]) + 1, 3)}`;
-	const outputPath = [env.SMDR_DATA, env.MANGLE_TARGET_DIRECTORY, outputFile].join(pathSeparator());
+	const outputPath = [env.MANGLE_TARGET_DIRECTORY, outputFile].join(pathSeparator());
 
 	process.stdout.write(`Mangling ${smdrFileName} to ${outputPath}: `);
 
