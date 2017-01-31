@@ -9,6 +9,7 @@ const fs = require('fs');
 
 const routineName = 'pbx-interface';
 console.log(`Restarting ${routineName}`);
+console.log('Goofy message that should be removed');
 
 const _ = require('lodash');
 
