@@ -12,7 +12,6 @@ const dir = require('node-dir');
 const envalid = require('envalid');
 const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
-	SMDR_DATA: str(),
 	MANGLE_SOURCE_DIRECTORY: str(),
 	MANGLE_TARGET_DIRECTORY: str()
 });
@@ -69,8 +68,6 @@ let smdrFiles: string[] = [];
 let smdrFileNo = 0;
 
 const replicateSmdrFile = (smdrFileName: string) => {
-
-	console.log ('input file: ', smdrFileName);
 
 	let data = fs.readFileSync(smdrFileName).toString();
 
@@ -135,8 +132,6 @@ const nextFile = () => {
 }
 
 ee.on('next', nextFile);
-
-console.log ('soureDir: ', sourceDir);
 
 // Search the current directory, if none specified
 dir.files(sourceDir, (err, files) => {
