@@ -17,6 +17,9 @@ const env = envalid.cleanEnv(process.env, {
 	MANGLE_TARGET_DIRECTORY: str()
 });
 
+const sourceDir = `/smdr-data/${env.MANGLE_SOURCE_DIRECTORY}`;
+const targetDir = `/smdr-data/${env.MANGLE_TARGET_DIRECTORY}`;
+
 const eventEmitter = require('events').EventEmitter;
 const ee = new eventEmitter;      //make an Event Emitter object
 
@@ -67,13 +70,15 @@ let smdrFileNo = 0;
 
 const replicateSmdrFile = (smdrFileName: string) => {
 
+	console.log ('input file: ', smdrFileName);
+
 	let data = fs.readFileSync(smdrFileName).toString();
 
 	// Increment the file extension by 1 to get the output file name
 	let filePart = smdrFileName.split(pathSeparator());
 	const inputFileNameParts = filePart[filePart.length - 1].split('.');
 	const outputFile = `${inputFileNameParts[0]}.${zeroPad(Number(inputFileNameParts[1]) + 1, 3)}`;
-	const outputPath = [env.MANGLE_TARGET_DIRECTORY, outputFile].join(pathSeparator());
+	const outputPath = [targetDir, outputFile].join(pathSeparator());
 
 	process.stdout.write(`Mangling ${smdrFileName} to ${outputPath}: `);
 
@@ -131,8 +136,6 @@ const nextFile = () => {
 
 ee.on('next', nextFile);
 
-
-const sourceDir = `/smdr-data/${env.MANGLE_SOURCE_DIRECTORY}`;
 console.log ('soureDir: ', sourceDir);
 
 // Search the current directory, if none specified
