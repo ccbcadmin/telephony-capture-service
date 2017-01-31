@@ -132,7 +132,7 @@ const nextFile = () => {
 ee.on('next', nextFile);
 
 
-const sourceDir = `/smrd-data/${env.MANGLE_SOURCE_DIRECTORY}`;
+const sourceDir = `/smdr-data/${env.MANGLE_SOURCE_DIRECTORY}`;
 console.log ('soureDir: ', sourceDir);
 
 // Search the current directory, if none specified
