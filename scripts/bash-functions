@@ -89,7 +89,7 @@ tcsenv () {
     export DEV_COMPOSE_ARGS=' -f docker-compose.yml -f env_DEV/docker-compose.yml -p dev '
     export QA_COMPOSE_ARGS=' -f docker-compose.yml  -f env_QA/docker-compose.yml -p qa '
     export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f env_PROD/docker-compose.yml -p prod '
-    export BACKUP_HOME=/home/barman
+    export BARMAN_HOME=/home/barman
 
     if [ "$#" == 0 ]; then
         echo $TCSENV
