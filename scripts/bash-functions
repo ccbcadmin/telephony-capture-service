@@ -125,6 +125,16 @@ tcsenv () {
     fi
 }
 
+dev () {
+    tcsenv dev;
+}
+qa () {
+    tcsenv qa;
+}
+prod () {
+    tcsenv prod;
+}
+
 # Ensure that a container is not restarted at boot time
 disable-restart () {
     docker update --restart no $1 2>&1 >/dev/null
