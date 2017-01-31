@@ -131,6 +131,8 @@ const nextFile = () => {
 
 ee.on('next', nextFile);
 
+console.log ('smdr-data: ', env.SMDR_DATA);
+
 // Search the current directory, if none specified
 dir.files(env.MANGLE_SOURCE_DIRECTORY, (err, files) => {
 	if (err) {
