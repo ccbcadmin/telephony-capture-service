@@ -14,7 +14,7 @@ services:
     restart: unless-stopped
     privileged: true
     network_mode: "host"
-    env_file: ./env_PROD/env
+    env_file: ./env_PROD/.env
     volumes:
       - /etc/localtime:/etc/localtime
       - ./env_PROD:/etc/barman.d
