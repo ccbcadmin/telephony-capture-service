@@ -483,7 +483,7 @@ mangle ()
     if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1
     fi
-    echo $COMPOSE_ARGS
+
     docker-compose $COMPOSE_ARGS run --rm --name $TCSENV'-mangle' -e MANGLE_SOURCE_DIRECTORY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
     return $?
 }
