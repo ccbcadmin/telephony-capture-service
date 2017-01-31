@@ -499,7 +499,7 @@ pbx-simulator ()
     if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
         return 1;
     fi    
-    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' pbx-simulator
+    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' -e PBX_SIMULATOR_SOURCE="$1" pbx-simulator
     return $?
 }
 
