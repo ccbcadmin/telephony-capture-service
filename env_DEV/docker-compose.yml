@@ -37,8 +37,8 @@ services:
 
   pbx-simulator:
     container_name: ${TCSENV}-pbx-simulator
-    env_file: .env
     env_file: ./env_DEV/env
+    env_file: .env
     volumes:
       - /etc/localtime:/etc/localtime
       - ./lib:/app/lib
