@@ -90,9 +90,11 @@ const nextFile = () => {
 
 ee.on('next', nextFile);
 
+const sourceDir = `/smdr-data/${env.SOURCE_DIRECTORY}`;
+
 // Search the source directory looking for raw SMDR files
-console.log('source: ', env.SOURCE_DIRECTORY);
-dir.files(env.SOURCE_DIRECTORY, (err, files) => {
+console.log('sourceDir: ', sourceDir);
+dir.files(sourceDir, (err, files) => {
 	if (err) throw err;
 
 	// Deliver the data in chronological order
