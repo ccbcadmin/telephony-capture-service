@@ -89,6 +89,7 @@ tcsenv () {
     export DEV_COMPOSE_ARGS=' -f docker-compose.yml -f env_DEV/docker-compose.yml -p dev '
     export QA_COMPOSE_ARGS=' -f docker-compose.yml  -f env_QA/docker-compose.yml -p qa '
     export PROD_COMPOSE_ARGS=' -f docker-compose.yml -f env_PROD/docker-compose.yml -p prod '
+    export BACKUP_HOME=/home/barman
 
     if [ "$#" == 0 ]; then
         echo $TCSENV
@@ -99,16 +100,19 @@ tcsenv () {
                 export COMPOSE_ARGS=$DEV_COMPOSE_ARGS
                 export TCSENV=dev
                 export TCSENV_LONG_FORM=Development
+                export SMDR_DATA=/home/smdr-data/dev
                 ;;
             [qQ][aA])
                 export COMPOSE_ARGS=$QA_COMPOSE_ARGS
                 export TCSENV=qa
                 export TCSENV_LONG_FORM=QA
+                export SMDR_DATA=/home/smdr-data/qa
                 ;;
             [pP][rR][oO][dD])
                 export COMPOSE_ARGS=$PROD_COMPOSE_ARGS
                 export TCSENV=prod
                 export TCSENV_LONG_FORM=Production
+                export SMDR_DATA=/home/smdr-data/prod
                 ;;
             *) echo $USAGE
                 return 1
