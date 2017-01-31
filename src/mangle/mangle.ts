@@ -131,13 +131,15 @@ const nextFile = () => {
 
 ee.on('next', nextFile);
 
-console.log ('smdr-data: ', env.SMDR_DATA);
+
+const sourceDir = `smrd-data/${env.MANGLE_SOURCE_DIRECTORY}`;
+console.log ('soureDir: ', sourceDir);
 
 // Search the current directory, if none specified
-dir.files(env.MANGLE_SOURCE_DIRECTORY, (err, files) => {
+dir.files(sourceDir, (err, files) => {
 	if (err) {
-		console.log(`Source ${env.MANGLE_SOURCE_DIRECTORY} is not a directory...aborting.`);
-		process.exit(-1);
+		console.log(`Source ${sourceDir} is not a directory...aborting.`);
+		process.exit(1);
 	}
 	files.sort();
 	for (let file of files) {
