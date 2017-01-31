@@ -21,7 +21,7 @@ const { str, num} = envalid;
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
-	PBX_SIMULATOR_SOURCE_DIRECTORY: str(),
+	SOURCE_DIRECTORY: str(),
 	PBX_SIMULATOR_INPUT_FREQUENCY: num()
 });
 
@@ -91,8 +91,8 @@ const nextFile = () => {
 ee.on('next', nextFile);
 
 // Search the source directory looking for raw SMDR files
-console.log('source: ', env.PBX_SIMULATOR_SOURCE_DIRECTORY);
-dir.files(env.PBX_SIMULATOR_SOURCE_DIRECTORY, (err, files) => {
+console.log('source: ', env.SOURCE_DIRECTORY);
+dir.files(env.SOURCE_DIRECTORY, (err, files) => {
 	if (err) throw err;
 
 	// Deliver the data in chronological order
