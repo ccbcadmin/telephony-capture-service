@@ -4,20 +4,20 @@ services:
 
   database-interface:
     container_name: ${TCSENV}-database-interface
-    env_file: ./env_PROD/env
+    env_file: ./env_PROD/.env
     volumes:
       - /etc/localtime:/etc/localtime
 
   mangle:
     container_name: ${TCSENV}-mangle
-    env_file: ./env_PROD/env
+    env_file: ./env_PROD/.env
     volumes:
       - /etc/localtime:/etc/localtime
       - /home/smdr-data/prod:/smdr-data
 
   pbx-interface:
     container_name: ${TCSENV}-pbx-interface
-    env_file: ./env_PROD/env
+    env_file: ./env_PROD/.env
     depends_on:
       - tms-interface
       - database-interface
@@ -27,19 +27,19 @@ services:
  
   pbx-simulator:
     container_name: ${TCSENV}-pbx-simulator
-    env_file: ./env_PROD/env
+    env_file: ./env_PROD/.env
     volumes:
       - /etc/localtime:/etc/localtime
       - ./sample-data/smdr-data:/smdr-data
  
   tms-interface:
     container_name: ${TCSENV}-tms-interface
-    env_file: ./env_PROD/env
+    env_file: ./env_PROD/.env
     volumes:
       - /etc/localtime:/etc/localtime
 
   tms-simulator:
     container_name: ${TCSENV}-tms-simulator
-    env_file: ./env_PROD/env
+    env_file: ./env_PROD/.env
     volumes:
       - /etc/localtime:/etc/localtime

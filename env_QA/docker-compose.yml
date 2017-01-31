@@ -4,25 +4,26 @@ services:
 
   database-interface:
     container_name: ${TCSENV}-database-interface
-    env_file: ./env_QA/env
+    env_file: ./env_QA/.env
     volumes:
       - /etc/localtime:/etc/localtime
 
   pbx-interface:
     container_name: ${TCSENV}-pbx-interface
-    env_file: ./env_QA/env
+    env_file: ./env_QA/.env
     volumes:
+      - /etc/localtime:/etc/localtime
       - /home/smdr-data/qa/smdr-data-001:/smdr-data-001
 
   tms-interface:
     container_name: ${TCSENV}-tms-interface
-    env_file: ./env_QA/env
+    env_file: ./env_QA/.env
     volumes:
       - /etc/localtime:/etc/localtime
 
   integrate:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     network_mode: "host"
-    env_file: ./env_QA/env
+    env_file: ./env_QA/.env
     volumes:
       - /etc/localtime:/etc/localtime
