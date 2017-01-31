@@ -20,15 +20,15 @@ if [ $# -eq 1 ]; then
         echo 'TCS Version must be of the form vX.Y, where X and Y are both integers'
         exit 1
     else
-        # Ensure TCS software is up-to-date
-        if ! git pull 2>&1 >/dev/null; then 
-            msg 'git pull from GitHub failed'; 
-            return 1; 
-        fi
         # Go back to the master before proceeding
         if ! git checkout master 2>&1 >/dev/null; then
             msg 'git checkout master failed';
             return 1;
+        fi
+        # Ensure TCS software is up-to-date
+        if ! git pull 2>&1 >/dev/null; then 
+            msg 'git pull failed'; 
+            return 1; 
         fi
         if ! git checkout tags/$1 -B $1 2>&1 >/dev/null; then 
             msg 'git checkout failed'; 
