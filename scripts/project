@@ -29,7 +29,6 @@ if [ $# -eq 1 ]; then
             msg 'git checkout failed'; 
             return 1;
         fi
-        echo 'export TCS_VERSION=:'$1 > ./.tcs.version
     fi
 fi
 
