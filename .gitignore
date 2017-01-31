@@ -3,6 +3,4 @@ coverage/
 node_modules/
 npm-debug.log
 /smdr-data-001
-/env_PROD/env
-/env_PROD/barman.conf
 ~$*
