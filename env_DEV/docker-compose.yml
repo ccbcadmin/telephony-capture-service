@@ -37,6 +37,8 @@ services:
 
   pbx-simulator:
     container_name: ${TCSENV}-pbx-simulator
+    environment:
+      - TCS_PORT:3457
     env_file: 
       - .env
       - ./env_DEV/env
