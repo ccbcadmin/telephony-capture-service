@@ -21,7 +21,7 @@ services:
     env_file: ./env_DEV/env
     volumes:
       - /etc/localtime:/etc/localtime
-      - ${SMDR_DATA}:/
+      - ${SMDR_DATA}:/smdr-data
       - ./lib:/app/lib
 
   pbx-interface:
