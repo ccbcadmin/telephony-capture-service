@@ -13,7 +13,7 @@ services:
     env_file: ./env_PROD/env
     volumes:
       - /etc/localtime:/etc/localtime
-      - ${SMDR_DATA}:/smdr-data
+      - /home/smdr-data/prod:/smdr-data
 
   pbx-interface:
     container_name: ${TCSENV}-pbx-interface
