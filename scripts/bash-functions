@@ -364,7 +364,7 @@ confirm-barman () {
     barman_running=$(docker inspect --format='{{.State.Running}}' barman)
     if [ "$barman_running" == "false" ]; then 
         func-error $FUNCNAME $LINENO 'barman Not Running'
-        return 1; 
+        return 1;
     fi
 
     return 0
@@ -372,7 +372,7 @@ confirm-barman () {
 
 pull-tcs-image () {
     echo -n $PROGNAME': Ensure tcs-image is current ... '
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION 2>&1 >/dev/null; then 
+    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then
         return 1
     else
         echo done
