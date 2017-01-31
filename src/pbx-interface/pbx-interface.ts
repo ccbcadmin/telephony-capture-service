@@ -8,6 +8,7 @@ const moment = require('moment');
 const fs = require('fs');
 
 const routineName = 'pbx-interface';
+console.log ('GOOFY MESSAGE INCLUDED IN v0.28 - REMOVED IN v0.29');
 console.log(`Restarting ${routineName}`);
 
 const _ = require('lodash');
