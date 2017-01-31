@@ -12,8 +12,6 @@ services:
   mangle:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     privileged: false
-    volumes:
-      - /home/smdr-data:/smdr-data
     command: ["./lib/mangle/mangle.js"]
 
   pbx-interface:
