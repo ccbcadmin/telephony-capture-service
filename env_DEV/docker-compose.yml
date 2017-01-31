@@ -18,7 +18,7 @@ services:
 
   mangle:
     container_name: ${TCSENV}-mangle
-    env_file: ./env_DEV/.env
+    env_file: .env
     volumes:
       - /etc/localtime:/etc/localtime
       - $SMDR_DATA:/smdr-data
