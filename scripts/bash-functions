@@ -488,7 +488,7 @@ mangle ()
         return 1
     fi
 
-    docker-compose $COMPOSE_ARGS run --rm --name $TCSENV'-mangle' -e MANGLE_SOURCE_DIRECTORY="$1" -e MANGLE_TARGET_DIRECTORY="$2" mangle
+    docker-compose $COMPOSE_ARGS run --rm --name $TCSENV'-mangle' -e SOURCE_DIRECTORY="$1" -e TARGET_DIRECTORY="$2" mangle
     return $?
 }
 
