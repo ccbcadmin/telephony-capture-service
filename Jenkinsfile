@@ -3,6 +3,8 @@
 node { // <1>
     checkout scm
     stage('Build') {
+        echo ${BRANCH_NAME}
+        echo 'Here'
         withEnv(["STORES_COMPOSE_ARGS= -f docker-compose.yml -f env_STORES/docker-compose.yml -p stores "]) {
             sh './scripts/project; ./scripts/build-images;'
         }
