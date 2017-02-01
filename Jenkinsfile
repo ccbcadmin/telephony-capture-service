@@ -4,7 +4,7 @@ node { // <1>
     checkout scm
     stage('Build') { // <2>
         echo 'Build stage'
-        def exitValue = "docker ps".execute().exitValue()  
+        def exitValue = "echo hello".execute().exitValue()  
     }
     stage('Test') {
         echo 'Test stage'
