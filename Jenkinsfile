@@ -3,8 +3,7 @@
 node { // <1>
     checkout scm
     stage('Build') { // <2>
-        echo 'Build stage'
-        "echo hello".execute()  
+        sh 'docker ps'
     }
     stage('Test') {
         echo 'Test stage'
