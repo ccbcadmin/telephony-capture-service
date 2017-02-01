@@ -4,7 +4,7 @@ PROGNAME=$(basename $0)
 
 echo 'Building Images ... '
 source .tcs.version
-if ! docker-compose $STORES_COMPOSE_ARGS build $1; then exit 1; fi
+if ! docker-compose $STORES_COMPOSE_ARGS build --no-cache; then exit 1; fi
 if ! docker login -u ccbcadmin -p 2620Turner; then exit 1; fi
 if ! docker push 'ccbcadmin/tcs-image'$TCS_VERSION; then exit 1; fi
 if ! docker push 'ccbcadmin/tcs-jenkins'$TCS_VERSION; then exit 1; fi
