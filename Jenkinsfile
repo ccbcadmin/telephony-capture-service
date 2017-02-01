@@ -9,7 +9,7 @@ node { // <1>
             ./scripts/tcs down dev;\
             ./.tcs.version;\
             TCSENV=prod;\
-            export TCS_VERSION=:v0.31
+            export TCS_VERSION=:v0.31;\
             ./scripts/tcs;'
 
         input message: 'TCS has been successfully built, Docker images saved to Docker Hub, and then tested.  Deploy?'
