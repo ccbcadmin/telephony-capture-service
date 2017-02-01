@@ -3,7 +3,7 @@
 node { // <1>
     checkout scm
     stage('Build') { // <2>
-        sh 'jenkins qa'
+        bash 'jenkins qa'
     }
     stage('Test') {
         echo 'Test stage'
