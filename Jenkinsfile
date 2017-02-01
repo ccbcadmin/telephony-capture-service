@@ -3,9 +3,10 @@
 node { // <1>
     checkout scm
     stage('Build') { // <2>
-       sh './scripts/project; tcsenv qa; ./scripts/build-images;'
+       sh './scripts/project; ./scripts/build-images;'
     }
     stage('Test') {
+        println 'HHHHHHHHEEEEEEEEEEEEEEEEE'
         sh './scripts/jenkins qa'
     }
     stage('Deploy') {
