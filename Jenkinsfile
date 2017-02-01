@@ -4,7 +4,7 @@ node { // <1>
     checkout scm
     stage('Build') { // <2>
         echo 'Build stage'
-        def exitValue = "echo hello".execute().exitValue()  
+        "echo hello".execute()  
     }
     stage('Test') {
         echo 'Test stage'
