@@ -4,7 +4,7 @@ node { // <1>
     checkout scm
     stage('Build') {
         echo 'Here 1'
-        echo "${BRANCH_NAME}"
+        echo "${env.BRANCH_NAME}"
         withEnv(["STORES_COMPOSE_ARGS= -f docker-compose.yml -f env_STORES/docker-compose.yml -p stores "]) {
             sh './scripts/project; ./scripts/build-images;'
         }
