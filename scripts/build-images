@@ -4,8 +4,8 @@ PROGNAME=$(basename $0)
 
 echo -n 'Building Images ... '
 if ! docker-compose $STORES_COMPOSE_ARGS build $1; then exit 1; fi
-if ! docker push 'ccbcadmin/tcs-image'$TCS_VERSION; then exit 1; fi
-if ! docker push 'ccbcadmin/tcs-jenkins'$TCS_VERSION; then exit 1; fi
+if ! docker push 'ccbcadmin/tcs-image'$TCS_VERSION -u ccbcadmin -p 2620Turner; then exit 1; fi
+if ! docker push 'ccbcadmin/tcs-jenkins'$TCS_VERSION -u ccbcadmin -p 2620Turner; then exit 1; fi
 
 echo done
 exit 0
