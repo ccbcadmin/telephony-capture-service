@@ -3,7 +3,7 @@
 node { // <1>
     checkout scm
     stage('Build') { // <2>
-       sh './srcipts/project'
+       sh './scripts/project'
        sh 'build-images'
     }
     stage('Test') {
