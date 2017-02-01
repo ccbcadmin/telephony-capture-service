@@ -8,7 +8,6 @@ node { // <1>
         }
     }
     stage('Test') {
-        println 'HHHHHHHHEEEEEEEEEEEEEEEEE'
         sh './scripts/jenkins qa'
     }
     stage('Deploy') {
