@@ -3,10 +3,11 @@
 node { // <1>
     checkout scm
     stage('Build') { // <2>
-        sh './scripts/jenkins qa'
+       sh './srcipts/project'
+       sh 'build-images'
     }
     stage('Test') {
-        echo 'Test stage'
+        sh './scripts/jenkins qa'
     }
     stage('Deploy') {
         echo 'Deploy stage'
