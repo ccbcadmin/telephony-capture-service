@@ -1,13 +1,15 @@
 #!groovy
 
 node { // <1>
+    checkout scm
     stage('Build') { // <2>
         /* .. snip .. */
+        echo 'Build stage'
     }
     stage('Test') {
-        /* .. snip .. */
+        echo 'Test stage'
     }
     stage('Deploy') {
-        /* .. snip .. */
+        echo 'Deploy stage'
     }
 }
