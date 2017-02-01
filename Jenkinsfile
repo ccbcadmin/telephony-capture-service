@@ -8,6 +8,7 @@ node { // <1>
         }
     }
     stage('Test') {
+        input: ok 'Yes or No'
         sh './scripts/jenkins qa'
     }
     stage('Deploy') {
