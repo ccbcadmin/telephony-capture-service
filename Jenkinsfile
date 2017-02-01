@@ -1,11 +1,8 @@
 #!groovy
 
-node { // <1>
+node {
     checkout scm
     stage('Build') {
-        echo 'Here 1'
-        sh 'TCSENV=prod; ./scripts/tcs; exit 0'
-        echo 'Here 2'
         withEnv(["STORES_COMPOSE_ARGS= -f docker-compose.yml -f env_STORES/docker-compose.yml -p stores "]) {
             sh './scripts/project; ./scripts/build-images;'
         }
