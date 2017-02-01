@@ -523,3 +523,17 @@ tms-simulator ()
     docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-tms-simulator' tms-simulator
     return $?
 }
+
+# Move a git tag
+tag-mv () {
+    tag-rm $1
+    tag-add $1
+}
+
+tag-add () {
+    git tag $1; git push origin $1;
+}
+
+tag-rm () {
+    git tag -d $1; git push origin :refs/tags/$1;
+}
