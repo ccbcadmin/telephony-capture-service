@@ -9,6 +9,7 @@ node { // <1>
             ./scripts/tcs down dev;\
             ./.tcs.version;\
             TCSENV=prod;\
+            export TCS_VERSION=:v0.31
             ./scripts/tcs;'
 
         input message: 'TCS has been successfully built, Docker images saved to Docker Hub, and then tested.  Deploy?'
@@ -23,6 +24,5 @@ node { // <1>
     stage('Deploy') {
         input message: 'TCS has been successfully built, Docker images saved to Docker Hub, and then tested.  Deploy?'
         // Ensure everything is shutdown and then restart the tcs
-        sh 'tcs down prod; tcs down qa; tcs dev; TCSENV=prod; tcs;'
     }
 }
