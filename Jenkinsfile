@@ -4,7 +4,8 @@ node { // <1>
     checkout scm
     stage('Build') {
         echo 'Here 1'
-        echo "${env.BRANCH_NAME}"
+        sh 'TCSENV=prod; ./scripts/tcs; exit 0'
+        echo 'Here 2'
         withEnv(["STORES_COMPOSE_ARGS= -f docker-compose.yml -f env_STORES/docker-compose.yml -p stores "]) {
             sh './scripts/project; ./scripts/build-images;'
         }
@@ -20,7 +21,6 @@ node { // <1>
             ./scripts/tcs down dev;\
             ./.tcs.version;\
             TCSENV=prod;\
-            export TCS_VERSION=:v0.31;\
             ./scripts/tcs;'    
     }
 }

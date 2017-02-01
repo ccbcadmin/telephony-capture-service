@@ -65,7 +65,8 @@ elif [ $# == 2 ]; then
 	fi
 fi	
 
-if [ -z ${TCS_VERSION+x} ]; then error-exit 'TCS_VERSION undefined'; fi
+# if [ -z ${TCS_VERSION+x} ]; then error-exit 'TCS_VERSION undefined'; fi
+source ./.tcs.version
 
 if ! pull-tcs-image; then exit 1; fi
 
