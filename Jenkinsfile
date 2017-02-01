@@ -3,7 +3,7 @@
 node { // <1>
     checkout scm
     stage('Build') { // <2>
-        sh 'docker ps'
+        sh 'jenkins qa'
     }
     stage('Test') {
         echo 'Test stage'
