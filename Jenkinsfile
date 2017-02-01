@@ -16,7 +16,6 @@ node {
         sh './scripts/tcs down prod;\
             ./scripts/tcs down qa;\
             ./scripts/tcs down dev;\
-            ./.tcs.version;\
             TCSENV=prod;\
             ./scripts/tcs;'    
     }
