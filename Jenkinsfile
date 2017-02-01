@@ -4,7 +4,7 @@ node { // <1>
     checkout scm
     stage('Build') {
         // Ensure everything is shutdown and then restart the tcs
-        sh 'tcs down prod; tcs down qa; tcs dev; TCSENV=prod; tcs;'
+        sh './scripts/tcs down prod; ./scripts/tcs down qa; ./scripts/tcs down dev; TCSENV=prod; ./scripts/tcs;'
 
         input message: 'TCS has been successfully built, Docker images saved to Docker Hub, and then tested.  Deploy?'
 
