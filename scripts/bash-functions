@@ -190,22 +190,17 @@ enable-barman-backups () {
     # Any partly done streaming is useless - discard
     barman-clear-legacy-streaming || return 1;
 
-    echo 'Here 3'
     # Ensure the Postgres replication slot exists
     barman-create-slot || return 1;
 
     # Do a master reset on Barman
     barman-reset || return 1;
 
-    echo 'Here 4'
-
     # Kick streaming to life
     barman-cron || return 1;
 
     # Now do a final sanity check
     barman-check &>/dev/null || return 1;
-
-    echo 'Here 5'
 
     echo 'done'
     return 0
@@ -220,7 +215,6 @@ error-exit () {
 }
 
 func-err () {
-    echo Here
     echo 'Error in function: '$1', Line '$2': '"$3"
     return 0
 }
