@@ -20,6 +20,8 @@ echo 'Here 3'
 
 if [ "$#" != 1 ] && [ "$#" != 2 ]; then error-exit "$USAGE"; fi
 
+echo 'Here 4'
+
 validate-backup_id $1 || exit 1;
 
 echo 'Here 2'
