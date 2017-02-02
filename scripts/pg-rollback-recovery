@@ -20,6 +20,8 @@ if [ "$#" != 1 ] && [ "$#" != 2 ]; then error-exit "$USAGE"; fi
 
 validate-backup_id $1 || exit 1;
 
+echo 'Here 2'
+
 # Shutdown the operational Postgres container
 remove-stores-container pg1 || exit 1;
 
