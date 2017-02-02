@@ -8,9 +8,12 @@ source ./scripts/bash-functions
 echo -n "Executing this command will result in data loss.  Proceed? [yes or no]: "
 read yno
 case $yno in
-    [yY] | [yY][Ee][Ss] ) ;;
-    [nN] | [n|N][O|o] ) echo "Command aborted."; exit 1;;
-    *)  echo "Invalid input"; exit 1;;
+    [yY] | [yY][Ee][Ss] ) 
+        ;;
+    [nN] | [n|N][O|o] ) 
+        echo "Command aborted."; exit 1;;
+    *)  
+        echo "Invalid input"; exit 1;;
 esac
 
 if [ "$#" != 1 ] && [ "$#" != 2 ]; then error-exit "$USAGE"; fi
