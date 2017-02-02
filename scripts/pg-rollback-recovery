@@ -8,33 +8,28 @@ source ./scripts/bash-functions
 echo -n "Executing this command will result in data loss.  Proceed? [yes or no]: "
 read yno
 case $yno in
-    [yY] | [yY][Ee][Ss] )
-        ;;
-    [nN] | [n|N][O|o] )
-        echo "Command aborted.";
-        exit 1
-        ;;
-    *) echo "Invalid input"
-		exit 1
-        ;;
+    [yY] | [yY][Ee][Ss] ) ;;
+    [nN] | [n|N][O|o] ) echo "Command aborted."; exit 1;;
+    *)  echo "Invalid input"; exit 1;;
 esac
 
 if [ "$#" != 1 ] && [ "$#" != 2 ]; then error-exit "$USAGE"; fi
+[ "$#" != 1 ] && [ "$#" != 2 ] || error-exit "$USAGE";
 
-if ! validate-backup_id $1; then return 1; fi
+validate-backup_id $1 || exit 1;
 
 # Shutdown the operational Postgres container
-if ! remove-stores-container pg1; then exit 1; fi
+remove-stores-container pg1 || exit 1;
 
 # Do the recovery
 case "$#" in
-	1)	if ! barman-recover pg1 $1; then error-exit 'Recovery Failure'; fi ;;
-	2)  if ! barman-pitr pg1 $1 $2; then error-exit 'Recovery Failure'; fi ;;
+	1)	barman-recover pg1 $1 || error-exit 'Recovery Failure';;
+	2)  barman-pitr pg1 $1 $2 || error-exit 'Recovery Failure';;
 	*)  error-exit 'Assertion Error @ '$LINENO ;;
 esac
 
 # Now restart the Postgres container
-if ! start-active-pg-container; then exit 1; fi
+start-active-pg-container || exit 1;
 
 msg 'Rollback Recovery Complete'
 exit 0
