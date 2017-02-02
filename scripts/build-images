@@ -2,18 +2,10 @@
 
 PROGNAME=$(basename $0)
 USAGE='Usage: '$PROGNAME' backup_id [target_time]'
+source ./scripts/bash-functions
 
-if [ $# == 1 ]; then
-	if [ $1 == 0 ]; then 
-		DETAIL_LEVEL=&>/dev/null
-	elif [ $1 == 1 ]; then
-		DETAIL_LEVEL=2>&1 >/dev/null
-	elif [ $1 == 2 ]; then
-		DETAIL_LEVEL=''
-	else
-		error-exit "$USAGE";
-	fi
-fi
+DETAIL_LEVEL=&>/dev/null
+if [ $# == 1 ]; then set-detail-level $1; fi
 
 exit 0
 
