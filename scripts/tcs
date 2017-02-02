@@ -65,7 +65,6 @@ elif [ $# == 2 ]; then
 	fi
 fi	
 
-# if [ -z ${TCS_VERSION+x} ]; then error-exit 'TCS_VERSION undefined'; fi
 source ./.tcs.version
 
 pull-tcs-image || exit 1;
@@ -76,6 +75,8 @@ start-barman || exit 1;
 start-pg1 || exit 1;
 start-rabbitmq || exit 1;
 start-jenkins || exit 1;
+
+echo 'Here 1'
 start-tcs || exit 1;
 
 echo 'TCS Up, Operating Environment:'$TCSENV_LONG_FORM', Version'$TCS_VERSION
