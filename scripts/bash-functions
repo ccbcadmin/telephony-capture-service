@@ -144,7 +144,7 @@ disable-restart () {
 # Configure the container to auto restart in the case of a reboot
 enable-restart () {
     
-    if docker update --restart unless-stopped $1 2>&1 >/dev/null; then
+    if ! docker update --restart unless-stopped $1 2>&1 >/dev/null; then
         func-err $FUNCNAME $LINENO 'Unable to Reconfigure '$1' Container to Auto Restart'; 
         return 1
     else
