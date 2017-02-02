@@ -190,6 +190,7 @@ enable-barman-backups () {
     # Any partly done streaming is useless - discard
     barman-clear-legacy-streaming || return 1;
 
+    echo 'Here 3'
     # Ensure the Postgres replication slot exists
     barman-create-slot || return 1;
 
