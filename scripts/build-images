@@ -9,8 +9,8 @@ if [ $# == 1 ]; then set-detail-level $1; fi
 
 echo 'Building Images ... '
 source .tcs.version 
-echo 'Detail Level: '"$DETAIL_LEVEL"
-exit 0;
+echo 'Detail Level: ' "$DETAIL_LEVEL" 
+
 docker-compose $STORES_COMPOSE_ARGS build  || exit 1;
 docker login -u ccbcadmin -p 2620Turner  || exit 1;
 docker push 'ccbcadmin/tcs-image'$TCS_VERSION  || exit 1;
