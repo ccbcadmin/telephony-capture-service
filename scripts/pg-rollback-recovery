@@ -14,7 +14,6 @@ case $yno in
 esac
 
 if [ "$#" != 1 ] && [ "$#" != 2 ]; then error-exit "$USAGE"; fi
-[ "$#" != 1 ] && [ "$#" != 2 ] || error-exit "$USAGE";
 
 validate-backup_id $1 || exit 1;
 
