@@ -197,7 +197,7 @@ enable-barman-backups () {
     barman-reset || return 1;
 
     # Kick streaming to life
-    barman-cron; return 1;
+    barman-cron || return 1;
 
     # Now do a final sanity check
     barman-check &>/dev/null || return 1;
