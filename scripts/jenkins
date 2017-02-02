@@ -9,7 +9,7 @@ NO_DEBUG='&> /dev/null'
 execute-test-case () {
 	echo -n 'Test Case: '$1' ... '
 	if docker-compose $COMPOSE_ARGS run --rm --name $TCSENV-$1 --entrypoint bash integrate -c \
-		'./lib/integrate/'$1'.js; exit $?' ; then
+		'./lib/integrate/'$1'.js '"$NO_DEBUG"'; exit $?' ; then
 		echo 'passed'
 	else
 		echo 'failed.  Test execution aborted.'

@@ -8,15 +8,15 @@ node {
         }
     }
     stage('Test') {
-        // Execute all the QA tests
+        // Execute the QA tests
         sh './scripts/jenkins qa'
     }
     stage('Deploy') {
-        // Then optionally deploy
+        // Optionally deploy to the Production operating environment
         input message: '\
             TCS Docker images have been built, saved to Docker Hub, and all tests passed.  \
             Deploy to Production?'
-       // Ensure everything is shutdown and then restart the tcs
+        // Ensure everything is shutdown and then restart the tcs
         sh './scripts/tcs down prod;\
             ./scripts/tcs down qa;\
             ./scripts/tcs down dev;\

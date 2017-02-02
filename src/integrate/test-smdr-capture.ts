@@ -52,6 +52,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 			++smdrMsgsSent;
 			const nextMsg = data.slice(index, next_index + 2);
 
+			/*
 			if (smdrMsgsSent % 20 === 5)
 				process.stdout.write('\b-');
 			else if (smdrMsgsSent % 20 === 10)
@@ -60,7 +61,8 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 				process.stdout.write('\b|');
 			else if (smdrMsgsSent % 20 === 0)
 				process.stdout.write('\b/');
-
+			*/
+			
 			index = next_index + 2;
 
 			// Randomly partition socket writes to ensure TCS handles gracefully
