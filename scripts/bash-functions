@@ -426,7 +426,7 @@ start-pg1 () {
         if ! change-pgdata-owner postgres pg1; then return 1; fi
 
         # Now start the incoming Postgres container
-        if ! start-stores-container pg1; then func-err 'Failed to Start Container pg1'; fi
+        if ! start-stores-container pg1; then func-err $FUNCNAME $LINENO 'Failed to Start Container pg1'; fi
 
         sleep 5; # Allow for creation of new database
         
