@@ -211,6 +211,7 @@ error-exit () {
 }
 
 func-err () {
+    echo Here
     echo 'Error in function: '$1', Line '$2': '"$3"
     return 0
 }
