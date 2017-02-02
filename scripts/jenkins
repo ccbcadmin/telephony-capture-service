@@ -62,8 +62,8 @@ execute-test-case test-pbx-to-tms-flow
 execute-test-case test-rabbit-interruption-part1
 
 # Now restart the RabbitMQ container
-if ! remove-stores-container rabbitmq; then exit 1; fi
-if ! start-stores-container rabbitmq; then exit 1; fi
+remove-stores-container rabbitmq || exit 1;
+start-stores-container rabbitmq || exit 1;
 
 # TEST CASE DESCRIPTION 
 # After the restart of RabbitMQ, all expected data from part1 should be received.

@@ -14,17 +14,17 @@ remove-stores-container pg2
 
 # Do the recovery
 case "$#" in
-	1)	if ! barman-recover pg2 $1; then error-exit 'Recovery Failure'; fi ;;
-	2)  if ! barman-pitr pg2 $1 $2; then error-exit 'Recovery Failure'; fi ;;
+	1)	barman-recover pg2 $1 || error-exit 'Recovery Failure';;
+	2)  barman-pitr pg2 $1 $2 || error-exit 'Recovery Failure';;
 	*)  error-exit 'Assertion Error @ '$LINENO ;;
 esac
 msg 'Recovery Successful'
 
 # Ensure Postgres owns everything
-if ! change-pgdata-owner postgres pg2; then exit 1; fi
+change-pgdata-owner postgres pg2 || exit 1;
 
 # Finally bring up the offline container to listen on port 5433
-if ! start-stores-container pg2; then exit 1; fi
+start-stores-container pg2 || exit 1;
 
 msg 'Offline Recovery Complete'
 exit 0
