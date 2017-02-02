@@ -9,9 +9,6 @@ if [ "$#" != 1 ] && [ "$#" != 2 ] ; then error-exit "$USAGE"; fi
 
 validate-backup_id $1
 
-# Get the pg statuses (Active or PITR)
-pg-state &> /dev/null
-
 # Remove the offline container, before doing the recovery
 remove-stores-container pg2
 

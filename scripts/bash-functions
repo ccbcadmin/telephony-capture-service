@@ -61,10 +61,10 @@ msg () {
 
 change-pgdata-owner () {
     
-    if [ $# != 2 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
+    if [ $# != 2 ]; then func-err $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 
     if ! docker exec -it barman sh -c 'chown -R '$1'.'$1' /'$2'_data; exit $?;'; then 
-        func-error $FUNCNAME $LINENO 'PGDATA Ownership Change Failed';
+        func-err $FUNCNAME $LINENO 'PGDATA Ownership Change Failed';
         return 1
     fi
     return 0
@@ -73,7 +73,7 @@ change-pgdata-owner () {
 change-pgdata-permissions () {
 
     if ! docker exec -it barman sh -c 'chmod -R 775 /'$1'_data; exit $?;' &> /dev/null; then 
-        func-error $FUNCNAME $LINENO 'PGDATA Permissions Change Failed';
+        func-err $FUNCNAME $LINENO 'PGDATA Permissions Change Failed';
         return 1
     fi
     return 0
@@ -138,39 +138,35 @@ prod () {
 # Ensure that a container is not restarted at boot time
 disable-restart () {
     docker update --restart no $1 2>&1 >/dev/null
-    return $?
+    return $? 
 }
 
 # Configure the container to auto restart in the case of a reboot
 enable-restart () {
     
-    if docker update --restart unless-stopped $1 2>&1 >/dev/null; then 
-        return 0
-    else 
-        func-error $FUNCNAME $LINENO 'Unable to Reconfigure '$1' Container to Auto Restart'; 
-        return 1;  
-    fi
+    docker update --restart unless-stopped $1 2>&1 >/dev/null || func-err $FUNCNAME $LINENO 'Unable to Reconfigure '$1' Container to Auto Restart'; return 1;
+    return 0
 }
 
 alter-archive-command () {
         
-    if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
+    if [ $# != 0 ]; then func-err $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 
     for i in {1..10}
     do
         sleep 2
         if ! docker exec -it pg1 sh -c 'psql -c "ALTER SYSTEM SET archive_command TO true;" -U postgres 2>&1 >/dev/null; exit $?;'; then 
-            func-error $FUNCNAME $LINENO 'pg1 Failed to Alter archive_command';
+            func-err $FUNCNAME $LINENO 'pg1 Failed to Alter archive_command';
             continue
         fi
         sleep 3
         if ! docker exec -it pg1 sh -c 'psql -c "SELECT pg_reload_conf();" -U postgres 2>&1 >/dev/null; exit $?;'; then 
-            func-error $FUNCNAME $LINENO 'pg1 Failed to Reload Postgres';
+            func-err $FUNCNAME $LINENO 'pg1 Failed to Reload Postgres';
             continue
         fi
         return 0
     done
-    func-error $FUNCNAME $LINENO 'pg1 Unable to Alter archive_command';
+    func-err $FUNCNAME $LINENO 'pg1 Unable to Alter archive_command';
     return 1
 }
 
@@ -178,30 +174,29 @@ clean-exit () {
     trap '' EXIT; 
     exit 0;
 }
+
 enable-barman-backups () {
 
     echo -n $PROGNAME': Enable Backups ... '
     # Various steps to ensure that barman is backing up the ACTIVE pg
-
-    pg-state &> /dev/null
     
     # archive_command set 'true'
-    if ! alter-archive-command; then return 1; fi
+    alter-archive-command || return 1;
 
     # Any partly done streaming is useless - discard
-    if ! barman-clear-legacy-streaming; then return 1; fi
+    barman-clear-legacy-streaming || return 1;
 
     # Ensure the Postgres replication slot exists
-    if ! barman-create-slot; then return 1; fi
+    barman-create-slot || return 1;
 
     # Do a master reset on Barman
-    if ! barman-reset; then return 1; fi
+    barman-reset || return 1;
 
     # Kick streaming to life
-    if ! barman-cron; then return 1; fi
+    barman-cron; return 1;
 
     # Now do a final sanity check
-    if ! barman-check &>/dev/null; then return 1; fi
+    barman-check &>/dev/null || return 1;
 
     echo 'done'
     return 0
@@ -215,14 +210,14 @@ error-exit () {
 	exit 1
 }
 
-func-error () {
+func-err () {
     msg 'Error in function: '$1', Line '$2': '"$3"
     return 0
 }
 
 barman-check () {
 	
-    if [ $# != 0 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
+    if [ $# != 0 ]; then func-err $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 
     for i in {1..10}
     do
@@ -247,11 +242,8 @@ barman-create-slot () {
 
 barman-cron () {
 
-	if docker exec -it barman sh -c 'barman cron 2>&1 >/dev/null; exit $?;'; then
-        return 0;
-	else
-        return 1;
-    fi
+	docker exec -it barman sh -c 'barman cron 2>&1 >/dev/null; exit $?;';
+    return $?
 }
 
 barman-recover-latest () {
@@ -266,7 +258,7 @@ barman-recover-latest () {
 
     # Use barman to recover the latest backup for the selected pg container
     if ! docker exec -it barman sh -c 'barman recover pg1 latest /pg1_data 2>&1 >/dev/null; exit $?;'; then
-        func-error $FUNCNAME $LINENO 'Latest Recovery Failure';
+        func-err $FUNCNAME $LINENO 'Latest Recovery Failure';
         return 1
     else
         return 0
@@ -281,7 +273,7 @@ barman-recover-latest () {
 
 barman-clear-legacy-streaming () {
     if ! docker exec -it barman sh -c 'rm -rf /var/lib/barman/pg1/streaming/*; exit $?;'; then
-        func-error $FUNCNAME $LINENO 'Unable to clear legacy streaming';
+        func-err $FUNCNAME $LINENO 'Unable to clear legacy streaming';
         return 1
     fi
     return 0
@@ -289,7 +281,7 @@ barman-clear-legacy-streaming () {
 
 barman-recover () {
     
-    if [ "$#" != 2 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; fi
+    if [ "$#" != 2 ]; then func-err $FUNCNAME $LINENO 'Incorrect parameter count'; fi
 
     echo -n $PROGNAME': Backup Recovery to '$1' ... '
 
@@ -301,7 +293,7 @@ barman-recover () {
 
     # Do the recovery
     if ! docker exec -it barman sh -c 'barman recover pg1 '$2' /'$1'_data; exit $?;'; then
-            func-error $FUNCNAME $LINENO  $1' Recovery Failure';
+            func-err $FUNCNAME $LINENO  $1' Recovery Failure';
             return 1
     fi
 
@@ -315,30 +307,28 @@ barman-pitr () {
 
     echo -n $PROGNAME': Point-In-Time Recovery to '$1' ... '
 
-    if [ "$#" != 3 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; fi
+    if [ "$#" != 3 ]; then func-err $FUNCNAME $LINENO 'Incorrect parameter count'; fi
 
     # barman needs ownership of the pgdata area
-    if ! change-pgdata-owner barman $1; then return 1; fi
+    change-pgdata-owner barman $1 || return 1;
 
     # Tweak unix permissions
-    if ! change-pgdata-permissions $1; then return 1; fi
+    change-pgdata-permissions $1 || return 1;
 
     # Do the recovery
-    if ! docker exec -it barman sh -c 'barman recover --target-time '$3' pg1 '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
-        return 1
-    fi
+    docker exec -it barman sh -c 'barman recover --target-time '$3' pg1 '$2' /'$1'_data 2>&1 >/dev/null; exit $?;' || return 1;
 
     # Ownership passed to postgres
-    if ! change-pgdata-owner postgres $1; then return 1; fi
+    change-pgdata-owner postgres $1 || return 1;
+
     echo 'done'
     return 0
 }
 
 barman-reset () {
-	if ! docker exec -it barman sh -c 'barman receive-wal --reset pg1; exit $?;' &> /dev/null; then
-        func-error $FUNCNAME $LINENO 'Failed to Reset Stream Replication'; 
-        return 1     
-    fi
+	docker exec -it barman sh -c 'barman receive-wal --reset pg1; exit $?;' &> /dev/null ||
+        func-err $FUNCNAME $LINENO 'Failed to Reset Stream Replication'; return 1     
+
     return 0
 }
 
@@ -357,13 +347,13 @@ is-multi-environment () {
 confirm-barman () {
     # Minimally barman must be running
     if [ ! docker inspect --format='{{.State.Running}}' barman &> /dev/null ]; then 
-        func-error $FUNCNAME $LINENO 'barman GONE'
+        func-err $FUNCNAME $LINENO 'barman GONE'
         return 1
     fi
 
     barman_running=$(docker inspect --format='{{.State.Running}}' barman)
     if [ "$barman_running" == "false" ]; then 
-        func-error $FUNCNAME $LINENO 'barman Not Running'
+        func-err $FUNCNAME $LINENO 'barman Not Running'
         return 1;
     fi
 
@@ -417,12 +407,12 @@ start-barman () {
         # Barman must own its home area
         if ! docker-compose $STORES_COMPOSE_ARGS run --rm --entrypoint bash barman -c \
             'chown -R barman.barman /var/lib/barman &>/dev/null; exit $?;'; then 
-            func-error $FUNCNAME $LINENO 'Failed to config barman ownership';
+            func-err $FUNCNAME $LINENO 'Failed to config barman ownership';
             return 1
         fi
 
         if ! start-stores-container barman; then
-            func-error $FUNCNAME $LINE 'Failed to Start barman';
+            func-err $FUNCNAME $LINE 'Failed to Start barman';
         fi
     fi
     return 0
@@ -436,7 +426,7 @@ start-pg1 () {
         if ! change-pgdata-owner postgres pg1; then return 1; fi
 
         # Now start the incoming Postgres container
-        if ! start-stores-container pg1; then func-error 'Failed to Start Container pg1'; fi
+        if ! start-stores-container pg1; then func-err 'Failed to Start Container pg1'; fi
 
         sleep 5; # Allow for creation of new database
         
@@ -456,6 +446,7 @@ start-jenkins () {
 }
 
 start-rabbitmq () {
+    
     if ! container-exists rabbitmq; then
 	    if ! start-stores-container rabbitmq; then
 		    return 1;
@@ -465,12 +456,8 @@ start-rabbitmq () {
 }
 
 start-tcs () {
-    if ! docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface; then
-        func-error $FUNCNAME $LINENO 'Failed to Start TCS Containers'; 
-        return 1
-    else
-        return 0   
-    fi
+    docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface || func-err $FUNCNAME $LINENO 'Failed to Start TCS Containers'; return 1
+    return 0
 }
 
 validate-pg-selection () {
@@ -481,12 +468,10 @@ validate-pg-selection () {
 }
 
 validate-backup_id () {
-    if [ $# != 1 ]; then func-error $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
+    if [ $# != 1 ]; then func-err $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
 
-    if ! docker exec -it barman sh -c 'barman list-backup --minimal pg1 | grep -w '$1'; exit $?;' &> /dev/null; then 
-        func-error $FUNCNAME $LINENO 'Unknown '$1' backup_id '$2;
-        return 1
-    fi
+    docker exec -it barman sh -c 'barman list-backup --minimal pg1 | grep -w '$1'; exit $?;' &> /dev/null || \
+        func-err $FUNCNAME $LINENO 'Unknown '$1' backup_id '$2; return 1;
     return 0
 }
 
@@ -494,46 +479,45 @@ mangle ()
 {
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
 
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        return 1
-    fi
-
-    docker-compose $COMPOSE_ARGS run --rm --name $TCSENV'-mangle' -e SOURCE_DIRECTORY="$1" -e TARGET_DIRECTORY="$2" mangle
-    return $?
+    docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null || return 1;
+       
+    docker-compose $COMPOSE_ARGS run --rm --name $TCSENV'-mangle' -e SOURCE_DIRECTORY="$1" -e TARGET_DIRECTORY="$2" mangle || return 1;
+    return 0
 }
 
 pbx-simulator ()
 {
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
 
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        return 1;
-    fi    
-    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' -e SOURCE_DIRECTORY="$1" pbx-simulator
-    return $?
+    docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null || return 1;
+    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' -e SOURCE_DIRECTORY="$1" pbx-simulator || return 1;
+    return 0
 }
 
 tms-simulator ()
 {
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
 
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null; then
-        return 1;
-    fi
-    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-tms-simulator' tms-simulator
-    return $?
+    docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null || return 1;
+    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-tms-simulator' tms-simulator || return 1;
+    return 0
 }
 
 # Move a git tag
 tag-mv () {
-    tag-rm $1
-    tag-add $1
+    tag-rm $1 || return 1;
+    tag-add $1 || return 1;
+    return 0
 }
 
 tag-add () {
-    git tag $1; git push origin $1;
+    git tag $1 || return 1;
+    git push origin $1 | return 1;
+    return 0
 }
 
 tag-rm () {
-    git tag -d $1; git push origin :refs/tags/$1;
+    git tag -d $1 || return 1;
+    git push origin :refs/tags/$1 || return 1;
+    return 0
 }
