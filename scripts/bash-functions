@@ -205,6 +205,8 @@ enable-barman-backups () {
     # Now do a final sanity check
     barman-check &>/dev/null || return 1;
 
+    echo 'Here 5'
+
     echo 'done'
     return 0
 }
