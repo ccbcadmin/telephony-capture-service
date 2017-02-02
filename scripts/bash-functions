@@ -461,8 +461,8 @@ start-rabbitmq () {
 }
 
 start-tcs () {
-    docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface || func-err $FUNCNAME $LINENO 'Failed to Start TCS Containers'; return 1
-    return 0
+    docker-compose $COMPOSE_ARGS up -d --no-build pbx-interface && return 0;
+    func-err $FUNCNAME $LINENO 'Failed to Start TCS Containers'; return 1;
 }
 
 validate-pg-selection () {
