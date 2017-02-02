@@ -393,7 +393,7 @@ remove-stores-container () {
 start-stores-container () {
     echo -n $PROGNAME': Starting '$1' ... '
 
-    docker-compose $STORES_COMPOSE_ARGS up -d $1 &> /dev/null; || return 1;
+    docker-compose $STORES_COMPOSE_ARGS up -d $1 &> /dev/null || return 1;
      
     enable-restart $1 || return 1
     echo 'done'; 
