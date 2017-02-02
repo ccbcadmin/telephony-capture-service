@@ -4,7 +4,7 @@ PROGNAME=$(basename $0)
 USAGE='Usage: '$PROGNAME' 0 | 1 | 2 (Detail Level)'
 source ./scripts/bash-functions
 
-DETAIL_LEVEL=&>/dev/null
+export DETAIL_LEVEL=&>/dev/null
 if [ $# == 1 ]; then set-detail-level $1; fi
 
 echo 'Building Images ... '
