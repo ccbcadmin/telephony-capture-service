@@ -2,14 +2,14 @@
 
 PROGNAME=$(basename $0)
 source ./scripts/bash-functions
-USAGE='Usage: jenkins dev|qa [debug]'
-NO_DEBUG='&> /dev/null'
+USAGE='Usage: jenkins dev|qa [trace]'
+NO_TRACE='&> /dev/null'
 
 # 'execute-test-case' is the workhorse function to execute the various test cases
 execute-test-case () {
 	echo -n 'Test Case: '$1' ... '
 	if docker-compose $COMPOSE_ARGS run --rm --name $TCSENV-$1 --entrypoint bash integrate -c \
-		'./lib/integrate/'$1'.js '"$NO_DEBUG"'; exit $?' ; then
+		'./lib/integrate/'$1'.js '"$NO_TRACE"'; exit $?' ; then
 		echo 'passed'
 	else
 		echo 'failed.  Test execution aborted.'
@@ -27,10 +27,10 @@ source scripts/bash-functions
 if [ $# != 1 ] && [ $# != 2 ]; then error-exit "$USAGE"; fi
 if [ $1 != 'dev' ] && [ $1 != 'qa' ]; then error-exit "$USAGE"; fi
 if [ $# == 2 ]; then
-	if [ $2 != 'debug' ]; then
-		error-exit "$USAGE"; 
+	if [ $2 == 'trace' ]; then
+		unset NO_TRACE 
 	else
-		NO_DEBUG=''
+		error-exit "$USAGE";
 	fi
 fi
 tcsenv $1
