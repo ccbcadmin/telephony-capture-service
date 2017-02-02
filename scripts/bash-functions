@@ -72,6 +72,8 @@ change-pgdata-owner () {
 
 set-detail-level () {
 
+    if [ $# != 1 ]; then func-err $FUNCNAME $LINENO 'Incorrect parameter count'; return 1; fi
+
     if [ $1 == 0 ]; then 
 		DETAIL_LEVEL=&>/dev/null
         msg 'Detail Level: nothing'
