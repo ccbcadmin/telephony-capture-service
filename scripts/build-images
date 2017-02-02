@@ -7,14 +7,12 @@ source ./scripts/bash-functions
 DETAIL_LEVEL=&>/dev/null
 if [ $# == 1 ]; then set-detail-level $1; fi
 
-exit 0
-
 echo 'Building Images ... '
-source .tcs.version
-docker-compose $STORES_COMPOSE_ARGS build 2>&1 >/dev/null || exit 1;
-docker login -u ccbcadmin -p 2620Turner || exit 1;
-docker push 'ccbcadmin/tcs-image'$TCS_VERSION || exit 1;
-docker push 'ccbcadmin/tcs-jenkins'$TCS_VERSION || exit 1;
+source .tcs.version "$DETAIL_LEVEL"
+docker-compose $STORES_COMPOSE_ARGS build "$DETAIL_LEVEL" || exit 1;
+docker login -u ccbcadmin -p 2620Turner "$DETAIL_LEVEL" || exit 1;
+docker push 'ccbcadmin/tcs-image'$TCS_VERSION "$DETAIL_LEVEL" || exit 1;
+docker push 'ccbcadmin/tcs-jenkins'$TCS_VERSION "$DETAIL_LEVEL" || exit 1;
 
 echo $PROGNAME' Complete'
 exit 0
