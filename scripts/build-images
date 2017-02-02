@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROGNAME=$(basename $0)
-USAGE='Usage: '$PROGNAME' backup_id [target_time]'
+USAGE='Usage: '$PROGNAME' 0 | 1 | 2 (Detail Level)'
 source ./scripts/bash-functions
 
 DETAIL_LEVEL=&>/dev/null
