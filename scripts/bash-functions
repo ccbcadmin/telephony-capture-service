@@ -412,7 +412,7 @@ start-barman () {
         fi
 
         if ! start-stores-container barman; then
-            func-err $FUNCNAME $LINE 'Failed to Start barman';
+            func-err $FUNCNAME $LINENO 'Failed to Start barman';
         fi
     fi
     return 0
