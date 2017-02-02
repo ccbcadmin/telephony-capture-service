@@ -16,6 +16,8 @@ case $yno in
         echo "Invalid input"; exit 1;;
 esac
 
+echo 'Here 3'
+
 if [ "$#" != 1 ] && [ "$#" != 2 ]; then error-exit "$USAGE"; fi
 
 validate-backup_id $1 || exit 1;
