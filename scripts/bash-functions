@@ -247,8 +247,8 @@ barman-create-slot () {
 
 barman-cron () {
 
-	docker exec -it barman sh -c 'barman cron 2>&1 >/dev/null; exit $?;';
-    return $?
+	docker exec -it barman sh -c 'barman cron 2>&1 >/dev/null; exit $?;' || return 0;
+    return 1;
 }
 
 barman-recover-latest () {
@@ -256,10 +256,10 @@ barman-recover-latest () {
     echo -n $PROGNAME': Backup (latest) Recovery to '$2' ... '
 
     # barman needs ownership of the pgdata area
-    if ! change-pgdata-owner barman $2; then return 1; fi
+    change-pgdata-owner barman $2 || return 1;
 
     # Tweak unix permissions
-    if ! change-pgdata-permissions $2; then return 1; fi
+    change-pgdata-permissions $2 || return 1;
 
     # Use barman to recover the latest backup for the selected pg container
     if ! docker exec -it barman sh -c 'barman recover pg1 latest /pg1_data 2>&1 >/dev/null; exit $?;'; then
@@ -270,7 +270,7 @@ barman-recover-latest () {
     fi
 
     # Ownership now passed to postgres
-    if ! change-pgdata-owner postgres pg1; then return 1; fi
+    change-pgdata-owner postgres pg1 || return 1;
     
     echo 'done'
     return 0
@@ -291,10 +291,10 @@ barman-recover () {
     echo -n $PROGNAME': Backup Recovery to '$1' ... '
 
     # barman needs ownership of the pgdata area
-    if ! change-pgdata-owner barman $1; then return 1; fi
+    change-pgdata-owner barman $1 || return 1;
 
     # Tweak unix permissions
-    if ! change-pgdata-permissions $1; then return 1; fi
+    change-pgdata-permissions $1 || return 1;
 
     # Do the recovery
     if ! docker exec -it barman sh -c 'barman recover pg1 '$2' /'$1'_data; exit $?;'; then
@@ -303,7 +303,7 @@ barman-recover () {
     fi
 
     # Ownership now passed to postgres
-    if ! change-pgdata-owner postgres $1; then return 1; fi
+    change-pgdata-owner postgres $1 || return 1;
     echo 'done'
     return 0   
 }
@@ -331,10 +331,9 @@ barman-pitr () {
 }
 
 barman-reset () {
-	docker exec -it barman sh -c 'barman receive-wal --reset pg1; exit $?;' &> /dev/null ||
-        func-err $FUNCNAME $LINENO 'Failed to Reset Stream Replication'; return 1     
-
-    return 0
+	docker exec -it barman sh -c 'barman receive-wal --reset pg1; exit $?;' &> /dev/null && return 0;
+    func-err $FUNCNAME $LINENO 'Failed to Reset Stream Replication'; 
+    return 1;
 }
 
 container-exists () {
@@ -367,20 +366,16 @@ confirm-barman () {
 
 pull-tcs-image () {
     echo -n $PROGNAME': Ensure tcs-image is current ... '
-    if ! docker pull ccbcadmin/tcs-image$TCS_VERSION; then
-        return 1
-    else
-        echo done
-    fi
+    docker pull ccbcadmin/tcs-image$TCS_VERSION || return 1;
+    echo done
+    return 0;
 }
 
 pull-tcs-jenkins () {
     echo -n $PROGNAME': Ensure tcs-jenkins is current ... '
-    if ! docker pull ccbcadmin/tcs-jenkins$TCS_VERSION 2>&1 >/dev/null; then 
-        return 1
-    else
-        echo done
-    fi
+    docker pull ccbcadmin/tcs-jenkins$TCS_VERSION 2>&1 >/dev/null || return 1;
+
+    echo done
     return 0
 }
 
@@ -398,11 +393,11 @@ remove-stores-container () {
 start-stores-container () {
     echo -n $PROGNAME': Starting '$1' ... '
 
-    if ! docker-compose $STORES_COMPOSE_ARGS up -d $1 &> /dev/null; then
-        return 1
-    fi
-
-    if enable-restart $1; then echo 'done'; return 0; else return 1; fi
+    docker-compose $STORES_COMPOSE_ARGS up -d $1 &> /dev/null; || return 1;
+     
+    enable-restart $1 || return 1
+    echo 'done'; 
+    return 0
 }
 
 start-barman () {
@@ -418,6 +413,7 @@ start-barman () {
 
         if ! start-stores-container barman; then
             func-err $FUNCNAME $LINENO 'Failed to Start barman';
+            return 1
         fi
     fi
     return 0
@@ -428,14 +424,14 @@ start-pg1 () {
     if ! container-exists pg1; then
 
         # Ensure Postgres owns everything
-        if ! change-pgdata-owner postgres pg1; then return 1; fi
+        change-pgdata-owner postgres pg1 || return 1;
 
         # Now start the incoming Postgres container
         if ! start-stores-container pg1; then func-err $FUNCNAME $LINENO 'Failed to Start Container pg1'; fi
 
         sleep 5; # Allow for creation of new database
         
-        if ! enable-barman-backups pg1; then return 1; fi
+        enable-barman-backups pg1 || return 1;
 
     fi
     return 0;
