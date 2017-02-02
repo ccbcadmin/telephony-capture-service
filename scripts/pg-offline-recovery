@@ -7,7 +7,7 @@ source ./scripts/bash-functions
 
 if [ "$#" != 1 ] && [ "$#" != 2 ] ; then error-exit "$USAGE"; fi
 
-validate-backup_id $1
+validate-backup_id $1 || exit 1;
 
 # Remove the offline container, before doing the recovery
 remove-stores-container pg2
