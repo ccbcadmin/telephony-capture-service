@@ -5,7 +5,6 @@ PROGNAME=$(basename $0)
 source ./scripts/bash-functions
 
 is-pg1-active && docker exec -it pg1 psql --username postgres -p 5432 -d $TCSENV && exit 0;
-echo Here1
 container-exists pg1 && echo 'pg1 STOPPED' && exit 0;
 echo 'pg1 GONE'
 exit 0
