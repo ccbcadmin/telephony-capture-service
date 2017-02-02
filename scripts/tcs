@@ -73,6 +73,8 @@ trap cleanup EXIT
 
 start-barman || exit 1;
 start-pg1 || exit 1;
+echo 'Here 2'
+
 start-rabbitmq || exit 1;
 start-jenkins || exit 1;
 
