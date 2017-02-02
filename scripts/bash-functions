@@ -296,7 +296,7 @@ barman-recover () {
     change-pgdata-permissions $1 || return 1;
 
     # Do the recovery
-    if ! docker exec -it barman sh -c 'barman recover pg1 '$2' /'$1'_data; exit $?;'; then
+    if ! docker exec -it barman sh -c 'barman recover pg1 '$2' /'$1'_data 2>&1 >/dev/null; exit $?;'; then
             func-err $FUNCNAME $LINENO  $1' Recovery Failure';
             return 1
     fi
