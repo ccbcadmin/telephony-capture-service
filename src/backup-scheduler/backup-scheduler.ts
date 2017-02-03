@@ -11,12 +11,7 @@ const env = envalid.cleanEnv(process.env, {
 
 const exec = require('child_process').exec;
 
-var CronJob = require('cron').CronJob;
-new CronJob('* * * * * *', function() {
-  console.log('You will see this message every second');
-}, null, true, 'America/Los_Angeles');
-
-/*
+let child;
 const barmanBackup = () => {
 	const child = exec(`barman backup pg1`, (error, stdout, stderr) => {
 		if (error) {
@@ -27,12 +22,19 @@ const barmanBackup = () => {
 		}
 	});
 
-	child.on('close', (code) => {
+	/*child.on('close', (code) => {
 		console.log('closing code: ' + code);
 		process.exit (0);
 	});
+	*/
 }
-*/
+
+const killChildProcess = () => {
+	console.log ('Kill Child');
+	process.kill (child.pid, 'SIGTERM');
+}
+const CronJob = require('cron').CronJob;
+new CronJob('* * * * *', barmanBackup, killChildProcess, true, 'America/Los_Angeles');
 
 process.on('SIGTERM', () => {
 	console.log(`\r${routineName}: Terminated`);
