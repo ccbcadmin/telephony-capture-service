@@ -9,6 +9,14 @@ const env = envalid.cleanEnv(process.env, {
 	BACKUP_SCHEDULE: str(),
 });
 
+try {
+	new CronJob('invalid cron pattern', function () {
+		console.log('this should not be printed');
+	})
+} catch (ex) {
+	console.log("cron pattern not valid");
+}
+
 const exec = require('child_process').exec;
 
 let child;
@@ -17,9 +25,14 @@ const barmanBackup = () => {
 		if (error) {
 			console.log(`Unable to backup pg1: `, JSON.stringify(error, null, 4));
 		}
-		else {
-			console.log(`Backup Successful:\nstdout:\n${stdout}\nstderr:\n${stderr}`);
+		if (stdout) {
+			console.log(`Backup Successful:\nstdout:\n${stdout}`);
 		}
+		if (stderr) {
+			console.log(`stderr:\n${stderr}`);
+		}
+
+		process.kill(child.pid, 'SIGTERM');
 	});
 
 	/*child.on('close', (code) => {
@@ -30,11 +43,18 @@ const barmanBackup = () => {
 }
 
 const killChildProcess = () => {
-	console.log ('Kill Child');
-	process.kill (child.pid, 'SIGTERM');
+	console.log('Kill Child');
+	process.kill(child.pid, 'SIGTERM');
 }
+
 const CronJob = require('cron').CronJob;
-new CronJob('* * * * *', barmanBackup, killChildProcess, true, 'America/Los_Angeles');
+try {
+	new CronJob(env.BACKUP_SCHEDULE, barmanBackup, killChildProcess, true);
+}
+catch (e) {
+	console.log("cron pattern not valid");
+	process.exit(1);
+}
 
 process.on('SIGTERM', () => {
 	console.log(`\r${routineName}: Terminated`);
@@ -47,12 +67,3 @@ process.on('SIGINT', () => {
 });
 
 console.log(`${routineName}: Started`);
-
-// Let everything stabilize and then trigger the backup schedule
-//setTimeout(() => {
-
-//	const spawn = require('child_process').spawn;
-//	exec('cron');
-//	require('node-schedule').scheduleJob(env.BACKUP_SCHEDULE, barmanBackup);
-
-//}, 5000);
