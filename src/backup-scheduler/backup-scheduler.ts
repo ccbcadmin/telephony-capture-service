@@ -18,16 +18,15 @@ const barmanBackup = () => {
 			console.log(`Unable to backup pg1: `, JSON.stringify(error, null, 4));
 		}
 		if (stdout) {
-			console.log(`Backup Successful:\nstdout:\n${stdout}`);
+			console.log(`Backup Successful:\n${stdout}`);
 		}
 		if (stderr) {
 			console.log(`stderr:\n${stderr}`);
 		}
-
-		process.kill(child.pid, 'SIGTERM');
 	});
 
-	/*child.on('close', (code) => {
+	/*
+	child.on('close', (code) => {
 		console.log('closing code: ' + code);
 		process.exit (0);
 	});
