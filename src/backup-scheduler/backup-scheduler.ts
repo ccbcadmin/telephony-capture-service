@@ -10,14 +10,17 @@ const env = envalid.cleanEnv(process.env, {
 });
 
 const exec = require('child_process').exec;
+exec.on ('close', (code) => { 
+  console.log(`child process exited with code ${code}`);
+});
 
 const barmanBackup = () => {
-	exec(`barman backup pg1`, error => {
+	exec(`barman backup pg1`, (error, stdout, stderr) => {
 		if (error) {
 			console.log(`Unable to backup pg1: `, JSON.stringify(error, null, 4));
 		}
 		else {
-			console.log('Backup Successful');
+			console.log(`Backup Successful:\nstdout: ${stdout}, stderr: ${stderr}`);
 		}
 	});
 }
