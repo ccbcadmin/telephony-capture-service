@@ -24,7 +24,7 @@ const barmanBackup = () => {
 		}
 	});
 }
-console.log ('Backup Cron Pattern: ', env.BACKUP_SCHEDULE);
+console.log('Backup Cron Pattern: ', env.BACKUP_SCHEDULE);
 const CronJob = require('cron').CronJob;
 try {
 	new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, true, 'America/Los_Angeles');
@@ -35,7 +35,7 @@ catch (e) {
 	process.exit(1);
 }
 
-exec ('cron');
+exec('cron');
 
 process.on('SIGTERM', () => {
 	console.log(`\r${routineName}: Terminated`);
@@ -50,4 +50,7 @@ process.on('SIGINT', () => {
 console.log(`${routineName}: Started`);
 
 // Restart once an hour to clear out defunct processes
-setTimeout (() => process.exit(0), 60000);
+setTimeout(() => {
+	console.log('Backup Scheduler Exiting');
+	process.exit(0)
+}, 60000);
