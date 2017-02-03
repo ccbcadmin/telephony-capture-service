@@ -24,16 +24,14 @@ const barmanBackup = () => {
 		}
 	});
 }
-console.log ('cron pattern: ', env.BACKUP_SCHEDULE);
+console.log ('Backup Cron Pattern: ', env.BACKUP_SCHEDULE);
 const CronJob = require('cron').CronJob;
 try {
-	const job = new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, true, 'America/Los_Angeles');
-	// Apply a settling period before starting the backup job
-	//setTimeout(job.Start, 10000);
+	new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, true, 'America/Los_Angeles');
 }
 catch (e) {
 	console.log(JSON.stringify(e, null, 4));
-	console.log("cron pattern not valid");
+	console.log("Backup Cron Patter Not Valid");
 	process.exit(1);
 }
 
