@@ -9,14 +9,6 @@ const env = envalid.cleanEnv(process.env, {
 	BACKUP_SCHEDULE: str(),
 });
 
-try {
-	new CronJob('invalid cron pattern', function () {
-		console.log('this should not be printed');
-	})
-} catch (ex) {
-	console.log("cron pattern not valid");
-}
-
 const exec = require('child_process').exec;
 
 let child;
