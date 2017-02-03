@@ -29,9 +29,10 @@ const CronJob = require('cron').CronJob;
 try {
 	const job = new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, false);
 	// Apply a settling period before starting the backup job
-	setTimeout (job.Start, 10000);
+	setTimeout(job.Start, 10000);
 }
 catch (e) {
+	console.log(JSON.stringify(e, null, 4));
 	console.log("cron pattern not valid");
 	process.exit(1);
 }
