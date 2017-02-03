@@ -31,7 +31,7 @@ try {
 }
 catch (e) {
 	console.log(JSON.stringify(e, null, 4));
-	console.log("Backup Cron Patter Not Valid");
+	console.log('BACKUP_SCHEDULE is Not a Valid Cron Pattern');
 	process.exit(1);
 }
 
