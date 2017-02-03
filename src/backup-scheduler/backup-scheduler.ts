@@ -24,10 +24,10 @@ const barmanBackup = () => {
 		}
 	});
 }
-
+console.log ('cron pattern: ', env.BACKUP_SCHEDULE);
 const CronJob = require('cron').CronJob;
 try {
-	const job = new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, false);
+	const job = new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, false, 'America/Los_Angeles');
 	// Apply a settling period before starting the backup job
 	setTimeout(job.Start, 10000);
 }
