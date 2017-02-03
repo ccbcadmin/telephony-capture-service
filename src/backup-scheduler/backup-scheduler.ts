@@ -27,9 +27,9 @@ const barmanBackup = () => {
 console.log ('cron pattern: ', env.BACKUP_SCHEDULE);
 const CronJob = require('cron').CronJob;
 try {
-	const job = new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, false, 'America/Los_Angeles');
+	const job = new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, true, 'America/Los_Angeles');
 	// Apply a settling period before starting the backup job
-	setTimeout(job.Start, 10000);
+	//setTimeout(job.Start, 10000);
 }
 catch (e) {
 	console.log(JSON.stringify(e, null, 4));
