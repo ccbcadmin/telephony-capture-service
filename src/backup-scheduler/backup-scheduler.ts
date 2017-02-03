@@ -23,6 +23,7 @@ const barmanBackup = () => {
 
 	child.on('close', (code) => {
 		console.log('closing code: ' + code);
+		child.kill();
 	});
 }
 
