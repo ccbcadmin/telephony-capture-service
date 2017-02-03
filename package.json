@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "amqplib": ">=0.4.2",
+    "cron": "^1.2.1",
     "envalid": "^2.4.1",
     "es6-shim": ">=0.35.1",
     "fs-extra": "^1.0.0",

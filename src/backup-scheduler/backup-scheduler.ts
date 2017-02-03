@@ -11,6 +11,12 @@ const env = envalid.cleanEnv(process.env, {
 
 const exec = require('child_process').exec;
 
+var CronJob = require('cron').CronJob;
+new CronJob('* * * * * *', function() {
+  console.log('You will see this message every second');
+}, null, true, 'America/Los_Angeles');
+
+/*
 const barmanBackup = () => {
 	const child = exec(`barman backup pg1`, (error, stdout, stderr) => {
 		if (error) {
@@ -26,6 +32,7 @@ const barmanBackup = () => {
 		process.exit (0);
 	});
 }
+*/
 
 process.on('SIGTERM', () => {
 	console.log(`\r${routineName}: Terminated`);
@@ -42,8 +49,8 @@ console.log(`${routineName}: Started`);
 // Let everything stabilize and then trigger the backup schedule
 setTimeout(() => {
 
-	const spawn = require('child_process').spawn;
-	exec('cron');
-	require('node-schedule').scheduleJob(env.BACKUP_SCHEDULE, barmanBackup);
+//	const spawn = require('child_process').spawn;
+//	exec('cron');
+//	require('node-schedule').scheduleJob(env.BACKUP_SCHEDULE, barmanBackup);
 
 }, 5000);
