@@ -23,6 +23,8 @@ const barmanBackup = () => {
 			console.log(`stderr:\n${stderr}`);
 		}
 		child.kill('SIGINT');
+		child.kill('SIGTERM');
+
 	});
 }
 console.log('Backup Cron Pattern: ', env.BACKUP_SCHEDULE);
