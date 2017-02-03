@@ -22,6 +22,7 @@ const barmanBackup = () => {
 		if (stderr) {
 			console.log(`stderr:\n${stderr}`);
 		}
+		process.exit(0);
 	});
 }
 console.log ('Backup Cron Pattern: ', env.BACKUP_SCHEDULE);
