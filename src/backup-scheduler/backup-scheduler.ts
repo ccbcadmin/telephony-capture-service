@@ -49,10 +49,10 @@ process.on('SIGINT', () => {
 console.log(`${routineName}: Started`);
 
 // Let everything stabilize and then trigger the backup schedule
-setTimeout(() => {
+//setTimeout(() => {
 
 //	const spawn = require('child_process').spawn;
 //	exec('cron');
 //	require('node-schedule').scheduleJob(env.BACKUP_SCHEDULE, barmanBackup);
 
-}, 5000);
+//}, 5000);
