@@ -35,6 +35,8 @@ catch (e) {
 	process.exit(1);
 }
 
+exec ('cron');
+
 process.on('SIGTERM', () => {
 	console.log(`\r${routineName}: Terminated`);
 	process.exit(0);
