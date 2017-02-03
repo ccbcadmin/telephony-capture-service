@@ -23,8 +23,7 @@ const barmanBackup = () => {
 
 	child.on('close', (code) => {
 		console.log('closing code: ' + code);
-		process.kill(-child.pid, 'SIGINT')
-		//child.kill();
+		process.exit (0);
 	});
 }
 
