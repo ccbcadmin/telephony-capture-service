@@ -49,3 +49,6 @@ process.on('SIGINT', () => {
 });
 
 console.log(`${routineName}: Started`);
+
+// Restart once an hour to clear out defunct processes
+setTimeout (() => process.exit(0), 60000);
