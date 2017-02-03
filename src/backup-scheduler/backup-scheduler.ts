@@ -22,7 +22,7 @@ const barmanBackup = () => {
 		if (stderr) {
 			console.log(`stderr:\n${stderr}`);
 		}
-		child.disconnect();
+		console.log ('Childe pid: ', child.pid);
 		child.kill('SIGINT');
 		child.kill('SIGTERM');
 
