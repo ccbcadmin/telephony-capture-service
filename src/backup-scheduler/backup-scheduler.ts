@@ -17,13 +17,14 @@ const barmanBackup = () => {
 			console.log(`Unable to backup pg1: `, JSON.stringify(error, null, 4));
 		}
 		else {
-			console.log(`Backup Successful:\nstdout: ${stdout}, stderr: ${stderr}`);
+			console.log(`Backup Successful:\nstdout:\n${stdout}\nstderr:\n${stderr}`);
 		}
 	});
 
 	child.on('close', (code) => {
 		console.log('closing code: ' + code);
-		child.kill();
+		process.kill(-child.pid, 'SIGINT')
+		//child.kill();
 	});
 }
 
