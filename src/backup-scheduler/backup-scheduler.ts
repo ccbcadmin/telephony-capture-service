@@ -11,9 +11,8 @@ const env = envalid.cleanEnv(process.env, {
 
 const exec = require('child_process').exec;
 
-let child;
 const barmanBackup = () => {
-	const child = exec(`barman backup pg1`, (error, stdout, stderr) => {
+	exec(`barman backup pg1`, (error, stdout, stderr) => {
 		if (error) {
 			console.log(`Unable to backup pg1: `, JSON.stringify(error, null, 4));
 		}
@@ -24,23 +23,13 @@ const barmanBackup = () => {
 			console.log(`stderr:\n${stderr}`);
 		}
 	});
-
-	/*
-	child.on('close', (code) => {
-		console.log('closing code: ' + code);
-		process.exit (0);
-	});
-	*/
-}
-
-const killChildProcess = () => {
-	console.log('Kill Child');
-	process.kill(child.pid, 'SIGTERM');
 }
 
 const CronJob = require('cron').CronJob;
 try {
-	new CronJob(env.BACKUP_SCHEDULE, barmanBackup, killChildProcess, true);
+	const job = new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, false);
+	// Apply a settling period before starting the backup job
+	setTimeout (job.Start, 10000);
 }
 catch (e) {
 	console.log("cron pattern not valid");
