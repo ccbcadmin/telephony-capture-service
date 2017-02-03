@@ -53,4 +53,4 @@ console.log(`${routineName}: Started`);
 setTimeout(() => {
 	console.log('Backup Scheduler Exiting');
 	process.exit(0)
-}, 60000);
+}, 600000);
