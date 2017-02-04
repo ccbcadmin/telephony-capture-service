@@ -24,17 +24,18 @@ const barmanBackup = () => {
 		}
 	});
 }
-console.log('Backup Cron Pattern: ', env.BACKUP_SCHEDULE);
+console.log(`Backup Cron Pattern: '${env.BACKUP_SCHEDULE}'`);
 const CronJob = require('cron').CronJob;
 try {
 	new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, true, 'America/Los_Angeles');
 }
 catch (e) {
 	console.log(JSON.stringify(e, null, 4));
-	console.log('BACKUP_SCHEDULE is Not a Valid Cron Pattern');
+	console.log(`BACKUP_SCHEDULE='${env.BACKUP_SCHEDULE}' is Not a Valid Cron Pattern`);
 	process.exit(1);
 }
 
+// Kick cron into life
 exec('cron');
 
 process.on('SIGTERM', () => {
@@ -49,8 +50,8 @@ process.on('SIGINT', () => {
 
 console.log(`${routineName}: Started`);
 
-// Restart once an hour to clear out defunct processes
+// Routinely restart in order to remove defunct child processes
 setTimeout(() => {
 	console.log('Backup Scheduler Exiting');
 	process.exit(0)
-}, 600000);
+}, 3600000);
