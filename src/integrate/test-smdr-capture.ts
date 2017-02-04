@@ -62,7 +62,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 			else if (smdrMsgsSent % 20 === 0)
 				process.stdout.write('\b/');
 			*/
-			
+
 			index = next_index + 2;
 
 			// Randomly partition socket writes to ensure TCS handles gracefully
@@ -111,7 +111,7 @@ const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
 
 		// Wait a bit and then confirm the count in the database
-		setTimeout(checkRecordCount, 3000);
+		setTimeout(checkRecordCount, 10000);
 	}
 	else {
 		sendSmdrRecords(smdrFiles[smdrFileNo]);
@@ -154,4 +154,4 @@ setTimeout(() => {
 		}
 		nextFile();
 	});
-}, 2000);
+}, 5000);
