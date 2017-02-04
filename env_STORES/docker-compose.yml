@@ -21,8 +21,7 @@ services:
       - postgres1_data:/pg1_data
       - postgres2_data:/pg2_data
       - $BARMAN_HOME:/var/lib/barman
-    #command: ["node", "./lib/backup-scheduler/backup-scheduler.js"]
-    entrypoint: ["/etc/init.d/cron", "start"]
+    command: ["node", "./lib/backup-scheduler/backup-scheduler.js"]
 
   pg1:
     image: ccbcadmin/tcs-image${TCS_VERSION}
