@@ -22,10 +22,6 @@ const barmanBackup = () => {
 		if (stderr) {
 			console.log(`stderr:\n${stderr}`);
 		}
-		console.log ('Childe pid: ', child.pid);
-		child.kill('SIGINT');
-		child.kill('SIGTERM');
-
 	});
 }
 console.log('Backup Cron Pattern: ', env.BACKUP_SCHEDULE);
