@@ -33,9 +33,15 @@ let smdrMsgsSent: number = 0;
 
 const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
+let txMessagesBuffer = Buffer.alloc(0);
+let rxMessagesBuffer = Buffer.alloc(0);
+
 const sendSmdrRecords = (smdrFileName: string): void => {
 
 	let data: Buffer = fs.readFileSync(smdrFileName);
+
+	// Accummulate data in one large buffer for later comparison
+	txMessagesBuffer = Buffer.concat([txMessagesBuffer, data], txMessagesBuffer.length + data.length);
 
 	process.stdout.write('Sending ' + smdrFileName + '  ');
 
@@ -78,9 +84,71 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 	}, 2);
 }
 
+
 const compareFiles = () => {
+
 	console.log('Compare Files');
-	process.exit(0);
+
+	dir.files('/smdr-data/smdr-data-001', (error, files) => {
+
+		if (error) {
+			console.log(JSON.stringify(error, null, 4));
+			process.exit(1);
+		}
+
+		files.forEach(file => {
+
+			console.log('filename: ', file);
+
+			fs.readFile(file, (error, data) => {
+
+
+				if (error) {
+					console.log(JSON.stringify(error, null, 4));
+					process.exit(1);
+				}
+
+				else {
+					console.log('Length of data: ', data.length);
+
+					// Accummulate all the data into one buffer
+					rxMessagesBuffer = Buffer.concat([rxMessagesBuffer, data], rxMessagesBuffer.length + data.length);
+
+					console.log('result: ', txMessagesBuffer.length, rxMessagesBuffer.length);
+
+					if (Buffer.compare(txMessagesBuffer, rxMessagesBuffer) === 0) {
+						console.log('Source Files and Target Files are identical');
+						process.exit(0);
+					}
+					else {
+						console.log('Source Files and Target Files differ');
+						
+						for (let i=0; i<txMessagesBuffer.length; ++i) {
+							if (rxMessagesBuffer[i] != txMessagesBuffer[i]) {
+								console.log ('differs at ', i);
+								console.log ('txChar: ', txMessagesBuffer[i].toString(16));
+								console.log ('rxChar: ', rxMessagesBuffer[i].toString(16));
+							}
+						}
+
+						var strTx = '';
+						for (let ii = 0; ii < 200; ii++) {
+							strTx += txMessagesBuffer[ii].toString(16) + ' ';
+						};
+						console.log(strTx);
+
+						var strRx = '';
+						for (let ii = 0; ii < 200; ii++) {
+							strRx += rxMessagesBuffer[ii].toString(16) + ' ';
+						};
+						console.log(strRx);
+
+						process.exit(1);
+					}
+				}
+			});
+		});
+	});
 }
 
 const nextFile = () => {
@@ -120,8 +188,12 @@ dir.files('/smdr-data/smdr-data-001', (error, files) => {
 setTimeout(() => {
 
 	// Search the source directory looking for raw SMDR files
-	dir.files('./sample-data/smdr-data/smdr-one-file', (err, files) => {
-		if (err) throw err;
+	dir.files('./sample-data/smdr-data/smdr-one-file', (error, files) => {
+
+		if (error) {
+			console.log(JSON.stringify(error, null, 4));
+			process.exit(1);
+		}
 
 		// Deliver the data in chronological order
 		files.sort();

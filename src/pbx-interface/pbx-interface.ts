@@ -41,7 +41,7 @@ let leftOver = Buffer.alloc(0);
 const processSmdrMessages = (data: Buffer) => {
 
 	// Gather all the outstanding data
-	let unprocessedData = Buffer.concat([leftOver, data]);
+	let unprocessedData = Buffer.concat([leftOver, data], leftOver.length + data.length);
 
 	// If a CRLF is found, then we have a message
 	const crLfIndexOf = unprocessedData.indexOf($.CRLF);

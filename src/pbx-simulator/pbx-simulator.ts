@@ -32,7 +32,6 @@ const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
 const sendSmdrRecords = (smdrFileName: string): void => {
 
-	//let data = fs.readFileSync(smdrFileName).toString();
 	let data: Buffer = fs.readFileSync(smdrFileName);
 
 	process.stdout.write('Sending ' + smdrFileName + '  ');
