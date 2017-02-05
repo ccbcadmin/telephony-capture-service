@@ -39,12 +39,17 @@ source ./.tcs.version
 echo 'TCS_VERSION: '$TCS_VERSION
 
 # Restart the TCS containers
-docker-compose $COMPOSE_ARGS down &>/dev/null
-docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface &>/dev/null
-docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface &>/dev/null
-docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface &>/dev/null
+
+docker-compose $COMPOSE_ARGS down 
+docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface 
+docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface 
+docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface 
 
 sleep 3
+
+execute-test-case test-recording-smdr-files
+
+exit 0
 
 # TEST CASE DESCRIPTION 
 # Send a file of SMDR messages through the TCS and ensure 

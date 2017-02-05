@@ -11,9 +11,12 @@ services:
 
   integrate:
     image: ccbcadmin/tcs-image${TCS_VERSION}
-    env_file: ./env_DEV/.env
+    env_file: 
+      - .env
+      - ./env_DEV/.env
     volumes:
       - /etc/localtime:/etc/localtime
+      - $SMDR_DATA_DEV:/smdr-data
       - ./lib:/app/lib
 
   mangle:

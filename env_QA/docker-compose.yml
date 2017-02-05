@@ -24,6 +24,9 @@ services:
   integrate:
     image: ccbcadmin/tcs-image${TCS_VERSION}
     network_mode: "host"
-    env_file: ./env_QA/.env
+    env_file: 
+      - .env
+      - ./env_QA/.env
     volumes:
       - /etc/localtime:/etc/localtime
+      - $SMDR_DATA_QA:/smdr-data
