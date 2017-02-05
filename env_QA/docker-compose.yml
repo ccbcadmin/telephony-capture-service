@@ -30,3 +30,4 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime
       - $SMDR_DATA_QA:/smdr-data
+      - ./lib:/app/lib

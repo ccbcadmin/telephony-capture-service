@@ -99,12 +99,18 @@ ee.on('next', nextFile);
 
 // Delete all files out of the SMDR-DATA-001 directory
 dir.files('/smdr-data/smdr-data-001', (error, files) => {
-	
-	if (error) throw error;
+
+	if (error) {
+		console.log(JSON.stringify(error, null, 4));
+		process.exit(1);
+	}
 
 	files.forEach(file => {
 		fs.unlink(file, (error) => {
-			throw error;
+			if (error) {
+				console.log(JSON.stringify(error, null, 4));
+				process.exit(1);
+			}
 		});
 	});
 
