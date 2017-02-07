@@ -6,14 +6,21 @@ export class ServerSocket {
 	private port: number;
 	private server: any;
 	private dataSink: any; // Place to direct incoming data
+	private linkClose;
+	private connection = null;
 
-	constructor(serverName, port, dataSink) {
+	constructor(serverName, port, dataSink, linkClose = null) {
 		this.serverName = serverName;
 		this.port = port;
 		this.dataSink = dataSink;
+		this.linkClose = linkClose;
 
 		this.server = this.net.createServer();
 		this.server.on('connection', this.handleConnection);
+
+		if (linkClose) {
+			this.server.on('close', this.linkClose);
+		}
 
 		this.server.listen(this.port, () => {
 			console.log(`${this.serverName}: Listening on: ${JSON.stringify(this.server.address())}`);
@@ -23,10 +30,10 @@ export class ServerSocket {
 	private handleConnection = conn => {
 
 		const remoteAddress = conn.remoteAddress + ':' + conn.remotePort;
-		console.log(`${this.serverName}: New client connection from ${remoteAddress}`);
+		console.log(`${this.serverName}: Connection Open: ${remoteAddress}`);
 
 		const onClose = () => {
-			console.log(`${this.serverName}: Connection from ${remoteAddress} closed.`);
+			console.log(`${this.serverName}: Connection Closed: from ${remoteAddress}`);
 		}
 
 		const onError = err => {
@@ -36,5 +43,12 @@ export class ServerSocket {
 		conn.on('data', this.dataSink);
 		conn.once('close', onClose);
 		conn.on('error', onError);
+		this.connection = conn;
+	}
+
+	// Provide a gracious shutdown of the circuit
+	public close = () => {
+		this.connection.end();
+		this.server.close();
 	}
 }

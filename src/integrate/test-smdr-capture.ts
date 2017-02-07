@@ -23,6 +23,7 @@ const { str, num} = envalid;
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
+	TEST_TRANSMIT_INTERVAL: num(),
 	DATABASE: str(),
 	DB_QUEUE: str()
 });
@@ -75,7 +76,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 				process.exit(-1);
 			}
 		}
-	}, 2);
+	}, env.TEST_TRANSMIT_INTERVAL);
 }
 
 const connection = {
@@ -122,7 +123,7 @@ const nextFile = () => {
 ee.on('next', nextFile);
 
 // Connect to DB_QUEUE only to purge it
-const databaseQueue = new Queue(env.DB_QUEUE);
+const databaseQueue = new Queue(env.DB_QUEUE, null, null, null);
 
 db.none('delete from smdr;')
 	.then(() => _.noop)

@@ -23,14 +23,20 @@ const env = envalid.cleanEnv(process.env, {
 	TMS_QUEUE: str()
 });
 
+let pbxSocket;
+
 process.on('SIGTERM', () => {
-	console.log('Telephony Capture Service: Terminated');
-	process.exit(0);
+
+	pbxSocket.close();
+
+	console.log('TCS Terminated (SIGTERM)');
 });
 
 process.on('SIGINT', () => {
-	console.log("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
-	process.exit(0);
+
+	pbxSocket.close();
+
+	console.log('TCS Terminated (SIGINT)');
 });
 
 let tmsQueue;
@@ -76,11 +82,22 @@ const dataSink = (data: Buffer) => {
 	processSmdrMessages(data);
 }
 
+const pbxLinkClosed = () => {
+	console.log('PBX Link Closed');
+	process.exit(0);
+}
+
+const queueDisconnectHandler = () => {
+
+	// If RabbitMQ connection is lost, then stop pbx reception immediately
+	pbxSocket.close();
+}
+
 // Setup the queue to the TMS if needed
-tmsQueue = env.TMS_ACTIVE ? new Queue(env.TMS_QUEUE) : null;
+tmsQueue = env.TMS_ACTIVE ? new Queue(env.TMS_QUEUE, null, null, queueDisconnectHandler) : null;
 
 // Always need the database queue
-databaseQueue = new Queue(env.DB_QUEUE);
+databaseQueue = new Queue(env.DB_QUEUE, null, null, queueDisconnectHandler);
 
 // Start listening for incoming messages
-new ServerSocket(routineName, env.TCS_PORT, dataSink);
+pbxSocket = new ServerSocket(routineName, env.TCS_PORT, dataSink, pbxLinkClosed);

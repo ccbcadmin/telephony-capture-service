@@ -203,10 +203,12 @@ const dataSink = (msg): boolean => {
 			})
 			.catch(err => {
 				console.log('Database Insert Failure: ', err);
-				return false;
+
+				// Let the process restart
+				process.exit(1);
 			});
 	}
 	return true;
 }
 
-const databaseQueue = new Queue(env.DB_QUEUE, dataSink);
+const databaseQueue = new Queue(env.DB_QUEUE, null, dataSink, null);

@@ -16,12 +16,14 @@ export class Queue {
 	private maxLength;
 	private retryConnectTimer$ = Observable.interval(1000).take(15).startWith();
 	private retryConnectSubscription;
+	private disconnectHandler;
 
-	constructor(queueName: string, consumer = null, maxLength = null) {
+	constructor(queueName: string, maxLength: number, consumer, disconnectHandler) {
 
 		this.queueName = queueName;
 		this.consumer = consumer;
 		this.maxLength = maxLength;
+		this.disconnectHandler = disconnectHandler;
 		this.connection = null;
 
 		this.retryConnectSubscription = this.retryConnectTimer$.subscribe(
@@ -41,23 +43,33 @@ export class Queue {
 	private connect = () => {
 
 		this.amqp.connect(`amqp://localhost:5672`, (err, queueConnection) => {
+
 			if (err) {
-				return;
+				console.log('Queue error: ', JSON.stringify(err, null, 4));
+
+				// Inform the queue client
+				if (this.disconnectHandler) {
+					console.log ('Here 1');
+					this.disconnectHandler();
+				} else {
+					console.log ('Here 2');
+					throw new Error(err);
+				}
 			}
+
+			// Stop the retrys - we are connected
+			this.retryConnectSubscription.unsubscribe();
 
 			queueConnection.addListener('error', (err) => {
 				if (err.message !== "Connection closing") {
-					console.error("[AMQP] conn error", err.message);
+					console.error("[AMQP] connection error", err.message);
 					process.exit(1);
 				}
 			});
 
-			queueConnection.addListener('close', () => { });
+			queueConnection.addListener('close', () => { console.log ('QUEUE CLOSE EVENT') });
 
 			this.connection = queueConnection;
-
-			// Stop the retrys - we are connected
-			this.retryConnectSubscription.unsubscribe();
 
 			this.connection.createChannel((err, channel) => {
 
@@ -66,7 +78,7 @@ export class Queue {
 					process.exit(1);
 				}
 
-				console.log(`Channel to Message Broker for ${this.queueName} Created`);
+				console.log(`Channel to ${this.queueName} Created`);
 
 				if (this.maxLength) {
 					channel.assertQueue(this.queueName, { durable: true, maxLength: this.maxLength });
@@ -82,12 +94,7 @@ export class Queue {
 
 						if (this.consumer(msg.content)) {
 							this.channel.ack(msg);
-						} else {
-							this.channel.nack(msg);
-							// Can't consume, kill the process and wait for the restart
-							process.exit(1);
 						}
-
 					}, { noAck: false });
 				}
 			});
@@ -103,13 +110,13 @@ export class Queue {
 	}
 
 	public purge = () => {
-		console.log (`Queue ${this.queueName} Purged`);
+		console.log(`Queue ${this.queueName} Purged`);
 		this.channel.purgeQueue();
 	}
 
 	public close = () => {
 		console.log('Close queue connection');
-
+		this.connection.close();
 		// Stop listening to queue events
 		// this.connection ? this.connection.removeListener('close', () => { }) : _.noop;
 		// this.connection ? this.connection.removeListener('error', () => { }) : _.noop;

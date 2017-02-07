@@ -12,10 +12,18 @@ execute-test-case () {
 		'./lib/integrate/'$1'.js '"$NO_TRACE"'; exit $?' ; then
 		echo 'passed'
 	else
-		echo 'failed.  Test execution aborted.'
+		echo 'failed'
+		echo 'Testing Aborted'
 		exit 1
 	fi
 }
+
+cleanup () {
+	# Ensure the test environment is shutdown
+	docker-compose $COMPOSE_ARGS down 
+}
+
+trap cleanup EXIT
 
 # Allow access to bash scripts
 export PATH=./scripts:$PATH
@@ -45,34 +53,51 @@ docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface 
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface 
 
-sleep 3
-
-execute-test-case test-recording-smdr-files
+execute-test-case test-tms-link-reopening
 
 exit 0
 
-# TEST CASE DESCRIPTION 
-# Send a file of SMDR messages through the TCS and ensure 
-# that the database has recorded all records in the SMDR table.
-execute-test-case test-smdr-capture
+# Execute the following several times
+for i in 1
+do
 
-# TEST CASE DESCRIPTION 
-# Ensure that a stream of data makes it round-trip.
-# input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
-# input_testdata and output_testdata must be identical
-execute-test-case test-pbx-to-tms-flow
+	# TEST CASE DESCRIPTION 
+	# Send a file of SMDR messages through the TCS and ensure that a
+	# copy of the file is safely recorded in the SMDR_DATA-001 directory.
+	execute-test-case test-recording-smdr-files
 
-# TEST CASE DESCRIPTION 
-# Send a stream of data, shutdown rabbitmq, then restart it.
-execute-test-case test-rabbit-interruption-part1
+	# TEST CASE DESCRIPTION 
+	# Send a stream of data, shutdown the queue without acking last
+	# message, and then restart the queue - ensure no messages are lost.
+	execute-test-case test-queuing-no-ack
 
-# Now restart the RabbitMQ container
-remove-stores-container rabbitmq || exit 1;
-start-stores-container rabbitmq || exit 1;
+	# TEST CASE DESCRIPTION 
+	# Send a stream of data, shutdown rabbitmq, then restart it.
+	execute-test-case test-rabbit-interruption-part1
 
-# TEST CASE DESCRIPTION 
-# After the restart of RabbitMQ, all expected data from part1 should be received.
-execute-test-case test-rabbit-interruption-part2
+	# Allow time for all data to be absorbed into RabbitMQ
+	sleep 10 
+
+	# Now restart the RabbitMQ container
+	remove-stores-container rabbitmq || exit 1;
+	start-stores-container rabbitmq || exit 1;
+
+	# TEST CASE DESCRIPTION 
+	# After the restart of RabbitMQ, all expected data from part1 should be received.
+	execute-test-case test-rabbit-interruption-part2
+
+	# TEST CASE DESCRIPTION 
+	# Ensure that a stream of data makes it round-trip.
+	# input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
+	# input_testdata and output_testdata must be identical
+	execute-test-case test-pbx-to-tms-flow
+
+	# TEST CASE DESCRIPTION 
+	# Send a file of SMDR messages through the TCS and ensure 
+	# that the database has recorded all records in the SMDR table.
+	execute-test-case test-smdr-capture
+
+done
 
 echo 'All Test Cases executed successfully'
 exit 0

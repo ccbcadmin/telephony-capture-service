@@ -25,7 +25,7 @@ const env = envalid.cleanEnv(process.env, {
 	TMS_QUEUE: str()
 });
 
-console.log ('networkIP: ', networkIP);
+console.log('networkIP: ', networkIP);
 
 console.log(`${routineName}: Started`);
 
@@ -34,9 +34,19 @@ process.on('SIGTERM', () => {
 	process.exit(0);
 });
 
-const dataSink = msg => tmsSocket.write(msg);
-
 let tmsQueue = null;
+
+// 'dataSink' returns true if the socket write succeeds, otherwise crash out
+const dataSink = msg => {
+	if (tmsSocket.write(msg)) {
+		return true;
+	}
+	else {
+		console.log('Unable to write to socket');
+		tmsQueue.close();
+		process.exit(1);
+	}
+}
 
 // Suppress socket errors
 Observable.fromEvent(tmsSocket, 'error').subscribe((data) => { });
@@ -44,7 +54,7 @@ Observable.fromEvent(tmsSocket, 'error').subscribe((data) => { });
 let reconnectSubscription: any = null;
 let transmitSubscription: any = null;
 
-const retryConnectTimer$ = Observable.interval(5000).timeInterval().startWith().map(() => moment());
+const retryConnectTimer$ = Observable.interval(2000).timeInterval().startWith().map(() => moment());
 const tmsSocketConnect$ = Observable.fromEvent(tmsSocket, 'connect').map(() => moment());
 const tmsSocketClose$ = Observable.fromEvent(tmsSocket, 'close').startWith(null).map(() => moment());
 
@@ -56,7 +66,7 @@ tmsSocketConnect$.subscribe((data) => {
 	reconnectSubscription = null;
 
 	// (Re-)establish a connect to the queue
-	tmsQueue = new Queue(env.TMS_QUEUE, dataSink);
+	tmsQueue = new Queue(env.TMS_QUEUE, null, dataSink, null);
 });
 
 tmsSocketClose$.subscribe((data) => {
@@ -72,9 +82,13 @@ tmsSocketClose$.subscribe((data) => {
 		tmsQueue = null;
 	}
 
+	let retryCounter;
+
 	if (!reconnectSubscription) {
 		reconnectSubscription = retryConnectTimer$.subscribe(data => {
-			console.log(`${linkName}: Opening link...`);
+			if (retryCounter++ % 10 === 0) {
+				console.log(`${linkName}: Opening link...`);
+			}
 			tmsSocket.connect(env.TMS_PORT, env.TMS_HOST);
 			tmsSocket.setKeepAlive(true);
 		});

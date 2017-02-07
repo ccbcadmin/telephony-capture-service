@@ -71,7 +71,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 			// console.log ('secondPart: ', secondPart.toString());
 			if (!tcsSocket.write(firstPart) || !tcsSocket.write(secondPart)) {
 				console.log('Link to TCS unavailable...aborting.');
-				process.exit(-1);
+				process.exit(1);
 			}
 		}
 	}, env.PBX_SIMULATOR_INPUT_FREQUENCY);

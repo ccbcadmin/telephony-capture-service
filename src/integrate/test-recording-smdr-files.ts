@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/map';
-
 import * as $ from '../share/constants';
 import { ClientSocket } from '../share/client-socket';
 import { Queue } from '../share/queue';
@@ -23,27 +20,21 @@ const { str, num} = envalid;
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
+	TEST_TRANSMIT_INTERVAL: num(),
 	DATABASE: str(),
-	DB_QUEUE: str()
 });
 
 let smdrFiles: string[] = [];
 let smdrFileNo = 0;
-let smdrMsgsSent: number = 0;
 
 const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
-let txMessagesBuffer = Buffer.alloc(0);
-let rxMessagesBuffer = Buffer.alloc(0);
+let txBuffer = Buffer.alloc(0);
+let rxBuffer = Buffer.alloc(0);
+let txMsgCount = 0;
+let rxMsgCount = 0;
 
-const sendSmdrRecords = (smdrFileName: string): void => {
-
-	let data: Buffer = fs.readFileSync(smdrFileName);
-
-	// Accummulate data in one large buffer for later comparison
-	txMessagesBuffer = Buffer.concat([txMessagesBuffer, data], txMessagesBuffer.length + data.length);
-
-	process.stdout.write('Sending ' + smdrFileName + '  ');
+const sendSmdrRecords = (data: Buffer, transmitInterval: number): void => {
 
 	let index: number = 0;
 	let next_index: number = 0;
@@ -51,23 +42,12 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 	const intervalId = setInterval(() => {
 		// Look for SMDR record boundaries until there are no more
 		if ((next_index = data.indexOf($.CRLF, index)) < 0) {
-			process.stdout.write(`\bis complete.  ${smdrMsgsSent} SMDR records sent.\r\n`);
+			process.stdout.write(`\bis complete.  ${txMsgCount} SMDR records sent.\r\n`);
 			clearInterval(intervalId);
 			ee.emit('next');
 		} else {
-			++smdrMsgsSent;
+			++txMsgCount;
 			const nextMsg = data.slice(index, next_index + 2);
-
-			/*
-			if (smdrMsgsSent % 20 === 5)
-				process.stdout.write('\b-');
-			else if (smdrMsgsSent % 20 === 10)
-				process.stdout.write('\b\\');
-			else if (smdrMsgsSent % 20 === 15)
-				process.stdout.write('\b|');
-			else if (smdrMsgsSent % 20 === 0)
-				process.stdout.write('\b/');
-			*/
 
 			index = next_index + 2;
 
@@ -78,12 +58,11 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 
 			if (!tcsSocket.write(firstPart) || !tcsSocket.write(secondPart)) {
 				console.log('Link to TCS unavailable...aborting.');
-				process.exit(-1);
+				process.exit(1);
 			}
 		}
-	}, 2);
+	}, transmitInterval);
 }
-
 
 const compareFiles = () => {
 
@@ -95,70 +74,65 @@ const compareFiles = () => {
 			console.log(JSON.stringify(error, null, 4));
 			process.exit(1);
 		}
+		else if (files.length !== 1) {
+			console.log('Only One SMDR-DATA-001 file expected');
+			process.exit(1);
+		}
 
-		files.forEach(file => {
+		console.log('filename: ', files[0]);
 
-			console.log('filename: ', file);
+		fs.readFile(files[0], (error, data) => {
 
-			fs.readFile(file, (error, data) => {
+			if (error) {
+				console.log(JSON.stringify(error, null, 4));
+				process.exit(1);
+			}
 
+			console.log('Length of data: ', data.length);
 
-				if (error) {
-					console.log(JSON.stringify(error, null, 4));
-					process.exit(1);
-				}
+			// Accummulate all the data into one buffer
+			rxBuffer = Buffer.concat([rxBuffer, data], rxBuffer.length + data.length);
 
-				else {
-					console.log('Length of data: ', data.length);
+			console.log('result: ', txBuffer.length, rxBuffer.length);
 
-					// Accummulate all the data into one buffer
-					rxMessagesBuffer = Buffer.concat([rxMessagesBuffer, data], rxMessagesBuffer.length + data.length);
+			if (Buffer.compare(txBuffer, rxBuffer) === 0) {
+				console.log('Source Files and Target Files are identical');
+				process.exit(0);
+			}
+			else {
+				console.log('Source Files and Target Files differ');
 
-					console.log('result: ', txMessagesBuffer.length, rxMessagesBuffer.length);
-
-					if (Buffer.compare(txMessagesBuffer, rxMessagesBuffer) === 0) {
-						console.log('Source Files and Target Files are identical');
-						process.exit(0);
-					}
-					else {
-						console.log('Source Files and Target Files differ');
-						
-						for (let i=0; i<txMessagesBuffer.length; ++i) {
-							if (rxMessagesBuffer[i] != txMessagesBuffer[i]) {
-								console.log ('differs at ', i);
-								console.log ('txChar: ', txMessagesBuffer[i].toString(16));
-								console.log ('rxChar: ', rxMessagesBuffer[i].toString(16));
-							}
-						}
-
-						var strTx = '';
-						for (let ii = 0; ii < 200; ii++) {
-							strTx += txMessagesBuffer[ii].toString(16) + ' ';
-						};
-						console.log(strTx);
-
-						var strRx = '';
-						for (let ii = 0; ii < 200; ii++) {
-							strRx += rxMessagesBuffer[ii].toString(16) + ' ';
-						};
-						console.log(strRx);
-
-						process.exit(1);
+				// Scan the received file data looking for LF chars
+				for (let i = 0; i < rxBuffer.length; ++i) {
+					if (rxBuffer[i] === 10) {
+						++rxMsgCount;
 					}
 				}
-			});
+
+				if (rxMsgCount === txMsgCount) {
+					console.log('Msg Counts are Identical', txMsgCount, rxMsgCount);
+				} else {
+					console.log('Msg Counts are Not Identical', txMsgCount, rxMsgCount);
+				}
+
+				process.exit(1);
+			}
 		});
 	});
 }
 
 const nextFile = () => {
+
 	if (smdrFileNo === smdrFiles.length) {
 
 		// Wait a bit and then confirm the count in the database
 		setTimeout(compareFiles, 10000);
 	}
 	else {
-		sendSmdrRecords(smdrFiles[smdrFileNo]);
+
+		process.stdout.write('Sending ' + smdrFiles[smdrFileNo] + '  ');
+		txBuffer = fs.readFileSync(smdrFiles[smdrFileNo]);
+		sendSmdrRecords(txBuffer, env.TEST_TRANSMIT_INTERVAL);
 		++smdrFileNo;
 	}
 }
@@ -194,18 +168,20 @@ setTimeout(() => {
 			console.log(JSON.stringify(error, null, 4));
 			process.exit(1);
 		}
+		else if (files.length !== 1) {
+			console.log('Only One SMDR-DATA-001 file expected');
+			process.exit(1);
+		}
 
-		// Deliver the data in chronological order
-		files.sort();
+		let path = files[0].split('\\');
 
-		for (let file of files) {
-			let path = file.split('\\');
-
-			// Only interested in SMDR files
-			if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
-				smdrFiles.push(file);
-			}
+		// Only interested in SMDR files
+		if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
+			smdrFiles.push(files[0]);
+		} else {
+			console.log('Not an SMRD File');
+			process.exit(1);
 		}
 		nextFile();
 	});
-}, 5000);
+}, 2000);

@@ -118,25 +118,25 @@ tcsenv () {
                 export COMPOSE_ARGS=$DEV_COMPOSE_ARGS
                 export TCSENV=dev
                 export TCSENV_LONG_FORM=Development
-                export PS1='TCS '$TCSENV_LONG_FORM'@\t:\w$ '
+                export PS1='TCS '$TCSENV_LONG_FORM' \w $ '
                 ;;
             [qQ][aA])
                 export COMPOSE_ARGS=$QA_COMPOSE_ARGS
                 export TCSENV=qa
                 export TCSENV_LONG_FORM=QA
-                export PS1='TCS '$TCSENV_LONG_FORM'@\t:\w$ '
+                export PS1='TCS '$TCSENV_LONG_FORM' \w $ '
                 ;;
             [pP][rR][oO][dD])
                 export COMPOSE_ARGS=$PROD_COMPOSE_ARGS
                 export TCSENV=prod
                 export TCSENV_LONG_FORM=Production
-                export PS1='TCS '$TCSENV_LONG_FORM'@\t:\w$ '
+                export PS1='TCS '$TCSENV_LONG_FORM' \w $ '
                 ;;
             *) echo $USAGE
                 return 1
                 ;;
         esac
-        echo $TCSENV_LONG_FORM
+        echo TCS Operating Environment: $TCSENV_LONG_FORM
         return 0
     else
         echo $USAGE

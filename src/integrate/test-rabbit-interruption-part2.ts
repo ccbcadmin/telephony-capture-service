@@ -4,7 +4,6 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
 import * as $ from '../share/constants';
-import { ClientSocket } from '../share/client-socket';
 import { ServerSocket } from '../share/server-socket';
 
 const routineName = 'test-rabbit-interruption-part2';
@@ -21,8 +20,7 @@ const envalid = require('envalid');
 const { str, num} = envalid;
 
 // Number of random bytes to send through the channel
-const testSize = 1000000;
-const masterTxBuffer = Buffer.alloc(testSize);
+const testSize = 100000;
 
 process.on('SIGTERM', () => {
 	console.log(`${routineName} terminated`);
@@ -34,32 +32,28 @@ process.on('SIGINT', () => {
 });
 
 const env = envalid.cleanEnv(process.env, {
-	TCS_PORT: num(),
 	TMS_PORT: num()
 });
 
-// Load the buffer with random data
-for (let index = 0; index < testSize; ++index) {
-	masterTxBuffer[index] = index % 256;
-}
+setTimeout(() => {
+	// A limited time to allow for all data to be received
+	console.log('Insufficient Data Received: ', rxBytes);
+	process.exit(1);
+}, 30000);
 
-const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
-
-let masterIndex = 0;
-
-let rxIndex = 0;
+let rxBytes = 0;
 const dataCapture = (data: Buffer) => {
 
-	rxIndex += data.length;
+	rxBytes += data.length;
 
-	if (rxIndex === testSize) {
-		console.log ('All Data Received');
-        process.exit(0);
+	if (rxBytes === testSize) {
+		console.log('All Data Received');
+		process.exit(0);
 	}
-	else if (rxIndex > testSize) {
+	else if (rxBytes > testSize) {
 		// More data received than expected
-		console.log ('Excessive Data Received');
-		process.exit (1);
+		console.log('Excessive Data Received');
+		process.exit(1);
 	}
 };
 

@@ -36,6 +36,7 @@ process.on('SIGINT', () => {
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
+	TEST_TRANSMIT_INTERVAL: num(),
 	TMS_PORT: num(),
 	TMS_QUEUE: str()
 });
@@ -49,11 +50,11 @@ const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
 let masterIndex = 0;
 
-const tmsQueue = new Queue(env.TMS_QUEUE);
+const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
 
 setTimeout(() => {
 
-	// Ensure nothing hanging around from a previous test
+	// Ensure a clean sheet
 	tmsQueue.purge ();
 
 	const setIntervalId = setInterval(() => {
@@ -75,7 +76,7 @@ setTimeout(() => {
 		if (masterIndex === txBytes) {
 			clearInterval(setIntervalId);
 		}
-	}, 2);
+	}, env.TEST_TRANSMIT_INTERVAL);
 }, 2000);
 
 let rxBytes = 0;
