@@ -20,8 +20,6 @@ const ee = new eventEmitter;
 const envalid = require('envalid');
 const { str, num} = envalid;
 
-// Number of random bytes to send through the channel
-
 process.on('SIGTERM', () => {
 	console.log(`${routineName} terminated`);
 	process.exit(0);
@@ -49,7 +47,7 @@ const nextChar = (c) => {
 }
 
 let txIteration = 0;
-let testChar = 'A';
+let testChar = '\x00';
 
 setTimeout(() => {
 
@@ -73,28 +71,51 @@ setTimeout(() => {
 	}, 1000);
 }, 2000);
 
-// Do the test 'n' times to ensure that each time the link reopens
-let linkReopens = 0;
-
 let tmsServer;
 const tmsServerShutdown = () => {
 
-	if (linkReopens++ < 6) {
-		tmsServer = new ServerSocket(routineName, env.TMS_PORT, dataCapture, tmsServerShutdown);
-	}
-	else {
-		// Sufficient iterations - test passed
-		process.exit(0);
-	}
+	// Detected that the server is shutdown - create a new instance of the TMS server
+	tmsServer = new ServerSocket(routineName, env.TMS_PORT, dataCapture, tmsServerShutdown);
 }
+
+const testSize = 100;
+let rxMatrix = Buffer.alloc(testSize);
+rxMatrix.fill(0);
 
 const dataCapture = (data: Buffer) => {
 
-	// we receive something...now shutdown the TMS server
-	tmsServer.close();
+	console.log(data);
+
+	// Examine each data value and take note if received
+	for (let j = 0; j < testSize; ++j) {
+		for (let k = 0; k < data.length; ++k) {
+			if (data[k] === j) {
+				rxMatrix[j] = 1;
+				break;
+			}
+		}
+	}
+
+	// Check to see if all data has been received
+	let allReceived: boolean = true;
+	for (let i = 0; i < testSize; ++i) {
+		if (!rxMatrix[i]) {
+			allReceived = false;
+		}
+	}
+
+	if (allReceived) {
+		process.exit(0);
+	}
+	else {
+		// Else keep going
+		tmsServer.close();
+	}
 };
 
-tmsServer = new ServerSocket(routineName, env.TMS_PORT, dataCapture, tmsServerShutdown);
+
+// Begin the show with the following
+tmsServerShutdown ();
 
 setTimeout(() => {
 	console.log('Test Failed: Max time to complete test');

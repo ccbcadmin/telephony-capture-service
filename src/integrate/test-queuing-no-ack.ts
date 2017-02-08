@@ -38,7 +38,7 @@ const dataSink = msg => {
 
 		return true;
 	} else {
-		// Now simulate the complete shutdown of a process
+		// Now simulate the complete shutdown of the channel to the queue
 		rxQueue.close();
 		rxQueue = null;
 
