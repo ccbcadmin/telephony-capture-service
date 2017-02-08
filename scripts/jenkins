@@ -53,13 +53,21 @@ docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface 
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface 
 
-execute-test-case test-tms-link-reopening
-
-exit 0
-
 # Execute the following several times
 for i in 1
 do
+
+	# TEST CASE DESCRIPTION 
+	# Test the link to the tms-interface to ensure that it recovers and 
+	# that that there is no data loss.
+	execute-test-case test-pbx-link-reopening	
+
+	exit 0
+
+	# TEST CASE DESCRIPTION 
+	# Test the link to the tms-interface to ensure that it recovers and 
+	# ensuring no data loss.
+	execute-test-case test-tms-link-reopening	
 
 	# TEST CASE DESCRIPTION 
 	# Send a file of SMDR messages through the TCS and ensure that a

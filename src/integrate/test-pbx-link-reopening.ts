@@ -36,50 +36,46 @@ const env = envalid.cleanEnv(process.env, {
 	TMS_QUEUE: str()
 });
 
-const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
+let tcsSocket;
 
 const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
 
+const nextChar = c => String.fromCharCode(c.charCodeAt(0) + 1);
 
-
-const nextChar = (c) => {
-	return String.fromCharCode(c.charCodeAt(0) + 1);
-}
+const dataLength = 40;
 
 let txIteration = 0;
 let testChar = '\x00';
 
+const connectionHandler = () => {
+
+	let data = Buffer.alloc(dataLength);
+
+	data.fill(testChar);
+	testChar = nextChar(testChar);
+
+	if (tcsSocket.write(data) === false) {
+		console.log('Link to TCS unavailable ... aborting.');
+		process.exit(1);
+	}
+
+	// After a small timeout, close the circuit
+	console.log ('Destroy the link');
+	setTimeout(() => { tcsSocket.destroy(); }, 200);
+}
+
 setTimeout(() => {
 
-	// Ensure a clean sheet
+	// Start with a clean sheet
 	tmsQueue.purge();
 
 	const setIntervalId = setInterval(() => {
-
-		const dataLength = 40;
-
-		let data = Buffer.alloc(dataLength);
-
-		data.fill(testChar);
-		testChar = nextChar(testChar);
-
-		if (tcsSocket.write(data) === false) {
-			console.log('Link to TCS unavailable ... aborting.');
-			process.exit(1);
-		}
-
+		tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT, connectionHandler);
 	}, 1000);
 }, 2000);
 
-let tmsServer;
-const tmsServerShutdown = () => {
-
-	// Detected that the server is shutdown - create a new instance of the TMS server
-	tmsServer = new ServerSocket(routineName, env.TMS_PORT, dataCapture, tmsServerShutdown);
-}
-
-const testSize = 100;
-let rxMatrix = Buffer.alloc(testSize);
+const testIterations = 20;
+let rxMatrix = Buffer.alloc(testIterations);
 rxMatrix.fill(0);
 
 const dataCapture = (data: Buffer) => {
@@ -87,7 +83,7 @@ const dataCapture = (data: Buffer) => {
 	console.log(data);
 
 	// Examine each data value and take note if received
-	for (let j = 0; j < testSize; ++j) {
+	for (let j = 0; j < testIterations; ++j) {
 		for (let k = 0; k < data.length; ++k) {
 			if (data[k] === j) {
 				rxMatrix[j] = 1;
@@ -98,7 +94,7 @@ const dataCapture = (data: Buffer) => {
 
 	// Check to see if all data has been received
 	let allReceived: boolean = true;
-	for (let i = 0; i < testSize; ++i) {
+	for (let i = 0; i < testIterations; ++i) {
 		if (!rxMatrix[i]) {
 			allReceived = false;
 		}
@@ -106,16 +102,11 @@ const dataCapture = (data: Buffer) => {
 
 	if (allReceived) {
 		process.exit(0);
-	}
-	else {
-		// Else keep going
-		tmsServer.close();
-	}
-};
+	};
+}
 
-
-// Begin the show with the following
-tmsServerShutdown ();
+// Start receiving data from tms-interface
+new ServerSocket(routineName, env.TMS_PORT, dataCapture, null);
 
 setTimeout(() => {
 	console.log('Test Failed: Max time to complete test');

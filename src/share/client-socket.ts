@@ -1,3 +1,5 @@
+const _ = require('lodash');
+
 export class ClientSocket {
 
 	private net = require('net');
@@ -7,34 +9,48 @@ export class ClientSocket {
 	private socket;
 	private active: boolean;
 	private retryCount = 0;
+	private connectHandler;
 
-	constructor(linkName: string, host: string, port: number) {
+	constructor(linkName: string, host: string, port: number, connectHandler = null) {
 		this.linkName = linkName;
 		this.host = host;
 		this.port = port;
 		this.active = false;
+		this.connectHandler = connectHandler;
 
 		this.openSocket();
 	}
 
 	private openSocket = () => {
-		this.socket = this.net.connect(this.port, this.host);
-		this.socket.setKeepAlive(true);
-		this.socket.on('connect', this.onConnect.bind({}, this.socket));
-		this.socket.on('close', this.onClose.bind({}, this.socket));
+		this.socket = this.net.createConnection({ port: this.port }, this.onConnect);
+		this.socket.on('end', () => { console.log('disconnected from server'); });
+		this.socket.on('error', this.onError);
 	}
+
+	/*
+		private openSocket = () => {
+			this.socket = this.net.connect(this.port, this.host);
+			this.socket.setKeepAlive(true);
+			this.socket.on('connect', this.onConnect.bind({}, this.socket));
+			this.socket.on('close', this.onClose.bind({}, this.socket));
+		}
+	*/
 
 	private onConnect = socket => {
 		console.log(`${this.linkName}: Connected`);
 		this.retryCount = 0;
 		this.active = true;
-		this.socket.on('error', this.onError.bind({}, this.socket));
+		// this.socket.on('error', this.onError.bind({}, this.socket));
+
+		this.connectHandler ? this.connectHandler() : _.noop;
 	}
 
 	private onError = socket => {
 
+		console.log('Error detected');
+
 		// Stop listening to further 'error' events for the time being
-		this.socket.removeListener('error');
+		this.socket.removeListener('error', () => { });
 
 		console.log(`${this.linkName} link unavailable`);
 		process.exit(1);
@@ -59,10 +75,14 @@ export class ClientSocket {
 	public write = (msg: Buffer): boolean => {
 
 		if (this.active) {
-			if (this.socket.write(msg),'binary') {
+			if (this.socket.write(msg), 'binary') {
 				return true;
 			}
 		}
 		return false;
+	}
+
+	public destroy = (): void => {
+		this.active ? this.socket.destroy() : _.noop;
 	}
 }
