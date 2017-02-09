@@ -44,7 +44,6 @@ const nextChar = c => String.fromCharCode(c.charCodeAt(0) + 1);
 
 const dataLength = 40;
 
-let txIteration = 0;
 let testChar = '\x00';
 
 const connectionHandler = () => {
@@ -72,7 +71,8 @@ setTimeout(() => {
 	const setIntervalId = setInterval(() => {
 		tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT, connectionHandler);
 	}, 1000);
-}, 2000);
+
+}, 10000);
 
 const testIterations = 20;
 let rxMatrix = Buffer.alloc(testIterations);

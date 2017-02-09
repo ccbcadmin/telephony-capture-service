@@ -40,8 +40,6 @@ const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
 
 const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
 
-
-
 const nextChar = (c) => {
 	return String.fromCharCode(c.charCodeAt(0) + 1);
 }
@@ -67,9 +65,9 @@ setTimeout(() => {
 			console.log('Link to TCS unavailable ... aborting.');
 			process.exit(1);
 		}
-
 	}, 1000);
-}, 2000);
+	
+}, 10000);
 
 let tmsServer;
 const tmsServerShutdown = () => {

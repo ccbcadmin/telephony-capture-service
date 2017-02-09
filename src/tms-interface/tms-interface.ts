@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import * as $ from '../share/constants';
-import { ClientSocket } from '../share/client-socket';
 import { Queue } from '../share/queue';
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Observable';
@@ -34,7 +33,7 @@ let tmsQueue = null;
 
 // Any data received from the queue, immediately send to the TMS
 const dataSink = msg => tmsSocket.write(msg);
-	
+
 let linkRetrySubscription = null;
 let linkConnectSubscription = null;
 let linkCloseSubscription = null;
@@ -74,9 +73,7 @@ const linkClosed = () => {
 	linkCloseSubscription = null;
 
 	// Retry the link
-	if (!linkRetrySubscription) {
-		linkRetrySubscription = linkRetryTimer$.subscribe(linkRetry);
-	}
+	linkRetrySubscription = linkRetryTimer$.subscribe(linkRetry);
 
 	// Ensure queue reception is stopped
 	tmsQueue.close();
