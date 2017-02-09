@@ -36,7 +36,7 @@ export class Queue {
 			},
 			err => {
 				console.log(`${this.queueName} Retry Error: ${JSON.stringify(err, null, 4)}`);
-		});
+			});
 	}
 
 	private closeEvent = () => {
@@ -63,10 +63,8 @@ export class Queue {
 
 		this.amqp.connect(`amqp://localhost:5672`, (err, queueConnection) => {
 
-			if (err) {
-				console.log(`${this.queueName} Connection Error: ${JSON.stringify(err, null, 4)}`);
-			}
-			else {
+			// Errors can safely be ignored
+			if (!err) {
 
 				// Stop retrying
 				this.retryConnectSubscription.unsubscribe();
@@ -103,9 +101,9 @@ export class Queue {
 							if (this.consumer(msg.content)) {
 								this.channel.ack(msg);
 
-							// If the client is not able to handle the message at this time,
-							// then no Ack is returned to the queuing service, meaning that it 
-							// will retry later.
+								// If the client is not able to handle the message at this time,
+								// then no Ack is returned to the queuing service, meaning that it 
+								// will retry later.
 							}
 						}, { noAck: false });
 					}
