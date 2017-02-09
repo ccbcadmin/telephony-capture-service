@@ -32,43 +32,70 @@ process.on('SIGTERM', () => {
 
 let tmsQueue = null;
 
-// 'dataSink' returns true if the socket write succeeds, otherwise crash out
-const dataSink = msg => {
-	if (tmsSocket.write(msg)) {
-		return true;
-	}
-	else {
-		tmsQueue.close();
-		process.exit(1);
-	}
-}
+// Any data received from the queue, immediately send to the TMS
+const dataSink = msg => tmsSocket.write(msg);
+	
+let linkRetrySubscription = null;
+let linkConnectSubscription = null;
+let linkCloseSubscription = null;
 
 // Suppress socket errors
-Observable.fromEvent(tmsSocket, 'error').subscribe((data) => { });
+Observable.fromEvent(tmsSocket, 'error').subscribe((error) => { });
 
-const tmsSocketConnect$ = Observable.fromEvent(tmsSocket, 'connect').map(() => moment());
-const tmsSocketClose$ = Observable.fromEvent(tmsSocket, 'close').startWith(null).map(() => moment());
+const linkRetryTimer$ = Observable.interval(5000).timeInterval().startWith().map(() => moment());
+const linkConnect$ = Observable.fromEvent(tmsSocket, 'connect').map(() => moment());
+const linkClose$ = Observable.fromEvent(tmsSocket, 'close').map(() => moment());
 
-tmsSocketConnect$.subscribe((data) => {
-	console.log(`${linkName}: Connected`);
+const linkConnect = () => {
+
+	console.log(`${linkName}: Link Connected`);
+
+	// Stop listening to the close link connect event
+	linkConnectSubscription ? linkConnectSubscription.unsubscribe() : _.noop;
+	linkConnectSubscription = null;
+
+	// Stop retrying
+	linkRetrySubscription ? linkRetrySubscription.unsubscribe() : _.noop;
+	linkRetrySubscription = null;
+
+	// Listen for the socket close
+	linkCloseSubscription = linkClose$.subscribe(linkClosed);
 
 	// (Re-)establish a connection to the queue
 	tmsQueue = new Queue(env.TMS_QUEUE, null, dataSink, null);
-});
+}
 
-tmsSocketClose$.subscribe((data) => {
+const linkClosed = () => {
 
-	console.log(`${linkName}: Link Lost`);
+	console.log(`${linkName}: Link Closed`);
+
+	// Stop listening to the link close event
+	linkCloseSubscription ? linkCloseSubscription.unsubscribe() : _.noop;
+	linkCloseSubscription = null;
+
+	// Retry the link
+	if (!linkRetrySubscription) {
+		linkRetrySubscription = linkRetryTimer$.subscribe(linkRetry);
+	}
 
 	// Ensure queue reception is stopped
-	if (tmsQueue) {
-		tmsQueue.close();
-		tmsQueue = null;
-	}
+	tmsQueue.close();
+}
+
+const linkRetry = () => {
+
+	console.log(`${linkName}: Link Retry`);
 
 	tmsSocket.connect(env.TMS_PORT, env.TMS_HOST);
 	tmsSocket.setKeepAlive(true);
-});
+
+	// Start listening for the connect event
+	if (!linkConnectSubscription) {
+		linkConnectSubscription = linkConnect$.subscribe(linkConnect);
+	}
+}
+
+// Start the show
+linkRetrySubscription = linkRetryTimer$.subscribe(linkRetry);
 
 console.log(`${routineName}: Started`);
-

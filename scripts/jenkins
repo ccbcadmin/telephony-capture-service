@@ -62,12 +62,12 @@ do
 	# that that there is no data loss.
 	execute-test-case test-pbx-link-reopening	
 
-	exit 0
-
 	# TEST CASE DESCRIPTION 
 	# Test the link to the tms-interface to ensure that it recovers and 
 	# ensuring no data loss.
 	execute-test-case test-tms-link-reopening	
+
+exit 0
 
 	# TEST CASE DESCRIPTION 
 	# Send a file of SMDR messages through the TCS and ensure that a
