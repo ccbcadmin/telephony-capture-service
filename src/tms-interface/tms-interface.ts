@@ -13,7 +13,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const net = require('net');
 let tmsSocket = new net.Socket();
-let linkName = 'TMS_IF<=>TMS';
+let linkName = 'tms-interface=>tms';
 
 // Ensure the presence of required environment variables
 const envalid = require('envalid');
@@ -24,10 +24,6 @@ const env = envalid.cleanEnv(process.env, {
 	TMS_HOST: str(),
 	TMS_QUEUE: str()
 });
-
-console.log('networkIP: ', networkIP);
-
-console.log(`${routineName}: Started`);
 
 process.on('SIGTERM', () => {
 	console.log(`${routineName}: Terminated`);
@@ -42,7 +38,6 @@ const dataSink = msg => {
 		return true;
 	}
 	else {
-		console.log('Unable to write to socket');
 		tmsQueue.close();
 		process.exit(1);
 	}
@@ -51,30 +46,19 @@ const dataSink = msg => {
 // Suppress socket errors
 Observable.fromEvent(tmsSocket, 'error').subscribe((data) => { });
 
-let reconnectSubscription: any = null;
-let transmitSubscription: any = null;
-
-const retryConnectTimer$ = Observable.interval(2000).timeInterval().startWith().map(() => moment());
 const tmsSocketConnect$ = Observable.fromEvent(tmsSocket, 'connect').map(() => moment());
 const tmsSocketClose$ = Observable.fromEvent(tmsSocket, 'close').startWith(null).map(() => moment());
 
 tmsSocketConnect$.subscribe((data) => {
 	console.log(`${linkName}: Connected`);
 
-	// Stop trying to reconnnect
-	reconnectSubscription.unsubscribe();
-	reconnectSubscription = null;
-
-	// (Re-)establish a connect to the queue
+	// (Re-)establish a connection to the queue
 	tmsQueue = new Queue(env.TMS_QUEUE, null, dataSink, null);
 });
 
 tmsSocketClose$.subscribe((data) => {
 
-	if (transmitSubscription) {
-		transmitSubscription.unsubscribe();
-		transmitSubscription = null;
-	}
+	console.log(`${linkName}: Link Lost`);
 
 	// Ensure queue reception is stopped
 	if (tmsQueue) {
@@ -82,15 +66,9 @@ tmsSocketClose$.subscribe((data) => {
 		tmsQueue = null;
 	}
 
-	let retryCounter;
-
-	if (!reconnectSubscription) {
-		reconnectSubscription = retryConnectTimer$.subscribe(data => {
-			if (retryCounter++ % 10 === 0) {
-				console.log(`${linkName}: Opening link...`);
-			}
-			tmsSocket.connect(env.TMS_PORT, env.TMS_HOST);
-			tmsSocket.setKeepAlive(true);
-		});
-	}
+	tmsSocket.connect(env.TMS_PORT, env.TMS_HOST);
+	tmsSocket.setKeepAlive(true);
 });
+
+console.log(`${routineName}: Started`);
+

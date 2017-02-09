@@ -26,18 +26,34 @@ export class Queue {
 		this.disconnectHandler = disconnectHandler;
 		this.connection = null;
 
+		this.retryConnection();
+	}
+
+	private retryConnection = () => {
 		this.retryConnectSubscription = this.retryConnectTimer$.subscribe(
 			data => {
 				this.connect();
 			},
-			error => {
-				console.log(`${this.queueName} error: ${JSON.stringify(error)}`);
+			err => {
+				console.log(`${this.queueName} Retry Error: ${JSON.stringify(err, null, 4)}`);
 				process.exit(1);
 			},
 			() => {
-				console.log(`${this.queueName} not available...aborting.`);
+				console.log(`${this.queueName} Not Available...Aborting.`);
 				process.exit(1);
 			});
+	}
+
+	private closeEvent = () => {
+
+		console.log(`${this.queueName} Channel Closed - 2`);
+		this.retryConnection();
+	}
+
+	private errorEvent = (err) => {
+
+		// Just take note of the error - no action required
+		console.error("Queue error", JSON.stringify(err, null, 4));
 	}
 
 	private connect = () => {
@@ -45,29 +61,21 @@ export class Queue {
 		this.amqp.connect(`amqp://localhost:5672`, (err, queueConnection) => {
 
 			if (err) {
-				console.log('Queue error: ', JSON.stringify(err, null, 4));
+				console.log(`${this.queueName} Error: ${JSON.stringify(err, null, 4)}`);
 
 				// Inform the queue client
 				if (this.disconnectHandler) {
-					console.log ('Here 1');
 					this.disconnectHandler();
 				} else {
-					console.log ('Here 2');
 					throw new Error(err);
 				}
 			}
 
-			// Stop the retrys - we are connected
+			// Stop retrying - we are connected
 			this.retryConnectSubscription.unsubscribe();
 
-			queueConnection.addListener('error', (err) => {
-				if (err.message !== "Connection closing") {
-					console.error("[AMQP] connection error", err.message);
-					process.exit(1);
-				}
-			});
-
-			queueConnection.addListener('close', () => { console.log ('QUEUE CLOSE EVENT') });
+			queueConnection.addListener('error', this.errorEvent);
+			queueConnection.addListener('close', this.closeEvent);
 
 			this.connection = queueConnection;
 
@@ -78,7 +86,7 @@ export class Queue {
 					process.exit(1);
 				}
 
-				console.log(`Channel to ${this.queueName} Created`);
+				console.log(`${this.queueName} Channel Created`);
 
 				if (this.maxLength) {
 					channel.assertQueue(this.queueName, { durable: true, maxLength: this.maxLength });
@@ -89,7 +97,7 @@ export class Queue {
 				this.channel = channel;
 
 				if (this.consumer) {
-
+					// The client wants to listen to incoming data
 					channel.consume(this.queueName, (msg) => {
 
 						if (this.consumer(msg.content)) {
@@ -115,10 +123,15 @@ export class Queue {
 	}
 
 	public close = () => {
-		console.log('Close queue connection');
-		this.connection.close();
+
+		// The client not longer needs access to this queue
+
 		// Stop listening to queue events
-		// this.connection ? this.connection.removeListener('close', () => { }) : _.noop;
-		// this.connection ? this.connection.removeListener('error', () => { }) : _.noop;
+		this.connection ? this.connection.removeListener('close', this.closeEvent) : _.noop;
+		this.connection ? this.connection.removeListener('error', this.errorEvent) : _.noop;
+
+		console.log(`${this.queueName} Channel Closed`);
+		this.connection.close();
+
 	}
 }
