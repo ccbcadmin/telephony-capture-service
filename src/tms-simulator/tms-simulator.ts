@@ -24,4 +24,3 @@ const dataDump = (data) => {};
 
 // Start listening for incoming messages
 new ServerSocket(routineName, env.TMS_PORT, dataDump).startListening();
-
