@@ -382,17 +382,14 @@ confirm-barman () {
 }
 
 pull-tcs-image () {
-    echo -n $PROGNAME': Ensure tcs-image is current ... '
+    echo $PROGNAME': Ensure tcs-image is up-to-date'
     docker pull ccbcadmin/tcs-image$TCS_VERSION || return 1;
-    echo done
     return 0;
 }
 
 pull-tcs-jenkins () {
-    echo -n $PROGNAME': Ensure tcs-jenkins is current ... '
-    docker pull ccbcadmin/tcs-jenkins$TCS_VERSION 2>&1 >/dev/null || return 1;
-
-    echo done
+    echo $PROGNAME': Ensure tcs-jenkins is up-to-date'
+    docker pull ccbcadmin/tcs-jenkins$TCS_VERSION || return 1;
     return 0
 }
 
