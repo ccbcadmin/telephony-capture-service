@@ -124,13 +124,13 @@ tcsenv () {
                 export COMPOSE_ARGS=$QA_COMPOSE_ARGS
                 export TCSENV=qa
                 export TCSENV_LONG_FORM=QA
-                export PS1='TCS '$TCSENV_LONG_FORM' \w $ '
+                export PS1='TCS '$TCSENV_LONG_FORM'$ '
                 ;;
             [pP][rR][oO][dD])
                 export COMPOSE_ARGS=$PROD_COMPOSE_ARGS
                 export TCSENV=prod
                 export TCSENV_LONG_FORM=Production
-                export PS1='TCS '$TCSENV_LONG_FORM' \w $ '
+                export PS1='TCS '$TCSENV_LONG_FORM'$ '
                 ;;
             *) echo $USAGE
                 return 1

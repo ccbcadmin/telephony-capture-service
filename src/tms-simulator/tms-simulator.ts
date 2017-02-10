@@ -19,27 +19,9 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
-let recordCount = 0;
-let leftOver = '';
-const dataDump = (data) => {
-    const unprocessedData = leftOver.slice(0) + data.slice(0);
-    const crLfIndexOf = unprocessedData.indexOf($.CRLF);
-    const msg = unprocessedData.match(/\x00\x02\x00\x00\x00\x00(.+)\x0d\x0a/);
-    if (msg) {
-        if (++recordCount % 20 === 5)
-            process.stdout.write('\b-');
-        else if (recordCount % 20 === 10)
-            process.stdout.write('\b\\');
-        else if (recordCount % 20 === 15)
-            process.stdout.write('\b|');
-        else if (recordCount % 20 === 0)
-            process.stdout.write('\b/');
-        leftOver = unprocessedData.slice(crLfIndexOf + 2);
-    }
-    else {
-        leftOver = unprocessedData.slice(0);
-    }
-};
+// Just discard the data
+const dataDump = (data) => {};
 
 // Start listening for incoming messages
-new ServerSocket(routineName, env.TMS_PORT, dataDump);
+new ServerSocket(routineName, env.TMS_PORT, dataDump).startListening();
+

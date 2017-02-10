@@ -6,25 +6,20 @@ export class ServerSocket {
 	private port: number;
 	private server: any;
 	private dataSink: any; // Place to direct incoming data
-	private linkClose;
+	private linkCloseHandler;
 	private connection = null;
 
-	constructor(serverName, port, dataSink, linkClose = null) {
+	constructor(serverName, port, dataSink, linkCloseHandler = null) {
 		this.serverName = serverName;
 		this.port = port;
 		this.dataSink = dataSink;
-		this.linkClose = linkClose;
+		this.linkCloseHandler = linkCloseHandler;
 
 		this.server = this.net.createServer();
-		this.server.on('connection', this.handleConnection);
 
-		if (linkClose) {
-			this.server.on('close', this.linkClose);
+		if (linkCloseHandler) {
+			this.server.addListener('close', this.linkCloseHandler);
 		}
-
-		this.server.listen(this.port, () => {
-			console.log(`${this.serverName}: Listening on: ${JSON.stringify(this.server.address())}`);
-		});
 	}
 
 	private handleConnection = conn => {
@@ -40,15 +35,34 @@ export class ServerSocket {
 			console.log(`${this.serverName}: Connection ${remoteAddress} error: ${err.message}`);
 		}
 
-		conn.on('data', this.dataSink);
+		conn.addListener('data', this.dataSink);
 		conn.once('close', onClose);
-		conn.on('error', onError);
+		conn.addListener('error', onError);
 		this.connection = conn;
+	}
+
+	public startListening = () => {
+
+		console.log(`${this.serverName}: Start Listening`);
+		this.server.addListener('connection', this.handleConnection);
+
+		this.server.listen(this.port, () => {
+			console.log(`${this.serverName}: Listening on: ${JSON.stringify(this.server.address())}`);
+		});
+	}
+
+	public stopListening = () => {
+		console.log(`${this.serverName}: Stop Listening`);
+		this.server.removeListener('connection', this.handleConnection);
+		this.server.close();
 	}
 
 	// Provide a gracious shutdown of the circuit
 	public close = () => {
-		this.connection.end();
-		this.server.close();
+		if (this.connection) {
+			this.connection.end();
+			this.connection = null;
+		}
+		this.stopListening();
 	}
 }

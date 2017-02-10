@@ -5,7 +5,6 @@ import 'rxjs/add/operator/map';
 
 import * as $ from '../share/constants';
 import { ClientSocket } from '../share/client-socket';
-import { ServerSocket } from '../share/server-socket';
 import { Queue } from '../share/queue';
 
 const routineName = 'test-rabbit-interruption-part1';

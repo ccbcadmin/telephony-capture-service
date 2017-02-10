@@ -66,21 +66,16 @@ setTimeout(() => {
 			process.exit(1);
 		}
 	}, 1000);
-	
+
 }, 10000);
 
-let tmsServer;
-const tmsServerShutdown = () => {
-
-	// Detected that the server is shutdown - create a new instance of the TMS server
-	tmsServer = new ServerSocket(routineName, env.TMS_PORT, dataCapture, tmsServerShutdown);
-}
+const startListening = () => { tmsServer.startListening(); }
 
 const testSize = 100;
 let rxMatrix = Buffer.alloc(testSize);
 rxMatrix.fill(0);
 
-const dataCapture = (data: Buffer) => {
+const dataSink = (data: Buffer) => {
 
 	console.log(data);
 
@@ -111,9 +106,12 @@ const dataCapture = (data: Buffer) => {
 	}
 };
 
+// dataSink examines incoming data and closes the link.  
+// When the link is closed, startListening () is called again.
+const tmsServer = new ServerSocket(routineName, env.TMS_PORT, dataSink, startListening);
 
 // Begin the show with the following
-tmsServerShutdown ();
+startListening();
 
 setTimeout(() => {
 	console.log('Test Failed: Max time to complete test');

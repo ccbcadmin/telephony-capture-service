@@ -58,4 +58,4 @@ const dataCapture = (data: Buffer) => {
 };
 
 // Start listening for messages directed to the TMS
-new ServerSocket(routineName, env.TMS_PORT, dataCapture);
+new ServerSocket(routineName, env.TMS_PORT, dataCapture).startListening();

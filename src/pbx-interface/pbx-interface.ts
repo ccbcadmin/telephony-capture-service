@@ -23,7 +23,6 @@ const env = envalid.cleanEnv(process.env, {
 	TMS_QUEUE: str()
 });
 
-let pbxSocket;
 
 process.on('SIGTERM', () => {
 
@@ -83,21 +82,33 @@ const dataSink = (data: Buffer) => {
 }
 
 const pbxLinkClosed = () => {
-	console.log('PBX Link Closed');
-	process.exit(0);
+	console.log('pbx=>pbx-interface Link Closed');
 }
 
-const queueDisconnectHandler = () => {
+const tmsQueueDisconnectHandler = () => {
+
+	console.log(`${env.TMS_QUEUE} Channel Down`);
+}
+
+const dbQueueConnectHandler = () => {
+
+	// Start listening for pbx traffic
+	pbxSocket.startListening();
+	console.log(`${env.DB_QUEUE} Channel Up`);
+}
+
+const dbQueueDisconnectHandler = () => {
 
 	// If RabbitMQ connection is lost, then stop pbx reception immediately
+	console.log(`${env.DB_QUEUE} Down`);
 	pbxSocket.close();
 }
 
-// Setup the queue to the TMS if needed
-tmsQueue = env.TMS_ACTIVE ? new Queue(env.TMS_QUEUE, null, null, queueDisconnectHandler) : null;
+// Setup the queue to the TMS (if needed)
+tmsQueue = env.TMS_ACTIVE ? new Queue(env.TMS_QUEUE, null, null, tmsQueueDisconnectHandler) : null;
 
 // Always need the database queue
-databaseQueue = new Queue(env.DB_QUEUE, null, null, queueDisconnectHandler);
+databaseQueue = new Queue(env.DB_QUEUE, null, null, dbQueueDisconnectHandler, dbQueueConnectHandler);
 
-// Start listening for incoming messages
-pbxSocket = new ServerSocket(routineName, env.TCS_PORT, dataSink, pbxLinkClosed);
+// And finally the server to listen for SMDR messages
+const pbxSocket = new ServerSocket('pbx=>pbx-interface', env.TCS_PORT, dataSink, pbxLinkClosed);

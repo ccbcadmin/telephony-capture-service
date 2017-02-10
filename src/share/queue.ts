@@ -16,14 +16,20 @@ export class Queue {
 	private maxLength;
 	private retryConnectTimer$ = Observable.interval(5000).startWith();
 	private retryConnectSubscription;
-	private disconnectHandler;
 
-	constructor(queueName: string, maxLength: number, consumer, disconnectHandler) {
+	// Use disconnectHandler to inform the client that the channel to the queuing server is unavailable
+	private disconnectHandler = null;
+
+	// Use connectHandler to inform the client that the channel to the queuing server is available
+	private connectHandler = null;
+
+	constructor(queueName: string, maxLength: number, consumer, disconnectHandler, connectHandler = null) {
 
 		this.queueName = queueName;
 		this.consumer = consumer;
 		this.maxLength = maxLength;
 		this.disconnectHandler = disconnectHandler;
+		this.connectHandler = connectHandler;
 		this.connection = null;
 
 		this.retryConnection();
@@ -55,7 +61,7 @@ export class Queue {
 
 	private errorEvent = (err) => {
 
-		// Just take note of the error - no further action taken
+		// Take note of the error - no further action taken
 		console.log(`${this.queueName} Error Event: ${JSON.stringify(err, null, 4)}`);
 	}
 
@@ -93,6 +99,9 @@ export class Queue {
 					}
 					this.channel = channel;
 
+					// Inform the client that a channel exists
+					this.connectHandler ? this.connectHandler() : _.noop;
+
 					if (this.consumer) {
 
 						// The client wants to listen to incoming data
@@ -114,17 +123,18 @@ export class Queue {
 
 	public sendToQueue = (msg: Buffer): boolean => {
 
-		if (!this.channel.sendToQueue(this.queueName, msg, { persistent: true })) {
+		if (this.channel && this.channel.sendToQueue(this.queueName, msg, { persistent: true })) {
+			return true;
+		}
+		else {
+			// No channel to send the data to
 			console.log(`${this.queueName} Unable to Send to Queue`);
 			return false;
 		}
-		else {
-			return true;
-		}
 	}
 
-	// The following routine is only required for testing purposes.  It is
-	// not ever called in the Production environment.
+	// The following routine facilitats testing.  It is
+	// not ever employed in the Production environment.
 	public purge = () => {
 		console.log(`Queue ${this.queueName} Purged`);
 		this.channel.purgeQueue();
@@ -135,10 +145,15 @@ export class Queue {
 		// The client no longer needs/wants access to this queue
 
 		// Stop listening to queue events
+		if (this.channel) {
+			this.channel.close();
+			this.channel = null;
+		}
 		this.connection ? this.connection.removeListener('close', this.closeEvent) : _.noop;
 		this.connection ? this.connection.removeListener('error', this.errorEvent) : _.noop;
 
 		console.log(`${this.queueName} Channel Closed`);
 		this.connection.close();
+		this.connection = null;
 	}
 }

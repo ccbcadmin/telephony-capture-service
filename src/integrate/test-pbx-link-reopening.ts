@@ -72,7 +72,7 @@ setTimeout(() => {
 		tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT, connectionHandler);
 	}, 1000);
 
-}, 10000);
+}, 20000);
 
 const testIterations = 20;
 let rxMatrix = Buffer.alloc(testIterations);
@@ -106,7 +106,7 @@ const dataCapture = (data: Buffer) => {
 }
 
 // Start receiving data from tms-interface
-new ServerSocket(routineName, env.TMS_PORT, dataCapture, null);
+new ServerSocket(routineName, env.TMS_PORT, dataCapture, null).startListening();
 
 setTimeout(() => {
 	console.log('Test Failed: Max time to complete test');
