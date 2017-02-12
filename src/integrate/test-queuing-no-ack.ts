@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
-import * as $ from '../share/constants';
-import { Queue } from '../share/queue';
-import 'rxjs/Rx';
-import { Observable } from 'rxjs/Observable';
+import * as $ from "../share/constants";
+import { Queue } from "../share/queue";
+import "rxjs/Rx";
+import { Observable } from "rxjs/Observable";
 
-const routineName = 'test-queuing-no-ack';
+const routineName = "test-queuing-no-ack";
 
-const _ = require('lodash');
-const moment = require('moment');
+const _ = require("lodash");
+const moment = require("moment");
 
 console.log(`${routineName}: Started`);
 
-process.on('SIGTERM', () => {
+process.on("SIGTERM", () => {
 	console.log(`${routineName}: Terminated`);
 	process.exit(0);
 });
@@ -21,7 +21,7 @@ process.on('SIGTERM', () => {
 let failModule = 12;
 let receiveCount = 0;
 
-const testMsgCount = 200;
+const testMsgCount = 60;
 
 // Keep track of which messages are received (dups are possible)
 let rxMatrix = new Array(testMsgCount);
@@ -29,6 +29,8 @@ rxMatrix.fill(false);
 
 // 'dataSink' returns a boolean indicating success or not
 const dataSink = msg => {
+
+	console.log ("Received Msg: ", msg);
 
 	++receiveCount;
 	if (receiveCount % failModule !== 0) {
@@ -44,21 +46,21 @@ const dataSink = msg => {
 
 		// ... which is later restarted
 		setTimeout(() => {
-			rxQueue = new Queue('TEST_QUEUE', null, dataSink, null);
+			rxQueue = new Queue("TEST_QUEUE", null, dataSink, null);
 		}, 2000);
 
 		return false;
 	}
-}
+};
 
 let rxQueue;
-let txQueue = new Queue('TEST_QUEUE', null, null, null);
+let txQueue = new Queue("TEST_QUEUE", null, null, null);
 
 // Create an artificial msg of this size
 const msgLength = 40;
 
 // Send to and receive from the same queue
-rxQueue = new Queue('TEST_QUEUE', null, dataSink, null);
+rxQueue = new Queue("TEST_QUEUE", null, dataSink, null);
 
 // Wait to connect to RabbitMQ and then send some data
 setTimeout(() => {
@@ -73,17 +75,17 @@ setTimeout(() => {
 		}
 		txQueue.sendToQueue(sendBuffer);
 	}
-}, 2000);
+}, 1000);
 
-// Wait 60 seconds and then check 12 times if all done (every 5 seconds)
+// Wait 60 seconds and then check several times if all done (every 5 seconds)
 setTimeout(() => {
 
 	let recheckCounter = 0;
 
 	setInterval(() => {
 
-		console.log ('Check If All Messages Received');
-		
+		console.log ("Check If All Messages Received");
+
 		let allReceived = true;
 
 		// Check that all messages have been received
@@ -94,7 +96,7 @@ setTimeout(() => {
 			}
 		}
 		if (allReceived === true) {
-			console.log('All Messages Received');
+			console.log("All Messages Received");
 			process.exit(0);
 		}
 		if (12 < ++recheckCounter) {

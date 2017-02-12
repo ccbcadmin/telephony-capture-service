@@ -11,6 +11,7 @@ services:
 
   integrate:
     image: ccbcadmin/tcs-image${TCS_VERSION}
+    network_mode: "host"
     env_file: 
       - .env
       - ./env_DEV/.env
@@ -37,7 +38,7 @@ services:
       - /etc/localtime:/etc/localtime
       - /home/smdr-data/dev/smdr-data-001:/smdr-data-001
       - ./lib:/app/lib
-
+    
   pbx-simulator:
     container_name: ${TCSENV}-pbx-simulator
     env_file: 

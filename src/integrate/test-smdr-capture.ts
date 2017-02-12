@@ -1,24 +1,24 @@
 #!/usr/bin/env node
 
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/map';
+import { Observable } from "rxjs/Observable";
+import "rxjs/add/operator/map";
 
-import * as $ from '../share/constants';
-import { ClientSocket } from '../share/client-socket';
-import { Queue } from '../share/queue';
+import * as $ from "../share/constants";
+import { ClientSocket } from "../share/client-socket";
+import { Queue } from "../share/queue";
 
-const routineName = 'pbx-simulator';
-const pgp = require('pg-promise')();
+const routineName = "pbx-simulator";
+const pgp = require("pg-promise")();
 
-const _ = require('lodash');
-const net = require('net');
-const fs = require('fs');
-const dir = require('node-dir');
-const eventEmitter = require('events').EventEmitter;
+const _ = require("lodash");
+const net = require("net");
+const fs = require("fs");
+const dir = require("node-dir");
+const eventEmitter = require("events").EventEmitter;
 const ee = new eventEmitter;
 
 // Ensure the presence of required environment variables
-const envalid = require('envalid');
+const envalid = require("envalid");
 const { str, num} = envalid;
 
 const env = envalid.cleanEnv(process.env, {
@@ -32,13 +32,13 @@ let smdrFiles: string[] = [];
 let smdrFileNo = 0;
 let smdrMsgsSent: number = 0;
 
-const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
+const tcsSocket = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT);
 
 const sendSmdrRecords = (smdrFileName: string): void => {
 
 	let data: Buffer = fs.readFileSync(smdrFileName);
 
-	process.stdout.write('Sending ' + smdrFileName + '  ');
+	process.stdout.write("Sending " + smdrFileName + "  ");
 
 	let index: number = 0;
 	let next_index: number = 0;
@@ -48,7 +48,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 		if ((next_index = data.indexOf($.CRLF, index)) < 0) {
 			process.stdout.write(`\bis complete.  ${smdrMsgsSent} SMDR records sent.\r\n`);
 			clearInterval(intervalId);
-			ee.emit('next');
+			ee.emit("next");
 		} else {
 			++smdrMsgsSent;
 			const nextMsg = data.slice(index, next_index + 2);
@@ -72,25 +72,25 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 			const secondPart = nextMsg.slice(partition);
 
 			if (!tcsSocket.write(firstPart) || !tcsSocket.write(secondPart)) {
-				console.log('Link to TCS unavailable...aborting.');
+				console.log("Link to TCS unavailable...aborting.");
 				process.exit(-1);
 			}
 		}
 	}, env.TEST_TRANSMIT_INTERVAL);
-}
+};
 
 const connection = {
-	host: 'localhost',
+	host: "localhost",
 	port: 5432,
 	database: env.DATABASE,
-	user: 'postgres'
+	user: "postgres"
 };
 
 const db = pgp(connection);
 
 const checkRecordCount = () => {
 
-	db.one('select count(*) from smdr;')
+	db.one("select count(*) from smdr;")
 		.then(response => {
 			console.log(response.count);
 			if (response.count == smdrMsgsSent) {
@@ -103,10 +103,10 @@ const checkRecordCount = () => {
 			}
 		})
 		.catch(error => {
-			console.log('Postgres query failed:\n', JSON.stringify(error));
+			console.log("Postgres query failed: ", JSON.stringify(error));
 			process.exit(1);
 		});
-}
+};
 
 const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
@@ -118,17 +118,17 @@ const nextFile = () => {
 		sendSmdrRecords(smdrFiles[smdrFileNo]);
 		++smdrFileNo;
 	}
-}
+};
 
-ee.on('next', nextFile);
+ee.on("next", nextFile);
 
 // Connect to DB_QUEUE only to purge it
 const databaseQueue = new Queue(env.DB_QUEUE, null, null, null);
 
-db.none('delete from smdr;')
+db.none("delete from smdr;")
 	.then(() => _.noop)
 	.catch(error => {
-		console.log('database purge error: ', JSON.stringify(error));
+		console.log("database purge error: ", JSON.stringify(error));
 		process.exit(1);
 	});
 
@@ -139,14 +139,14 @@ setTimeout(() => {
 	databaseQueue.purge();
 
 	// Search the source directory looking for raw SMDR files
-	dir.files('./sample-data/smdr-data/smdr-one-file', (err, files) => {
+	dir.files("./sample-data/smdr-data/smdr-one-file", (err, files) => {
 		if (err) throw err;
 
 		// Deliver the data in chronological order
 		files.sort();
 
 		for (let file of files) {
-			let path = file.split('\\');
+			let path = file.split("/");
 
 			// Only interested in SMDR files
 			if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
@@ -155,4 +155,4 @@ setTimeout(() => {
 		}
 		nextFile();
 	});
-}, 5000);
+}, 1000);

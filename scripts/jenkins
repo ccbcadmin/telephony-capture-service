@@ -33,7 +33,7 @@ source scripts/bash-functions
 
 # This script can only be run in the dev or qa environments
 if [ $# != 1 ] && [ $# != 2 ]; then error-exit "$USAGE"; fi
-if [ $1 != 'dev' ] && [ $1 != 'qa' ]; then error-exit "$USAGE"; fi
+if [ $1 != 'dev' ] && [ $1 != 'qa' ] && [ $1 != 'prod' ; then error-exit "$USAGE"; fi
 if [ $# == 2 ]; then
 	if [ $2 == 'trace' ]; then
 		unset NO_TRACE 
@@ -41,7 +41,10 @@ if [ $# == 2 ]; then
 		error-exit "$USAGE";
 	fi
 fi
-tcsenv $1
+
+# Config for the selected operating environment
+$1
+
 # Note what version is being tested
 source ./.tcs.version
 echo 'TCS_VERSION: '$TCS_VERSION
@@ -53,32 +56,11 @@ docker-compose $COMPOSE_ARGS up -d --no-build --no-deps pbx-interface
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps database-interface 
 docker-compose $COMPOSE_ARGS up -d --no-build --no-deps tms-interface 
 
+sleep 3 # Wait for the startup to settle
+
 # Execute the following several times
 for i in 1
 do
-
-	# TEST CASE DESCRIPTION 
-	# Test the link to the tms-interface to ensure that it recovers and 
-	# that that there is no data loss.
-	execute-test-case test-pbx-link-reopening	
-
-	# TEST CASE DESCRIPTION 
-	# Test the link to the tms-interface to ensure that it recovers and 
-	# ensuring no data loss.
-	execute-test-case test-tms-link-reopening	
-
-exit 0
-
-	# TEST CASE DESCRIPTION 
-	# Send a file of SMDR messages through the TCS and ensure that a
-	# copy of the file is safely recorded in the SMDR_DATA-001 directory.
-	execute-test-case test-recording-smdr-files
-
-	# TEST CASE DESCRIPTION 
-	# Send a stream of data, shutdown the queue without acking last
-	# message, and then restart the queue - ensure no messages are lost.
-	execute-test-case test-queuing-no-ack
-
 	# TEST CASE DESCRIPTION 
 	# Send a stream of data, shutdown rabbitmq, then restart it.
 	execute-test-case test-rabbit-interruption-part1
@@ -90,9 +72,11 @@ exit 0
 	remove-stores-container rabbitmq || exit 1;
 	start-stores-container rabbitmq || exit 1;
 
+
 	# TEST CASE DESCRIPTION 
 	# After the restart of RabbitMQ, all expected data from part1 should be received.
 	execute-test-case test-rabbit-interruption-part2
+
 
 	# TEST CASE DESCRIPTION 
 	# Ensure that a stream of data makes it round-trip.
@@ -100,10 +84,38 @@ exit 0
 	# input_testdata and output_testdata must be identical
 	execute-test-case test-pbx-to-tms-flow
 
+
+	# TEST CASE DESCRIPTION 
+	# Send a stream of data, shutdown the queue without acking last
+	# message, and then restart the queue - ensure no messages are lost.
+	execute-test-case test-queuing-no-ack
+
+
+	# TEST CASE DESCRIPTION 
+	# Test the link to the tms-interface to ensure that it recovers and 
+	# that that there is no data loss.
+	execute-test-case test-pbx-link-reopening	
+
+
+	# TEST CASE DESCRIPTION 
+	# Test the link to the tms-interface to ensure that it recovers and 
+	# ensuring no data loss.
+	execute-test-case test-tms-link-reopening	
+
+exit 0
+
+
+	# TEST CASE DESCRIPTION 
+	# Send a file of SMDR messages through the TCS and ensure that a
+	# copy of the file is safely recorded in the SMDR_DATA-001 directory.
+	execute-test-case test-recording-smdr-files
+
 	# TEST CASE DESCRIPTION 
 	# Send a file of SMDR messages through the TCS and ensure 
 	# that the database has recorded all records in the SMDR table.
 	execute-test-case test-smdr-capture
+
+	
 
 done
 

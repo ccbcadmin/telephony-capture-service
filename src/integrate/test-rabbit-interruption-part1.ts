@@ -1,34 +1,34 @@
 #!/usr/bin/env node
 
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/map';
+import { Observable } from "rxjs/Observable";
+import "rxjs/add/operator/map";
 
-import * as $ from '../share/constants';
-import { ClientSocket } from '../share/client-socket';
-import { Queue } from '../share/queue';
+import * as $ from "../share/constants";
+import { ClientSocket } from "../share/client-socket";
+import { Queue } from "../share/queue";
 
-const routineName = 'test-rabbit-interruption-part1';
+const routineName = "test-rabbit-interruption-part1";
 
-const _ = require('lodash');
-const net = require('net');
-const fs = require('fs');
-const dir = require('node-dir');
-const eventEmitter = require('events').EventEmitter;
+const _ = require("lodash");
+const net = require("net");
+const fs = require("fs");
+const dir = require("node-dir");
+const eventEmitter = require("events").EventEmitter;
 const ee = new eventEmitter;
 
 // Ensure the presence of required environment variables
-const envalid = require('envalid');
+const envalid = require("envalid");
 const { str, num} = envalid;
 
 // Number of random bytes to send through the channel
 const testSize = 100000;
 const masterTxBuffer = Buffer.alloc(testSize);
 
-process.on('SIGTERM', () => {
+process.on("SIGTERM", () => {
 	console.log(`${routineName} terminated`);
 	process.exit(0);
 });
-process.on('SIGINT', () => {
+process.on("SIGINT", () => {
 	console.log(`Ctrl-C received. ${routineName} terminated`);
 	process.exit(0);
 });
@@ -44,7 +44,7 @@ for (let index = 0; index < testSize; ++index) {
 	masterTxBuffer[index] = index % 256;
 }
 
-const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
+const tcsSocket = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT);
 
 let masterIndex = 0;
 
@@ -67,11 +67,9 @@ setTimeout(() => {
 		}
 
 		if (tcsSocket.write(data) === false) {
-			console.log('Link to TCS unavailable ... aborting.');
+			console.log("Link to TCS unavailable ... aborting.");
 			process.exit(1);
 		}
-
-		// console.log ('masterIndex: ', masterIndex);
 
 		if (masterIndex === testSize) {
 
@@ -79,8 +77,8 @@ setTimeout(() => {
 			process.exit(0);
 		}
 		else if (masterIndex > testSize) {
-			console.log('Assertion Failure: masterIndex > testSize');
+			console.log("Assertion Failure: masterIndex > testSize");
 			process.exit(1);
 		}
 	}, env.TEST_TRANSMIT_INTERVAL);
-}, 2000);
+}, 1000);

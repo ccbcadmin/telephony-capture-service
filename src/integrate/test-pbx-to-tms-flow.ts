@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 
-import 'rxjs/add/operator/map';
+import "rxjs/add/operator/map";
 
-import * as $ from '../share/constants';
-import { ClientSocket } from '../share/client-socket';
-import { ServerSocket } from '../share/server-socket';
-import { Queue } from '../share/queue';
+import * as $ from "../share/constants";
+import { ClientSocket } from "../share/client-socket";
+import { ServerSocket } from "../share/server-socket";
+import { Queue } from "../share/queue";
 
-const routineName = 'test-pbx-to-tms-flow';
+const routineName = "test-pbx-to-tms-flow";
 
-const _ = require('lodash');
-const net = require('net');
-const fs = require('fs');
-const dir = require('node-dir');
-const eventEmitter = require('events').EventEmitter;
+const _ = require("lodash");
+const net = require("net");
+const fs = require("fs");
+const dir = require("node-dir");
+const eventEmitter = require("events").EventEmitter;
 const ee = new eventEmitter;
 
 // Ensure the presence of required environment variables
-const envalid = require('envalid');
+const envalid = require("envalid");
 const { str, num} = envalid;
 
 // Number of random bytes to send through the channel
@@ -25,11 +25,11 @@ const txBytes = 1000000;
 const masterTxBuffer = Buffer.alloc(txBytes);
 const masterRxBuffer = Buffer.alloc(txBytes);
 
-process.on('SIGTERM', () => {
+process.on("SIGTERM", () => {
 	console.log(`${routineName} terminated`);
 	process.exit(0);
 });
-process.on('SIGINT', () => {
+process.on("SIGINT", () => {
 	console.log(`Ctrl-C received. ${routineName} terminated`);
 	process.exit(0);
 });
@@ -46,15 +46,16 @@ for (let index = 0; index < txBytes; ++index) {
 	masterTxBuffer[index] = Math.floor(Math.random() * 255);
 }
 
-const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
+const tcsSocket = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT);
 
 let masterIndex = 0;
 
 const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
 
+// Ensure a channel to the queue...
 setTimeout(() => {
 
-	// Ensure a clean sheet
+	// ...then clear the queue
 	tmsQueue.purge ();
 
 	const setIntervalId = setInterval(() => {
@@ -69,7 +70,7 @@ setTimeout(() => {
 		}
 
 		if (tcsSocket.write(data) === false) {
-			console.log('Link to TCS unavailable ... aborting.');
+			console.log("Link to TCS unavailable ... aborting.");
 			process.exit(1);
 		}
 
@@ -90,7 +91,7 @@ const dataCapture = (data: Buffer) => {
 			process.exit(0);
 		}
 		else {
-			console.log('Rx / Tx Data Not Consistent');
+			console.log("Rx / Tx Data Not Consistent");
 			process.exit(1);
 		}
 	}
@@ -102,4 +103,4 @@ const dataCapture = (data: Buffer) => {
 };
 
 // Start listening for messages directed to the TMS
-new ServerSocket(routineName, env.TMS_PORT, dataCapture).startListening();
+new ServerSocket("tcs=>tms", env.TMS_PORT, dataCapture).startListening();

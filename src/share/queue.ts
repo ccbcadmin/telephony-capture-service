@@ -1,20 +1,20 @@
-import { networkIP } from './util';
-import 'rxjs/Rx';
-import { Observable } from 'rxjs/Observable';
+import { networkIP } from "./util";
+import "rxjs/Rx";
+import { Observable } from "rxjs/Observable";
 
-const moment = require('moment');
-const _ = require('lodash');
+const moment = require("moment");
+const _ = require("lodash");
 
 export class Queue {
 
-	private amqp = require('amqplib/callback_api');
+	private amqp = require("amqplib/callback_api");
 	private connection;
 	private channel;
 	private queueName: string;
 	private messageCounter = 0;
 	private consumer;
 	private maxLength;
-	private retryConnectTimer$ = Observable.interval(5000).startWith();
+	private retryConnectTimer$ = Observable.timer(0, 5000).startWith();
 	private retryConnectSubscription;
 
 	// Use disconnectHandler to inform the client that the channel to the queuing server is unavailable
@@ -53,8 +53,8 @@ export class Queue {
 		this.disconnectHandler ? this.disconnectHandler() : _.noop;
 
 		// Stop listening to queue events
-		this.connection ? this.connection.removeListener('close', this.closeEvent) : _.noop;
-		this.connection ? this.connection.removeListener('error', this.errorEvent) : _.noop;
+		this.connection ? this.connection.removeListener("close", this.closeEvent) : _.noop;
+		this.connection ? this.connection.removeListener("error", this.errorEvent) : _.noop;
 
 		this.retryConnection();
 	}
@@ -75,8 +75,8 @@ export class Queue {
 				// Stop retrying
 				this.retryConnectSubscription.unsubscribe();
 
-				queueConnection.addListener('error', this.errorEvent);
-				queueConnection.addListener('close', this.closeEvent);
+				queueConnection.addListener("error", this.errorEvent);
+				queueConnection.addListener("close", this.closeEvent);
 
 				this.connection = queueConnection;
 
@@ -111,7 +111,7 @@ export class Queue {
 								this.channel.ack(msg);
 
 								// If the client is not able to handle the message at this time,
-								// then no Ack is returned to the queuing service, meaning that it 
+								// then no Ack is returned to the queuing service, meaning that it
 								// will retry later.
 							}
 						}, { noAck: false });
@@ -136,7 +136,7 @@ export class Queue {
 	// The following routine facilitats testing.  It is
 	// not ever employed in the Production environment.
 	public purge = () => {
-		console.log(`Queue ${this.queueName} Purged`);
+		console.log(`${this.queueName} Purged`);
 		this.channel.purgeQueue();
 	}
 
@@ -149,8 +149,8 @@ export class Queue {
 			this.channel.close();
 			this.channel = null;
 		}
-		this.connection ? this.connection.removeListener('close', this.closeEvent) : _.noop;
-		this.connection ? this.connection.removeListener('error', this.errorEvent) : _.noop;
+		this.connection ? this.connection.removeListener("close", this.closeEvent) : _.noop;
+		this.connection ? this.connection.removeListener("error", this.errorEvent) : _.noop;
 
 		console.log(`${this.queueName} Channel Closed`);
 		this.connection.close();

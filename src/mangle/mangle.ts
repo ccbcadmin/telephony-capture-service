@@ -1,15 +1,14 @@
 #!/usr/bin/env node
 
-import * as $ from '../share/constants';
-import { pathSeparator } from '../share/util';
+import * as $ from "../share/constants";
 
-const routineName = 'mangle';
+const routineName = "mangle";
 
-const fs = require('fs');
-const dir = require('node-dir');
+const fs = require("fs");
+const dir = require("node-dir");
 
 // Ensure the presence of required environment variables
-const envalid = require('envalid');
+const envalid = require("envalid");
 const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
 	SOURCE_DIRECTORY: str(),
@@ -19,13 +18,13 @@ const env = envalid.cleanEnv(process.env, {
 const sourceDir = `/smdr-data/${env.SOURCE_DIRECTORY}`;
 const targetDir = `/smdr-data/${env.TARGET_DIRECTORY}`;
 
-const eventEmitter = require('events').EventEmitter;
+const eventEmitter = require("events").EventEmitter;
 const ee = new eventEmitter;      //make an Event Emitter object
 
 const zeroPad = (num, places) => {
-	var zero = places - num.toString().length + 1;
+	let zero = places - num.toString().length + 1;
 	return Array(+(zero > 0 && zero)).join("0") + num;
-}
+};
 
 let substitutePhoneNumberMap = new Map();
 
@@ -40,7 +39,7 @@ const substituteDummyPhoneNumber = (phoneNumber: string) => {
 			return substitutePhoneNumber;
 		}
 	}
-	else if ((phoneNumber.length === 11 && phoneNumber.slice(0, 1) === '1')) {
+	else if ((phoneNumber.length === 11 && phoneNumber.slice(0, 1) === "1")) {
 		if (substitutePhoneNumberMap.has(phoneNumber)) {
 			return substitutePhoneNumberMap.get(phoneNumber);
 		} else {
@@ -52,14 +51,14 @@ const substituteDummyPhoneNumber = (phoneNumber: string) => {
 	else {
 		return phoneNumber;
 	}
-}
+};
 
-process.on('SIGTERM', () => {
-	console.log('Telephony Capture Service: Terminated');
+process.on("SIGTERM", () => {
+	console.log("Telephony Capture Service: Terminated");
 	process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on("SIGINT", () => {
 	console.log("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
 	process.exit(0);
 });
@@ -72,14 +71,14 @@ const replicateSmdrFile = (smdrFileName: string) => {
 	let data = fs.readFileSync(smdrFileName).toString();
 
 	// Increment the file extension by 1 to get the output file name
-	let filePart = smdrFileName.split(pathSeparator());
-	const inputFileNameParts = filePart[filePart.length - 1].split('.');
+	let filePart = smdrFileName.split("/");
+	const inputFileNameParts = filePart[filePart.length - 1].split(".");
 	const outputFile = `${inputFileNameParts[0]}.${zeroPad(Number(inputFileNameParts[1]) + 1, 3)}`;
-	const outputPath = [targetDir, outputFile].join(pathSeparator());
+	const outputPath = [targetDir, outputFile].join("/");
 
 	process.stdout.write(`Mangling ${smdrFileName} to ${outputPath}: `);
 
-	const fd = fs.openSync(outputPath, 'w');
+	const fd = fs.openSync(outputPath, "w");
 
 	let recordCount = 0;
 	let unknownRecords = 0;
@@ -91,7 +90,7 @@ const replicateSmdrFile = (smdrFileName: string) => {
 		const smdrMessage = data.slice(index, next_index);
 		index = next_index + 2;
 
-		let raw_call = smdrMessage.split(',');
+		let raw_call = smdrMessage.split(",");
 
 		if (raw_call.length !== 30) {
 			++unknownRecords;
@@ -109,17 +108,17 @@ const replicateSmdrFile = (smdrFileName: string) => {
 			raw_call[6] = substituteDummyPhoneNumber(raw_call[6]);
 
 			// Reconstitute the line
-			let testSmdr = raw_call.join(',') + $.CRLF;
+			let testSmdr = raw_call.join(",") + $.CRLF;
 			fs.writeSync(fd, testSmdr);
 
 		}
 	}
 
-	process.stdout.write('SMDR Records: ' + recordCount + ', Unknown Records: ' + unknownRecords + $.CRLF);
+	process.stdout.write("SMDR Records: " + recordCount + ", Unknown Records: " + unknownRecords + $.CRLF);
 
 	++smdrFileNo;
-	ee.emit('next');
-}
+	ee.emit("next");
+};
 
 const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
@@ -129,9 +128,9 @@ const nextFile = () => {
 	else {
 		replicateSmdrFile(smdrFiles[smdrFileNo]);
 	}
-}
+};
 
-ee.on('next', nextFile);
+ee.on("next", nextFile);
 
 // Search the current directory, if none specified
 dir.files(sourceDir, (err, files) => {
@@ -141,7 +140,7 @@ dir.files(sourceDir, (err, files) => {
 	}
 	files.sort();
 	for (let file of files) {
-		let path = file.split(pathSeparator());
+		let path = file.split("/");
 		if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
 			smdrFiles.push(file);
 		}

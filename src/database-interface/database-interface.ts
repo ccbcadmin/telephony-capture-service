@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
-import * as $ from '../share/constants';
-import { Queue } from '../share/queue';
+import * as $ from "../share/constants";
+import { Queue } from "../share/queue";
 
-const routineName = 'database-interface';
+const routineName = "database-interface";
 
-const moment = require('moment');
-const _ = require('lodash');
-const pgp = require('pg-promise')();
+const moment = require("moment");
+const _ = require("lodash");
+const pgp = require("pg-promise")();
 
 // Ensure the presence of required environment variables
-const envalid = require('envalid');
+const envalid = require("envalid");
 const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
 	DATABASE: str(),
@@ -18,32 +18,32 @@ const env = envalid.cleanEnv(process.env, {
 });
 
 interface SmdrRecord {
-	callStart: string,
-	connectedTime: string,
-	ringTime: string,
-	caller: string,
-	direction: string,
-	calledNumber: string,
-	dialedNumber: string,
-	isInternal: string,
-	callId: string,
-	continuation: string,
-	party1Device: string,
-	party1Name: string,
-	party2Device: string,
-	party2Name: string,
-	holdTime: string,
-	parkTime: string,
-	externalTargetingCause: string,
-	externalTargeterId: string,
-	externalTargetedNumber: string
+	callStart: string;
+	connectedTime: string;
+	ringTime: string;
+	caller: string;
+	direction: string;
+	calledNumber: string;
+	dialedNumber: string;
+	isInternal: string;
+	callId: string;
+	continuation: string;
+	party1Device: string;
+	party1Name: string;
+	party2Device: string;
+	party2Name: string;
+	holdTime: string;
+	parkTime: string;
+	externalTargetingCause: string;
+	externalTargeterId: string;
+	externalTargetedNumber: string;
 };
 
 const connection = {
-	host: 'localhost',
+	host: "localhost",
 	port: 5432,
 	database: env.DATABASE,
-	user: 'postgres'
+	user: "postgres"
 };
 
 const db = pgp(connection);
@@ -94,7 +94,7 @@ const insertCallRecords = (smdrRecord: SmdrRecord) =>
 
 console.log(`${routineName}: Started`);
 
-process.on('SIGTERM', (): void => {
+process.on("SIGTERM", (): void => {
 	console.log(`${routineName}: Terminated`);
 	process.exit(0);
 });
@@ -103,10 +103,10 @@ let badRawRecords = 0;
 
 const dataSink = (msg): boolean => {
 
-	let raw_call = msg.toString().split(',');
+	let raw_call = msg.toString().split(",");
 
 	if (raw_call.length !== 30) {
-		console.log ('bad call length: ', raw_call.length);
+		console.log ("bad call length: ", raw_call.length);
 		++badRawRecords;
 	} else {
 
@@ -115,7 +115,7 @@ const dataSink = (msg): boolean => {
 		// console.log('Call Start: ', callStart);
 
 		// Record Connected Time in seconds
-		let temp: string[] = raw_call[1].split(':');
+		let temp: string[] = raw_call[1].split(":");
 		let connectedTime = String(
 			Number(temp[0]) * 60 * 60 +
 			Number(temp[1]) * 60 +
@@ -201,13 +201,13 @@ const dataSink = (msg): boolean => {
 				return true;
 			})
 			.catch(err => {
-				console.log('Database Insert Failure: ', err);
+				console.log("Database Insert Failure: ", err);
 
 				// Let the process restart
 				process.exit(1);
 			});
 	}
 	return true;
-}
+};
 
 const databaseQueue = new Queue(env.DB_QUEUE, null, dataSink, null);

@@ -1,14 +1,13 @@
-const _ = require('lodash');
+const _ = require("lodash");
 
 export class ClientSocket {
 
-	private net = require('net');
+	private net = require("net");
 	private linkName: string;
 	private host: string;
 	private port: number;
 	private socket;
 	private active: boolean;
-	private retryCount = 0;
 	private connectHandler;
 
 	constructor(linkName: string, host: string, port: number, connectHandler = null) {
@@ -16,6 +15,8 @@ export class ClientSocket {
 		this.host = host;
 		this.port = port;
 		this.active = false;
+
+		// Allows ClientSocket to inform the client that a connection has been established
 		this.connectHandler = connectHandler;
 
 		this.openSocket();
@@ -23,13 +24,15 @@ export class ClientSocket {
 
 	private openSocket = () => {
 		this.socket = this.net.createConnection({ port: this.port }, this.onConnect);
-		this.socket.on('end', () => { console.log('disconnected from server'); });
-		this.socket.on('close', () => { console.log('link closed'); });
+		this.socket.addListener("end", () => { console.log(`${this.linkName} Disconnected`); });
+		this.socket.addListener("close", () => { console.log(`${this.linkName} Closed`); });
+		this.socket.addListener("error", (error) => {
+			console.log(`${this.linkName} Link Error:\n${JSON.stringify(error, null, 4)}`);
+		});
 	}
 
 	private onConnect = () => {
 		console.log(`${this.linkName}: Connected`);
-		this.retryCount = 0;
 		this.active = true;
 		this.connectHandler ? this.connectHandler() : _.noop;
 	}
@@ -41,7 +44,7 @@ export class ClientSocket {
 	public write = (msg: Buffer): boolean => {
 
 		if (this.active) {
-			if (this.socket.write(msg), 'binary') {
+			if (this.socket.write(msg)) {
 				return true;
 			}
 		}

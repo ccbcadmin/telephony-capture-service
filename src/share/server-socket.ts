@@ -1,7 +1,7 @@
 export class ServerSocket {
 
-	private net = require('net');
-	private serverName: string;
+	private net = require("net");
+	private linkName: string;
 	private host: string;
 	private port: number;
 	private server: any;
@@ -9,8 +9,8 @@ export class ServerSocket {
 	private linkCloseHandler;
 	private connection = null;
 
-	constructor(serverName, port, dataSink, linkCloseHandler = null) {
-		this.serverName = serverName;
+	constructor(linkName, port, dataSink, linkCloseHandler = null) {
+		this.linkName = linkName;
 		this.port = port;
 		this.dataSink = dataSink;
 		this.linkCloseHandler = linkCloseHandler;
@@ -18,42 +18,44 @@ export class ServerSocket {
 		this.server = this.net.createServer();
 
 		if (linkCloseHandler) {
-			this.server.addListener('close', this.linkCloseHandler);
+			this.server.addListener("close", this.linkCloseHandler);
 		}
 	}
 
-	private handleConnection = conn => {
+	private handleConnection = connection => {
 
-		const remoteAddress = conn.remoteAddress + ':' + conn.remotePort;
-		console.log(`${this.serverName}: Connection Open: ${remoteAddress}`);
+		const remoteAddress = connection.remoteAddress + ":" + connection.remotePort;
+		console.log(`${this.linkName}: Connection Open: ${remoteAddress}`);
 
 		const onClose = () => {
-			console.log(`${this.serverName}: Connection Closed: from ${remoteAddress}`);
-		}
+			console.log(`${this.linkName}: Connection Closed: from ${remoteAddress}`);
+			connection.removeListener("data", this.dataSink);
+			connection.removeListener("error", onError);
+		};
 
 		const onError = err => {
-			console.log(`${this.serverName}: Connection ${remoteAddress} error: ${err.message}`);
-		}
+			console.log(`${this.linkName}: Connection ${remoteAddress} error: ${err.message}`);
+		};
 
-		conn.addListener('data', this.dataSink);
-		conn.once('close', onClose);
-		conn.addListener('error', onError);
-		this.connection = conn;
+		connection.addListener("data", this.dataSink);
+		connection.prependOnceListener("close", onClose);
+		connection.addListener("error", onError);
+		this.connection = connection;
 	}
 
 	public startListening = () => {
 
-		console.log(`${this.serverName}: Start Listening`);
-		this.server.addListener('connection', this.handleConnection);
+		console.log(`${this.linkName}: Start Listening`);
+		this.server.addListener("connection", this.handleConnection);
 
 		this.server.listen(this.port, () => {
-			console.log(`${this.serverName}: Listening on: ${JSON.stringify(this.server.address())}`);
+			console.log(`${this.linkName}: Listening on: ${this.port}`);
 		});
 	}
 
 	public stopListening = () => {
-		console.log(`${this.serverName}: Stop Listening`);
-		this.server.removeListener('connection', this.handleConnection);
+		console.log(`${this.linkName}: Stop Listening`);
+		this.server.removeListener("connection", this.handleConnection);
 		this.server.close();
 	}
 

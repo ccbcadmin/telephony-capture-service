@@ -1,22 +1,22 @@
 #!/usr/bin/env node
 
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/map';
+import { Observable } from "rxjs/Observable";
+import "rxjs/add/operator/map";
 
-import * as $ from '../share/constants';
-import { ClientSocket } from '../share/client-socket';
+import * as $ from "../share/constants";
+import { ClientSocket } from "../share/client-socket";
 
-const routineName = 'pbx-simulator';
+const routineName = "pbx-simulator";
 
-const _ = require('lodash');
-const net = require('net');
-const fs = require('fs');
-const dir = require('node-dir');
-const eventEmitter = require('events').EventEmitter;
+const _ = require("lodash");
+const net = require("net");
+const fs = require("fs");
+const dir = require("node-dir");
+const eventEmitter = require("events").EventEmitter;
 const ee = new eventEmitter;
 
 // Ensure the presence of required environment variables
-const envalid = require('envalid');
+const envalid = require("envalid");
 const { str, num} = envalid;
 
 const env = envalid.cleanEnv(process.env, {
@@ -28,13 +28,13 @@ const env = envalid.cleanEnv(process.env, {
 let smdrFiles: string[] = [];
 let smdrFileNo = 0;
 
-const tcsSocket = new ClientSocket('PBX->TCS', 'localhost', env.TCS_PORT);
+const tcsSocket = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT);
 
 const sendSmdrRecords = (smdrFileName: string): void => {
 
 	let data: Buffer = fs.readFileSync(smdrFileName);
 
-	process.stdout.write('Sending ' + smdrFileName + '  ');
+	process.stdout.write("Sending " + smdrFileName + "  ");
 
 	let index: number = 0;
 	let next_index: number = 0;
@@ -45,20 +45,20 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 		if ((next_index = data.indexOf($.CRLF, index)) < 0) {
 			process.stdout.write(`\bis complete.  ${recordCount} SMDR records sent.\r\n`);
 			clearInterval(intervalId);
-			ee.emit('next');
+			ee.emit("next");
 		} else {
 			++recordCount;
 			const nextMsg = data.slice(index, next_index + 2);
 			// process.stdout.write(nextMsg);
 
 			if (recordCount % 20 === 5)
-				process.stdout.write('\b-');
+				process.stdout.write("-");
 			else if (recordCount % 20 === 10)
-				process.stdout.write('\b\\');
+				process.stdout.write("\\");
 			else if (recordCount % 20 === 15)
-				process.stdout.write('\b|');
+				process.stdout.write("|");
 			else if (recordCount % 20 === 0)
-				process.stdout.write('\b/');
+				process.stdout.write("/");
 
 			index = next_index + 2;
 
@@ -67,15 +67,13 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 			const firstPart = nextMsg.slice(0, partition);
 			const secondPart = nextMsg.slice(partition);
 
-			// console.log ('firstPart: ', firstPart.toString());
-			// console.log ('secondPart: ', secondPart.toString());
 			if (!tcsSocket.write(firstPart) || !tcsSocket.write(secondPart)) {
-				console.log('Link to TCS unavailable...aborting.');
+				console.log("Link to TCS unavailable...aborting.");
 				process.exit(1);
 			}
 		}
 	}, env.PBX_SIMULATOR_INPUT_FREQUENCY);
-}
+};
 
 const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
@@ -85,14 +83,14 @@ const nextFile = () => {
 		sendSmdrRecords(smdrFiles[smdrFileNo]);
 		++smdrFileNo;
 	}
-}
+};
 
-ee.on('next', nextFile);
+ee.addListener("next", nextFile);
 
 const sourceDir = `/smdr-data/${env.SOURCE_DIRECTORY}`;
 
 // Search the source directory looking for raw SMDR files
-console.log('sourceDir: ', sourceDir);
+console.log("sourceDir: ", sourceDir);
 dir.files(sourceDir, (err, files) => {
 	if (err) throw err;
 
@@ -100,7 +98,7 @@ dir.files(sourceDir, (err, files) => {
 	files.sort();
 
 	for (let file of files) {
-		let path = file.split('\\');
+		let path = file.split("/");
 
 		// Only interested in SMDR files
 		if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
