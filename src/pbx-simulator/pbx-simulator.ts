@@ -21,7 +21,7 @@ const { str, num} = envalid;
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
-	SOURCE_DIRECTORY: str(),
+	PBX_SIMULATOR_SOURCE_DIRECTORY: str(),
 	PBX_SIMULATOR_INPUT_FREQUENCY: num()
 });
 
@@ -87,7 +87,7 @@ const nextFile = () => {
 
 ee.addListener("next", nextFile);
 
-const sourceDir = `/smdr-data/${env.SOURCE_DIRECTORY}`;
+const sourceDir = `/smdr-data/${env.PBX_SIMULATOR_SOURCE_DIRECTORY}`;
 
 // Search the source directory looking for raw SMDR files
 console.log("sourceDir: ", sourceDir);

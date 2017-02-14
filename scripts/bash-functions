@@ -508,7 +508,7 @@ pbx-simulator ()
     if [ -z ${TCS_VERSION+x} ]; then echo "TCS_VERSION undefined"; return 1; fi
 
     docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null || return 1;
-    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' -e SOURCE_DIRECTORY="$1" pbx-simulator || return 1;
+    docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' pbx-simulator || return 1;
 
     enable-restart $TCSENV'-pbx-simulator' || return 1;
 
