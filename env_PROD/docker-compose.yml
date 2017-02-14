@@ -13,7 +13,7 @@ services:
     env_file: ./env_PROD/.env
     volumes:
       - /etc/localtime:/etc/localtime
-      - /home/smdr-data/prod:/smdr-data
+      - $SMDR_DATA_PROD:/smdr-data
 
   pbx-interface:
     container_name: ${TCSENV}-pbx-interface
@@ -22,7 +22,7 @@ services:
       - tms-interface
       - database-interface
     volumes:
-      - /home/smdr-data/prod/smdr-data-001:/smdr-data-001
+      - $SMDR_DATA_PROD:/smdr-data
       - /etc/localtime:/etc/localtime
  
   pbx-simulator:
@@ -30,7 +30,7 @@ services:
     env_file: ./env_PROD/.env
     volumes:
       - /etc/localtime:/etc/localtime
-      - ./sample-data/smdr-data:/smdr-data
+      - $SMDR_DATA_PROD:/smdr-data
  
   tms-interface:
     container_name: ${TCSENV}-tms-interface

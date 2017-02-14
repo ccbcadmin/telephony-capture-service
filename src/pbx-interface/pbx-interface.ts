@@ -51,7 +51,7 @@ const processSmdrMessages = (data: Buffer) => {
 		databaseQueue.sendToQueue(smdrMessage);
 
 		// Save a copy of each SMDR message to a file
-		const saveFileName = "/smdr-data-001/rw" + moment().format("YYMMDD") + ".001";
+		const saveFileName = "/smdr-data/smdr-data-001/rw" + moment().format("YYMMDD") + ".001";
 		fs.appendFile(saveFileName, smdrMessage, (err) => {
 			if (err) throw err;
 		});

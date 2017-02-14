@@ -13,7 +13,7 @@ services:
     env_file: ./env_QA/.env
     volumes:
       - /etc/localtime:/etc/localtime
-      - /home/smdr-data/qa/smdr-data-001:/smdr-data-001
+      - $SMDR_DATA_QA:/smdr-data-001:/smdr-data
 
   tms-interface:
     container_name: ${TCSENV}-tms-interface

@@ -12,3 +12,6 @@ alias rm-dangling-volumes='docker volume rm $(docker volume ls -f dangling=true 
 alias ls-exited='docker ps -aq -f status=exited'
 alias barman-exec='docker exec -it barman /bin/bash'
 alias rm-pg-volumes='docker volume rm stores_postgres1_data stores_postgres2_data'
+
+# Git Aliases
+alias gbr="git branch | grep -v "master" | xargs git branch -D"
