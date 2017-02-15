@@ -28,7 +28,7 @@ const env = envalid.cleanEnv(process.env, {
 let smdrFiles: string[] = [];
 let smdrFileNo = 0;
 
-const tcsSocket = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT);
+const tcsSocket = new ClientSocket("pbx=>tcs", '192.168.2.177', env.TCS_PORT);
 
 const sendSmdrRecords = (smdrFileName: string): void => {
 

@@ -48,9 +48,13 @@ export class ServerSocket {
 		console.log(`${this.linkName}: Start Listening`);
 		this.server.addListener("connection", this.handleConnection);
 
-		this.server.listen(this.port, () => {
-			console.log(`${this.linkName}: Listening on: ${this.port}`);
-		});
+		this.server.listen({
+			host: '0.0.0.0',
+			port: this.port
+		}
+			, () => {
+				console.log(`${this.linkName}: Listening on: ${this.port}`);
+			});
 	}
 
 	public stopListening = () => {

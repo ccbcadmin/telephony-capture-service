@@ -23,7 +23,7 @@ export class ClientSocket {
 	}
 
 	private openSocket = () => {
-		this.socket = this.net.createConnection({ port: this.port }, this.onConnect);
+		this.socket = this.net.createConnection({ host: this.host, port: this.port }, this.onConnect);
 		this.socket.addListener("end", () => { console.log(`${this.linkName} Disconnected`); });
 		this.socket.addListener("close", () => { console.log(`${this.linkName} Closed`); });
 		this.socket.addListener("error", (error) => {
