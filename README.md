@@ -62,6 +62,8 @@ TCS
 │
 ├── lib                                                   Transpiled *.js scripts
 │
+├── scripts                                               Various project bash scripts
+│
 ├── package.json                                          npm package definition
 │
 ├── src                                                   
