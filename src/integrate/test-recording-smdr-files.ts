@@ -173,7 +173,7 @@ setTimeout(() => {
 			process.exit(1);
 		}
 		else if (files.length !== 1) {
-			console.log("Only One SMDR-DATA-001 file expected");
+			console.log("Only one file expected");
 			process.exit(1);
 		}
 
@@ -188,6 +188,4 @@ setTimeout(() => {
 		}
 		nextFile();
 	});
-}, 2000);
-
-console.log ("TCS Port: ", env.TCS_PORT);
+}, 4000);

@@ -102,7 +102,7 @@ process.on("SIGTERM", (): void => {
 let badRawRecords = 0;
 
 const dataSink = (msg): boolean => {
-
+	
 	let raw_call = msg.toString().split(",");
 
 	if (raw_call.length !== 30) {
@@ -110,9 +110,7 @@ const dataSink = (msg): boolean => {
 		++badRawRecords;
 	} else {
 
-		//let callStart: string = moment(raw_call[0]).format();
 		let callStart = raw_call[0];
-		// console.log('Call Start: ', callStart);
 
 		// Record Connected Time in seconds
 		let temp: string[] = raw_call[1].split(":");

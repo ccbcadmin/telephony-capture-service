@@ -11,12 +11,12 @@ const routineName = "pbx-interface";
 console.log(`Restarting ${routineName}`);
 
 const _ = require("lodash");
+const assert = require('assert');
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
 const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
-	// Need the docker machine IP to link together the various Microservices
 	TMS_ACTIVE: num(),
 	TCS_PORT: num(),
 	DB_QUEUE: str(),
@@ -33,32 +33,45 @@ let databaseQueue;
 
 let leftOver = Buffer.alloc(0);
 
-const processSmdrMessages = (data: Buffer) => {
+const parseSmdrMessages = (data: Buffer) => {
 
-	// Gather all the outstanding data
+	// Gather all outstanding data
 	let unprocessedData = Buffer.concat([leftOver, data], leftOver.length + data.length);
 
-	// If a CRLF is found, then we have a message
-	const crLfIndexOf = unprocessedData.indexOf($.CRLF);
+	// Isolate all smdr messages
+	let nextMsg = 0;
+	let crLfIndexOf = unprocessedData.indexOf($.CRLF, nextMsg);
 
-	// If no CRLF, then nothing to do
-	if (crLfIndexOf < 0) {
-		leftOver = Buffer.alloc(unprocessedData.length);
-		unprocessedData.copy(leftOver);
+	while (0 <= crLfIndexOf) {
+
+		const smdrMessage = unprocessedData.slice(nextMsg, crLfIndexOf + 2);
+
+		// Apply a sanity test on the message (first 2 chars must be '20')
+		if (smdrMessage.indexOf("20") === 0) {
+
+			databaseQueue.sendToQueue(smdrMessage);
+
+			// Record a copy of each SMDR message to a file
+			fs.appendFile("/smdr-data/smdr-data-001/rw" + moment().format("YYMMDD") + ".001", smdrMessage, (err) => {
+				if (err) throw err;
+			});
+		}
+		else {
+			console.log('Corrupt message detected:\n', smdrMessage.toString());
+		}
+
+		// Move to the next message
+		nextMsg = crLfIndexOf + 2;
+		crLfIndexOf = unprocessedData.indexOf($.CRLF, nextMsg);
+	}
+
+	// Maybe some left over for next time
+	if (nextMsg < unprocessedData.length) {
+		leftOver = Buffer.alloc(unprocessedData.length - nextMsg);
+		unprocessedData.copy(leftOver, 0, nextMsg);
 	}
 	else {
-		const smdrMessage = unprocessedData.slice(0, crLfIndexOf + 2);
-		databaseQueue.sendToQueue(smdrMessage);
-
-		// Save a copy of each SMDR message to a file
-		const saveFileName = "/smdr-data/smdr-data-001/rw" + moment().format("YYMMDD") + ".001";
-		fs.appendFile(saveFileName, smdrMessage, (err) => {
-			if (err) throw err;
-		});
-
-		// Get ready for the next message reception
-		leftOver = Buffer.alloc(unprocessedData.length - (crLfIndexOf + 2));
-		unprocessedData.copy(leftOver, 0, crLfIndexOf + 2);
+		leftOver = Buffer.alloc(0);
 	}
 };
 
@@ -68,7 +81,7 @@ const dataSink = (data: Buffer) => {
 	env.TMS_ACTIVE ? tmsQueue.sendToQueue(data) : _.noop;
 
 	// However, only true SMDR data is queued for databaase archiving
-	processSmdrMessages(data);
+	parseSmdrMessages(data);
 };
 
 const pbxLinkClosed = () => {
@@ -76,7 +89,6 @@ const pbxLinkClosed = () => {
 };
 
 const tmsQueueDisconnectHandler = () => {
-
 	console.log(`${env.TMS_QUEUE} Channel Down`);
 };
 

@@ -36,7 +36,7 @@ services:
       - database-interface
     volumes:
       - /etc/localtime:/etc/localtime
-      - /home/smdr-data/dev/smdr-data-001:/smdr-data-001
+      - $SMDR_DATA_DEV:/smdr-data
       - ./lib:/app/lib
     
   pbx-simulator:
