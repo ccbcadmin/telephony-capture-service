@@ -64,6 +64,12 @@ for i in 1
 do
 
 	# TEST CASE DESCRIPTION 
+	# Send a stream of data, shutdown rabbitmq, then restart it.
+	execute-test-case test-smdr-capture-accuracy
+
+exit 0
+
+	# TEST CASE DESCRIPTION 
 	# Send a file of SMDR messages through the TCS and ensure that a
 	# copy of the file is safely recorded in the SMDR_DATA-001 directory.
 	execute-test-case test-recording-smdr-files
@@ -73,11 +79,6 @@ do
 	# Send a file of SMDR messages through the TCS and ensure 
 	# that the database has recorded all records in the SMDR table.
 	execute-test-case test-smdr-capture
-
-
-	# TEST CASE DESCRIPTION 
-	# Send a stream of data, shutdown rabbitmq, then restart it.
-	execute-test-case test-smdr-capture-accuracy
 
 
 	# TEST CASE DESCRIPTION 
