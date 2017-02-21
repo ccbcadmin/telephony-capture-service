@@ -19,9 +19,9 @@ execute-test-case () {
 }
 
 cleanup () {
-	echo "Jenkins Cleanup"
+	echo $PROGNAME" Cleanup"
 	# Ensure the test environment is shutdown
-	# docker-compose $COMPOSE_ARGS down 
+	docker-compose $COMPOSE_ARGS down 
 }
 
 trap cleanup EXIT
@@ -65,9 +65,7 @@ do
 
 	# TEST CASE DESCRIPTION 
 	# Send a stream of data, shutdown rabbitmq, then restart it.
-	execute-test-case test-smdr-capture-accuracy
-
-exit 0
+	execute-test-case test-smdr-capture-detail
 
 	# TEST CASE DESCRIPTION 
 	# Send a file of SMDR messages through the TCS and ensure that a

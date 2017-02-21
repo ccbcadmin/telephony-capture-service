@@ -49,10 +49,12 @@ const parseSmdrMessages = (data: Buffer) => {
 		// Apply a sanity test on the message (first 2 chars must be '20')
 		if (smdrMessage.indexOf("20") === 0) {
 
-			databaseQueue.sendToQueue(smdrMessage);
-
+			// Send to the queue without the CRLF
+			databaseQueue.sendToQueue(unprocessedData.slice(nextMsg, crLfIndexOf));
+			
 			// Record a copy of each SMDR message to a file
-			fs.appendFile("/smdr-data/smdr-data-001/rw" + moment().format("YYMMDD") + ".001", smdrMessage, (err) => {
+			fs.appendFile("/smdr-data/smdr-data-001/rw" + moment().format("YYMMDD") + ".001", 
+				smdrMessage, (err) => {
 				if (err) throw err;
 			});
 		}

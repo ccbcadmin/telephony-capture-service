@@ -44,8 +44,8 @@ const stringOccurrences = (string, subString, allowOverlapping = false): number 
 
 // Prepare some test streams whose boundaries do not correspond to the boundaries of an SMDR message
 const test1SmdrMessages = new Buffer("\
-2015/03/01 00:54:10,00:00:45,5,16046150477,I,203,,,0,1008741,0,E218,Volunteer9,T9001,Line 1.0,0,0,,,,,,,,,,,,,\x0d\x0a\
-2015/03/01 01:06:28,00:03:37,6,6044301510,I,203,,,0,1008742,0,E218,Volunteer9,T9001,Line 1.0,0,0,,,,,,,,,,,,,\x0d\x0a\
+2015/03/01 00:54:10,00:00:45,5,16046150477,I,203,6041234567,,1,1008741,0,E218,Volunteer9,T9001,Line 1.0,120,150,17,18,19,20,21,22,23,24,25,26,Cause1,Target1,Number1\x0d\x0a\
+2015/03/01 01:06:28,00:03:37,6,6044301510,I,203,,,1,1008742,0,E218,Volunteer9,T9001,Line 1.0,0,0,,,,,,,,,,,,,\x0d\x0a\
 2015/03/01 01:12:25,00:05:19,6,,I,203,,,0,1008743,0,E217,Volunteer8,T9001,Line 1.0,0,0,,,,,,,,,,,,,\x0d\x0a\
 2015/03/01 01:21:24,00:00:00,18,6042904566,I,206,,,0,1008745,0,E206,Vol N VM,T9015,Line 15.0,0,0,,,,,,,,,,,,,\x0d\x0a\
 2015/03/01 01:18:00,00:06:23,5,6046136447,I,206,,,0,\
@@ -73,7 +73,7 @@ T9014,Line 14.0,0,0,,,,,,,,,,,,,\x0d\x0a\
 2015/03/01 03:18:00,00:06:23,5,6046136447,I,206,,,0,1008744,0,E218,Volunteer9,T9014,Line 14.0,0,0,,,,,,,,,,,,,\x0d\x0a\
 2015/03/01 03:27:10,00:00:14,21,,I,203,,,0,1008746,0,T9001,Line 1.0,V9542,VM Channel 42,0,0,,,,,,,,,,,,,\x0d\x0a\
 2015/03/01 03:39:34,00:00:00,13,7785934953,I,206,,,0,1008749,0,E206,Vol N VM,T9015,Line 15.0,0,0,,,,,,,,,,,,,\x0d\x0a\
-2015/03/01 03:28:55,00:11:03,5,6045007440,I,206,,,0,1008747,0,E218,Volunteer9,T9014,Line 14.0,0,0,,,,,,,,,,,,,\x0d\x0a\
+2015/03/01 03:28:55,00:11:03,5,6045007440,O,206,,,0,1008747,0,E218,Volunteer9,T9014,Line 14.0,0,0,,,,,,,,,,,,,\x0d\x0a\
 ", 'ascii');
 
 let smdrMsgsSent: number = 0;
@@ -100,29 +100,55 @@ const db = pgp(connection);
 
 const testSelect = (query: string, expected: number): Promise<any> =>
 
-	new Promise((resolve, reject) => {
+	new Promise((resolve, reject) =>
 
-		console.log(query);
 		db.one(query)
 			.then(response => {
-				console.log(response.count, expected);
+				console.log(query);
 				if (response.count == expected) {
 					resolve('... passed');
 				}
 				else {
-					reject(`Query Failure: ${query}, ${response.count} Returned, ${smdrMsgsSent} Expected`);
+					reject(`Query Failure: ${query}, ${response.count} Returned, ${expected} Expected`);
 				}
 			})
-			.catch(reject);
-	});
+			.catch(error => reject(error)));
 
 const databaseCheck = () => {
 
 	testSelect("select count(*) from smdr;", smdrMsgsSent)
-		.then(() => { testSelect("select count(*) from smdr where connected_time = '319 seconds'::INTERVAL;", 3); })
-		.then(() => { testSelect("select count(*) from smdr where ring_time = '5 seconds'::INTERVAL;", 9); })
-		.then(() => { testSelect("select count(*) from smdr where caller = '6044301510';", 3); })
-		.then(() => { console.log ('Exiting Pass'); process.exit(0); })
+		.then(() => testSelect("select count(*) from smdr where connected_time = '319 seconds'::INTERVAL;", 3))
+		.then(() => testSelect("select count(*) from smdr where ring_time = '5 seconds'::INTERVAL;", 9))
+		.then(() => testSelect("select count(*) from smdr where caller = '6044301510';", 3))
+		.then(() => testSelect("select count(*) from smdr where direction = 'I';", 23))
+		.then(() => testSelect("select count(*) from smdr where direction = 'O';", 1))
+		.then(() => testSelect("select count(*) from smdr where called_number = '203';", 12))
+		.then(() => testSelect("select count(*) from smdr where called_number = '206';", 12))
+		.then(() => testSelect("select count(*) from smdr where dialed_number = '6041234567';", 1))
+		.then(() => testSelect("select count(*) from smdr where dialed_number = '';", 23))
+		.then(() => testSelect("select count(*) from smdr where is_internal = '0';", 22))
+		.then(() => testSelect("select count(*) from smdr where is_internal = '1';", 2))
+		.then(() => testSelect("select count(*) from smdr where call_id = '1008741';", 3))
+		.then(() => testSelect("select count(*) from smdr where continuation = '0';", 24))
+		.then(() => testSelect("select count(*) from smdr where party_1_device = 'E218';", 12))
+		.then(() => testSelect("select count(*) from smdr where party_1_device = 'T9001';", 3))
+		.then(() => testSelect("select count(*) from smdr where party_1_name = 'Volunteer9';", 12))
+		.then(() => testSelect("select count(*) from smdr where party_1_name = 'Volunteer8';", 3))
+		.then(() => testSelect("select count(*) from smdr where party_2_device = 'T9015';", 6))
+		.then(() => testSelect("select count(*) from smdr where party_2_device = 'T9001';", 9))
+		.then(() => testSelect("select count(*) from smdr where party_2_name = 'Line 15.0';", 6))
+		.then(() => testSelect("select count(*) from smdr where party_2_name = 'VM Channel 42';", 3))
+		.then(() => testSelect("select count(*) from smdr where hold_time = '120 seconds'::INTERVAL;", 1))
+		.then(() => testSelect("select count(*) from smdr where hold_time = '0 seconds'::INTERVAL;", 23))
+		.then(() => testSelect("select count(*) from smdr where park_time = '150 seconds'::INTERVAL;", 1))
+		.then(() => testSelect("select count(*) from smdr where park_time = '0 seconds'::INTERVAL;", 23))
+		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETING_CAUSE = 'Cause1';", 1))
+		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETING_CAUSE = '';", 23))
+		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETER_ID = 'Target1';", 1))
+		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETER_ID = '';", 23))
+		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETED_NUMBER = 'Number1';", 1))
+		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETED_NUMBER = '';", 23))
+		.then(() => { console.log('Exiting Pass'); process.exit(0); })
 		.catch(error => { console.log(JSON.stringify(error, null, 4)); process.exit(1); });
 };
 
