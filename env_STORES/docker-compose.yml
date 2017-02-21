@@ -66,11 +66,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   rabbitmq:
-    image: letsxo/rabbitmq
+    image: library/rabbitmq:3.6.6-management
     container_name: rabbitmq
     restart: unless-stopped
     privileged: true
     network_mode: "host"
+    env_file: 
+      - .env
     volumes:
       - /etc/localtime:/etc/localtime
       - rabbitmq_data:/var/lib/rabbitmq

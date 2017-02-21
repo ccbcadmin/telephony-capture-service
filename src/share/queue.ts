@@ -67,7 +67,7 @@ export class Queue {
 
 	private connect = () => {
 
-		this.amqp.connect(`amqp://localhost:5672`, (err, queueConnection) => {
+		this.amqp.connect((err, queueConnection) => {
 
 			// Errors can safely be ignored
 			if (!err) {
