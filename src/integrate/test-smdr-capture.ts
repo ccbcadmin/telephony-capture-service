@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 
-import { Observable } from "rxjs/Observable";
-import "rxjs/add/operator/map";
-
 import * as $ from "../share/constants";
 import { ClientSocket } from "../share/client-socket";
 import { Queue } from "../share/queue";
@@ -31,8 +28,7 @@ const env = envalid.cleanEnv(process.env, {
 let smdrFiles: string[] = [];
 let smdrFileNo = 0;
 let smdrMsgsSent: number = 0;
-
-const tcsSocket = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT);
+let tcsClient: ClientSocket;
 
 const sendSmdrRecords = (smdrFileName: string): void => {
 
@@ -53,17 +49,6 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 			++smdrMsgsSent;
 			const nextMsg = data.slice(index, next_index + 2);
 
-			/*
-			if (smdrMsgsSent % 20 === 5)
-				process.stdout.write('\b-');
-			else if (smdrMsgsSent % 20 === 10)
-				process.stdout.write('\b\\');
-			else if (smdrMsgsSent % 20 === 15)
-				process.stdout.write('\b|');
-			else if (smdrMsgsSent % 20 === 0)
-				process.stdout.write('\b/');
-			*/
-
 			index = next_index + 2;
 
 			// Randomly partition socket writes to ensure TCS handles gracefully
@@ -71,7 +56,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 			const firstPart = nextMsg.slice(0, partition);
 			const secondPart = nextMsg.slice(partition);
 
-			if (!tcsSocket.write(firstPart) || !tcsSocket.write(secondPart)) {
+			if (!tcsClient.write(firstPart) || !tcsClient.write(secondPart)) {
 				console.log("Link to TCS unavailable...aborting.");
 				process.exit(-1);
 			}
@@ -132,12 +117,8 @@ db.none("delete from smdr;")
 		process.exit(1);
 	});
 
-// Wait a bit to ensure the queue is empty, then proceed
-setTimeout(() => {
-
-	// Start from a clean sheet
-	databaseQueue.purge();
-
+const sendData = () => {
+	
 	// Search the source directory looking for raw SMDR files
 	dir.files("./sample-data/smdr-data/smdr-one-file", (err, files) => {
 		if (err) throw err;
@@ -154,5 +135,15 @@ setTimeout(() => {
 			}
 		}
 		nextFile();
-	});
-}, 1000);
+	});	
+}
+
+// Wait a bit to ensure the queue is empty, then proceed
+setTimeout(() => {
+
+	// Start from a clean sheet
+	databaseQueue.purge();
+
+	tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData);
+
+}, 2000);

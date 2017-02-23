@@ -77,13 +77,13 @@ T9014,Line 14.0,0,0,,,,,,,,,,,,,\x0d\x0a\
 ", 'ascii');
 
 let smdrMsgsSent: number = 0;
-const tcsSocket = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT);
+let tcsClient: ClientSocket;
 
 const sendSmdrRecords = (testMsgs: Buffer): void => {
 
 	smdrMsgsSent += stringOccurrences(testMsgs.toString(), "\x0d\x0a");
 
-	if (!tcsSocket.write(testMsgs)) {
+	if (!tcsClient.write(testMsgs)) {
 		console.log("Link to TCS unavailable...aborting.");
 		process.exit(1);
 	}
@@ -160,13 +160,7 @@ db.none("delete from smdr;")
 		process.exit(1);
 	});
 
-// Connect to DB_QUEUE only to purge it
-const databaseQueue = new Queue(env.DB_QUEUE, null, null, null);
-
-setTimeout(() => {
-
-	// Start from a clean sheet
-	databaseQueue.purge();
+const sendData = () => {
 
 	// Send some canned messages
 	sendSmdrRecords(test1SmdrMessages);
@@ -174,8 +168,16 @@ setTimeout(() => {
 	sendSmdrRecords(test3SmdrMessages);
 
 	// Wait a bit and then check the database
-	setTimeout(() => {
-		databaseCheck();
-	}, 2000);
+	setTimeout(() => { databaseCheck(); }, 2000);
+}
+
+// Connect to DB_QUEUE only to purge it
+const databaseQueue = new Queue(env.DB_QUEUE, null, null, null);
+setTimeout(() => {
+
+	// Start from a clean sheet
+	databaseQueue.purge();
+
+	tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData);
 
 }, 2000);

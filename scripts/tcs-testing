@@ -64,19 +64,16 @@ for i in 1
 do
 
 	# TEST CASE DESCRIPTION 
-	# Send a stream of data, shutdown rabbitmq, then restart it.
-	execute-test-case test-smdr-capture-detail
-
-	# TEST CASE DESCRIPTION 
-	# Send a file of SMDR messages through the TCS and ensure that a
-	# copy of the file is safely recorded in the SMDR_DATA-001 directory.
-	execute-test-case test-recording-smdr-files
+	# Ensure that a stream of data makes it round-trip.
+	# input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
+	# input_testdata and output_testdata must be identical
+	execute-test-case test-pbx-to-tms-flow
 
 
 	# TEST CASE DESCRIPTION 
-	# Send a file of SMDR messages through the TCS and ensure 
-	# that the database has recorded all records in the SMDR table.
-	execute-test-case test-smdr-capture
+	# Test the link to the tms-interface to ensure that it recovers and 
+	# ensuring no data loss.
+	execute-test-case test-tms-link-reopening	
 
 
 	# TEST CASE DESCRIPTION 
@@ -96,13 +93,6 @@ do
 
 
 	# TEST CASE DESCRIPTION 
-	# Ensure that a stream of data makes it round-trip.
-	# input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
-	# input_testdata and output_testdata must be identical
-	execute-test-case test-pbx-to-tms-flow
-
-
-	# TEST CASE DESCRIPTION 
 	# Send a stream of data, shutdown the queue without acking last
 	# message, and then restart the queue - ensure no messages are lost.
 	execute-test-case test-queuing-no-ack
@@ -115,9 +105,20 @@ do
 
 
 	# TEST CASE DESCRIPTION 
-	# Test the link to the tms-interface to ensure that it recovers and 
-	# ensuring no data loss.
-	execute-test-case test-tms-link-reopening		
+	# Send a file of SMDR messages through the TCS and ensure 
+	# that the database has recorded all records in the SMDR table.
+	execute-test-case test-smdr-capture
+
+
+	# TEST CASE DESCRIPTION 
+	# Send a stream of data, shutdown rabbitmq, then restart it.
+	execute-test-case test-smdr-capture-detail
+
+
+	# TEST CASE DESCRIPTION 
+	# Send a file of SMDR messages through the TCS and ensure that a
+	# copy of the file is safely recorded in the SMDR_DATA-001 directory.
+	execute-test-case test-recording-smdr-files
 
 done
 

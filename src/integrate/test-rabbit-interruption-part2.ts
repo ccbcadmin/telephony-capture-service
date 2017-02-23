@@ -1,19 +1,11 @@
 #!/usr/bin/env node
 
-import { Observable } from "rxjs/Observable";
-import "rxjs/add/operator/map";
-
 import * as $ from "../share/constants";
 import { ServerSocket } from "../share/server-socket";
 
 const routineName = "test-rabbit-interruption-part2";
 
 const _ = require("lodash");
-const net = require("net");
-const fs = require("fs");
-const dir = require("node-dir");
-const eventEmitter = require("events").EventEmitter;
-const ee = new eventEmitter;
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");

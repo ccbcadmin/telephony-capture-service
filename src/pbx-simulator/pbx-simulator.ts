@@ -28,7 +28,7 @@ const env = envalid.cleanEnv(process.env, {
 let smdrFiles: string[] = [];
 let smdrFileNo = 0;
 
-const tcsSocket = new ClientSocket("pbx=>tcs", '192.168.2.177', env.TCS_PORT);
+let tcsClient: ClientSocket;
 
 const sendSmdrRecords = (smdrFileName: string): void => {
 
@@ -67,7 +67,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 			const firstPart = nextMsg.slice(0, partition);
 			const secondPart = nextMsg.slice(partition);
 
-			if (!tcsSocket.write(firstPart) || !tcsSocket.write(secondPart)) {
+			if (!tcsClient.write(firstPart) || !tcsClient.write(secondPart)) {
 				console.log("Link to TCS unavailable...aborting.");
 				process.exit(1);
 			}
@@ -87,23 +87,28 @@ const nextFile = () => {
 
 ee.addListener("next", nextFile);
 
-const sourceDir = `/smdr-data/${env.PBX_SIMULATOR_SOURCE_DIRECTORY}`;
+const sendData = () => {
 
-// Search the source directory looking for raw SMDR files
-console.log("sourceDir: ", sourceDir);
-dir.files(sourceDir, (err, files) => {
-	if (err) throw err;
+	const sourceDir = `/smdr-data/${env.PBX_SIMULATOR_SOURCE_DIRECTORY}`;
 
-	// Deliver the data in chronological order
-	files.sort();
+	// Search the source directory looking for raw SMDR files
+	console.log("sourceDir: ", sourceDir);
+	dir.files(sourceDir, (err, files) => {
+		if (err) throw err;
 
-	for (let file of files) {
-		let path = file.split("/");
+		// Deliver the data in chronological order
+		files.sort();
 
-		// Only interested in SMDR files
-		if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
-			smdrFiles.push(file);
+		for (let file of files) {
+			let path = file.split("/");
+
+			// Only interested in SMDR files
+			if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
+				smdrFiles.push(file);
+			}
 		}
-	}
-	nextFile();
-});
+		nextFile();
+	});
+}
+
+tcsClient = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT, sendData);

@@ -1,57 +1,95 @@
+import "rxjs/Rx";
+import { Observable } from "rxjs/Observable";
+
+const net = require("net");
 const _ = require("lodash");
+const moment = require("moment");
+
+type callback = () => void;
 
 export class ClientSocket {
 
-	private net = require("net");
+	private socket = new net.Socket();
+
 	private linkName: string;
 	private host: string;
 	private port: number;
-	private socket;
-	private active: boolean;
-	private connectHandler;
+	private connectHandler: callback;
+	private disconnectHandler: callback;
 
-	constructor(linkName: string, host: string, port: number, connectHandler = null) {
+	private linkRetrySubscription = null;
+	private linkConnectSubscription = null;
+	private linkCloseSubscription = null;
+
+	private linkRetryTimer$ = Observable.interval(5000).timeInterval().startWith().map(() => moment());
+	private linkConnect$ = Observable.fromEvent(this.socket, "connect").map(() => moment());
+	private linkClose$ = Observable.fromEvent(this.socket, "close").map(() => moment());
+
+	constructor(linkName: string, host: string, port: number, connectHandler: callback = null, disconnectHandler: callback = null) {
+
 		this.linkName = linkName;
 		this.host = host;
 		this.port = port;
-		this.active = false;
-
-		// Allows ClientSocket to inform the client that a connection has been established
 		this.connectHandler = connectHandler;
+		this.disconnectHandler = disconnectHandler;
 
-		this.openSocket();
-	}
-
-	private openSocket = () => {
-		this.socket = this.net.createConnection({ host: this.host, port: this.port }, this.onConnect);
-		this.socket.addListener("end", () => { console.log(`${this.linkName} Disconnected`); });
-		this.socket.addListener("close", () => { console.log(`${this.linkName} Closed`); });
-		this.socket.addListener("error", (error) => {
+		// Routinely track socket errors
+		Observable.fromEvent(this.socket, "error").subscribe((error) => {
 			console.log(`${this.linkName} Link Error:\n${JSON.stringify(error, null, 4)}`);
 		});
+
+		// Begin the show
+		this.linkRetrySubscription = this.linkRetryTimer$.subscribe(this.linkRetry);
 	}
 
-	private onConnect = () => {
+	private linkConnect = () => {
+
 		console.log(`${this.linkName}: Connected`);
-		this.active = true;
+
+		// Stop listening to the close link connect event
+		this.linkConnectSubscription ? this.linkConnectSubscription.unsubscribe() : _.noop;
+		this.linkConnectSubscription = null;
+
+		// Stop retrying
+		this.linkRetrySubscription ? this.linkRetrySubscription.unsubscribe() : _.noop;
+		this.linkRetrySubscription = null;
+
+		// Listen for the socket close
+		this.linkCloseSubscription = this.linkClose$.subscribe(this.linkClosed);
+
 		this.connectHandler ? this.connectHandler() : _.noop;
-	}
+	};
 
-	private onClose = socket => {
-		setTimeout(this.openSocket, 2000);
-	}
+	private linkClosed = () => {
 
-	public write = (msg: Buffer): boolean => {
+		console.log(`${this.linkName}: Closed`);
 
-		if (this.active) {
-			if (this.socket.write(msg)) {
-				return true;
-			}
+		// Stop listening to the link close event
+		this.linkCloseSubscription ? this.linkCloseSubscription.unsubscribe() : _.noop;
+		this.linkCloseSubscription = null;
+
+		// Retry the link
+		this.linkRetrySubscription = this.linkRetryTimer$.subscribe(this.linkRetry);
+
+		this.disconnectHandler ? this.disconnectHandler() : _.noop;
+	};
+
+	private linkRetry = () => {
+
+		console.log(`${this.linkName}: Retry`);
+
+		this.socket.connect(this.port, this.host);
+		this.socket.setKeepAlive(true);
+
+		// Start listening for the connect event
+		if (!this.linkConnectSubscription) {
+			this.linkConnectSubscription = this.linkConnect$.subscribe(this.linkConnect);
 		}
-		return false;
-	}
+	};
 
 	public destroy = (): void => {
-		this.active ? this.socket.destroy() : _.noop;
+		this.socket.destroy();
 	}
+
+	public write = (msg: Buffer): boolean => this.socket.write(msg);
 }

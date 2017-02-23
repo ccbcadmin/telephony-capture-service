@@ -31,7 +31,7 @@ const env = envalid.cleanEnv(process.env, {
 let smdrFiles: string[] = [];
 let smdrFileNo = 0;
 
-const tcsSocket = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT);
+let tcsClient: ClientSocket;
 
 let txBuffer = Buffer.alloc(0);
 let rxBuffer = Buffer.alloc(0);
@@ -60,7 +60,7 @@ const sendSmdrRecords = (data: Buffer, transmitInterval: number): void => {
 			const firstPart = nextMsg.slice(0, partition);
 			const secondPart = nextMsg.slice(partition);
 
-			if (!tcsSocket.write(firstPart) || !tcsSocket.write(secondPart)) {
+			if (!tcsClient.write(firstPart) || !tcsClient.write(secondPart)) {
 				console.log("pbx=>tcs: Unavailable");
 				process.exit(1);
 			}
@@ -162,10 +162,8 @@ dir.files("/smdr-data/smdr-data-001", (error, files) => {
 
 });
 
-// Wait a bit to ensure SMDR-DATA-001 has been cleared
-setTimeout(() => {
-
-	// Search the source directory looking for raw SMDR files
+const sendData = () => {
+// Search the source directory looking for raw SMDR files
 	dir.files("./sample-data/smdr-data/smdr-one-file", (error, files) => {
 
 		if (error) {
@@ -188,4 +186,12 @@ setTimeout(() => {
 		}
 		nextFile();
 	});
+}
+
+// Wait a bit to ensure SMDR-DATA-001 has been cleared
+setTimeout(() => {
+
+	// Open the link to the TCS and send SMDR messages to the TCS
+	tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData);
+
 }, 4000);

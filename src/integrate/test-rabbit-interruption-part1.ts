@@ -1,24 +1,10 @@
 #!/usr/bin/env node
 
-import { Observable } from "rxjs/Observable";
-import "rxjs/add/operator/map";
-
 import * as $ from "../share/constants";
 import { ClientSocket } from "../share/client-socket";
 import { Queue } from "../share/queue";
 
 const routineName = "test-rabbit-interruption-part1";
-
-const _ = require("lodash");
-const net = require("net");
-const fs = require("fs");
-const dir = require("node-dir");
-const eventEmitter = require("events").EventEmitter;
-const ee = new eventEmitter;
-
-// Ensure the presence of required environment variables
-const envalid = require("envalid");
-const { str, num} = envalid;
 
 // Number of random bytes to send through the channel
 const testSize = 100000;
@@ -33,6 +19,9 @@ process.on("SIGINT", () => {
 	process.exit(0);
 });
 
+// Ensure the presence of required environment variables
+const envalid = require("envalid");
+const { str, num} = envalid;
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
 	TEST_TRANSMIT_INTERVAL: num(),
@@ -44,16 +33,13 @@ for (let index = 0; index < testSize; ++index) {
 	masterTxBuffer[index] = index % 256;
 }
 
-const tcsSocket = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT);
+let tcsClient: ClientSocket;
 
 let masterIndex = 0;
 
 const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
 
-setTimeout(() => {
-
-	// Start with a clean sheet
-	tmsQueue.purge();
+const sendData = () => {
 
 	const setIntervalId = setInterval(() => {
 
@@ -66,7 +52,7 @@ setTimeout(() => {
 			data[index] = masterTxBuffer[masterIndex];
 		}
 
-		if (tcsSocket.write(data) === false) {
+		if (tcsClient.write(data) === false) {
 			console.log("Link to TCS unavailable ... aborting.");
 			process.exit(1);
 		}
@@ -81,4 +67,14 @@ setTimeout(() => {
 			process.exit(1);
 		}
 	}, env.TEST_TRANSMIT_INTERVAL);
-}, 1000);
+}
+
+setTimeout(() => {
+
+	// Start with a clean sheet
+	tmsQueue.purge();
+
+	// Open the link to the TCS and send data when connected
+	tcsClient = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT, sendData);
+
+}, 2000);

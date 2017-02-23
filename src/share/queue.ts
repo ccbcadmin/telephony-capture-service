@@ -61,7 +61,7 @@ export class Queue {
 
 	private errorEvent = (err) => {
 
-		// Take note of the error - no further action taken
+		// Take note of the error - no further action required
 		console.log(`${this.queueName} Error Event: ${JSON.stringify(err, null, 4)}`);
 	}
 
@@ -133,8 +133,7 @@ export class Queue {
 		}
 	}
 
-	// The following routine facilitats testing.  It is
-	// not ever employed in the Production environment.
+	// The following routine facilitats testing; it is for use in the Production environment.
 	public purge = () => {
 		console.log(`${this.queueName} Purged`);
 		this.channel.purgeQueue();

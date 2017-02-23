@@ -2,8 +2,6 @@
 
 import * as $ from "../share/constants";
 import { Queue } from "../share/queue";
-import "rxjs/Rx";
-import { Observable } from "rxjs/Observable";
 
 const routineName = "test-queuing-no-ack";
 
@@ -17,7 +15,7 @@ process.on("SIGTERM", () => {
 	process.exit(0);
 });
 
-// Every 'failModule' messages will receive no ack
+// Every 'failModule' messages will not be acked
 let failModule = 12;
 let receiveCount = 0;
 
