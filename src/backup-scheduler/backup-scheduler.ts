@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+import { sleep } from "../share/util";
 const routineName = "backup-scheduler";
 
 // Ensure the presence of required environment variables
@@ -51,7 +51,8 @@ process.on("SIGINT", () => {
 console.log(`${routineName}: Started`);
 
 // Routinely restart in order to remove defunct child processes
-setTimeout(() => {
-	console.log("Backup Scheduler Exiting");
-	process.exit(0);
-}, 3600000);
+sleep(86400*1000)
+	.then(() => {
+		console.log("Backup Scheduler Exiting");
+		process.exit(0);
+	});

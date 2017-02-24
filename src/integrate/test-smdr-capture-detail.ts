@@ -3,6 +3,7 @@
 import * as $ from "../share/constants";
 import { ClientSocket } from "../share/client-socket";
 import { Queue } from "../share/queue";
+import { sleep } from "../share/util";
 
 const routineName = "test-smdr-capture-accuracy";
 const pgp = require("pg-promise")();
@@ -168,16 +169,11 @@ const sendData = () => {
 	sendSmdrRecords(test3SmdrMessages);
 
 	// Wait a bit and then check the database
-	setTimeout(() => { databaseCheck(); }, 2000);
+	sleep(2000).then(databaseCheck);
 }
 
 // Connect to DB_QUEUE only to purge it
 const databaseQueue = new Queue(env.DB_QUEUE, null, null, null);
-setTimeout(() => {
-
-	// Start from a clean sheet
-	databaseQueue.purge();
-
-	tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData);
-
-}, 2000);
+sleep(2000)
+	.then(databaseQueue.purge)
+	.then(() => tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData));

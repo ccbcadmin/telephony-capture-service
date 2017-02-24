@@ -71,7 +71,12 @@ export class ClientSocket {
 		// Retry the link
 		this.linkRetrySubscription = this.linkRetryTimer$.subscribe(this.linkRetry);
 
-		this.disconnectHandler ? this.disconnectHandler() : _.noop;
+		// If no specific disconnect handler, then exit
+		if (this.disconnectHandler) {
+			this.disconnectHandler();
+		} else {
+			process.exit(1);
+		}
 	};
 
 	private linkRetry = () => {
@@ -93,3 +98,6 @@ export class ClientSocket {
 
 	public write = (msg: Buffer): boolean => this.socket.write(msg);
 }
+
+export const createClient = (linkName, host, port, connectHandler, disconnectHandler = null) =>
+	new Promise((resolve) => resolve(new ClientSocket(linkName, host, port, connectHandler, disconnectHandler)));

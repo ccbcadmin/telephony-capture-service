@@ -133,15 +133,10 @@ export class Queue {
 		}
 	}
 
-	// The following routine facilitats testing; it is for use in the Production environment.
-	public purge = () => {
-		console.log(`${this.queueName} Purged`);
-		this.channel.purgeQueue();
-	}
+	// The following routine facilitates testing; it is not for use in Production.
+	public purge = () => this.channel.purgeQueue();
 
 	public close = () => {
-
-		// The client no longer needs/wants access to this queue
 
 		// Stop listening to queue events
 		if (this.channel) {

@@ -2,6 +2,7 @@
 
 import * as $ from "../share/constants";
 import { Queue } from "../share/queue";
+import { sleep } from "../share/util";
 
 const routineName = "test-queuing-no-ack";
 
@@ -25,10 +26,12 @@ const testMsgCount = 60;
 let rxMatrix = new Array(testMsgCount);
 rxMatrix.fill(false);
 
+let rxQueue;
+
 // 'dataSink' returns a boolean indicating success or not
 const dataSink = msg => {
 
-	console.log ("Received Msg: ", msg);
+	console.log("Received Msg: ", msg);
 
 	++receiveCount;
 	if (receiveCount % failModule !== 0) {
@@ -38,21 +41,16 @@ const dataSink = msg => {
 
 		return true;
 	} else {
-		// Now simulate the complete shutdown of the channel to the queue
+		// Now simulate the complete shutdown of the channel to the queue...
 		rxQueue.close();
 		rxQueue = null;
 
 		// ... which is later restarted
-		setTimeout(() => {
-			rxQueue = new Queue("TEST_QUEUE", null, dataSink, null);
-		}, 2000);
+		sleep(2000).then (()=>rxQueue = new Queue("TEST_QUEUE", null, dataSink, null));
 
 		return false;
 	}
 };
-
-let rxQueue;
-let txQueue = new Queue("TEST_QUEUE", null, null, null);
 
 // Create an artificial msg of this size
 const msgLength = 40;
@@ -61,45 +59,49 @@ const msgLength = 40;
 rxQueue = new Queue("TEST_QUEUE", null, dataSink, null);
 
 // Wait to connect to RabbitMQ and then send some data
-setTimeout(() => {
+const txQueue = new Queue("TEST_QUEUE", null, null, null);
+sleep(2000)
+	.then (()=>txQueue.purge())
+	.then(() => {
 
-	txQueue.purge();
-	for (let i = 0; i < testMsgCount; ++i) {
-
-		let sendBuffer = Buffer.alloc(msgLength);
-
-		for (let j = 0; j < msgLength; ++j) {
-			sendBuffer[j] = i;
-		}
-		txQueue.sendToQueue(sendBuffer);
-	}
-}, 1000);
-
-// Wait 60 seconds and then check several times if all done (every 5 seconds)
-setTimeout(() => {
-
-	let recheckCounter = 0;
-
-	setInterval(() => {
-
-		console.log ("Check If All Messages Received");
-
-		let allReceived = true;
-
-		// Check that all messages have been received
 		for (let i = 0; i < testMsgCount; ++i) {
-			if (rxMatrix[i] !== true) {
-				allReceived = false;
-				break;
+
+			let sendBuffer = Buffer.alloc(msgLength);
+
+			for (let j = 0; j < msgLength; ++j) {
+				sendBuffer[j] = i;
 			}
+			txQueue.sendToQueue(sendBuffer);
 		}
-		if (allReceived === true) {
-			console.log("All Messages Received");
-			process.exit(0);
-		}
-		if (12 < ++recheckCounter) {
-			console.log(`Not All Messages Received`);
-			process.exit(1);
-		}
-	}, 5000);
-}, 60000);
+	})
+	.catch((err) => { console.log('Err: ', JSON.stringify(err, null, 4));});
+
+// Wait for a while, then check several times to see if all is received
+sleep(30000)
+	.then(() => {
+
+		let recheckCounter = 0;
+
+		setInterval(() => {
+
+			console.log("Check If All Messages Received");
+
+			let allReceived = true;
+
+			// Check that all messages have been received
+			for (let i = 0; i < testMsgCount; ++i) {
+				if (rxMatrix[i] !== true) {
+					allReceived = false;
+					break;
+				}
+			}
+			if (allReceived === true) {
+				console.log("All Messages Received");
+				process.exit(0);
+			}
+			if (18 < ++recheckCounter) {
+				console.log(`Not All Messages Received`);
+				process.exit(1);
+			}
+		}, 5000);
+	});

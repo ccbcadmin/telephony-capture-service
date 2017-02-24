@@ -3,10 +3,10 @@
 import * as $ from "../share/constants";
 const moment = require("moment");
 const _ = require("lodash");
-import { ClientSocket } from "../share/client-socket";
+import { ClientSocket, createClient } from "../share/client-socket";
 import { ServerSocket } from "../share/server-socket";
 import { Queue } from "../share/queue";
-
+import { sleep } from "../share/util";
 const routineName = "test-pbx-to-tms-flow";
 
 // Ensure the presence of required environment variables
@@ -74,20 +74,14 @@ for (let index = 0; index < testSize; ++index) {
 	masterTxBuffer[index] = Math.floor(Math.random() * 255);
 }
 
-// Ensure a channel to the queue...
+// Ensure a clean queue and then create a link to send data to the TCS
 const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
-setTimeout(() => {
-
-	// ...then clear the queue
-	tmsQueue.purge();
-
-	// When the link opens, send the test data
-	setTimeout(() => {
-		
-		tcsClient = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT, sendData, linkClosed);
-	}, 2000);
-
-}, 2000);
+sleep(2000)
+	// Ensure an empty queue
+	.then(tmsQueue.purge)
+	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData, linkClosed))
+	.then((client) => tcsClient = client)
+	.catch((err) => { console.log('Err: ', JSON.stringify(err, null, 4));});
 
 const dataCapture = (data: Buffer) => {
 
@@ -114,7 +108,4 @@ const dataCapture = (data: Buffer) => {
 new ServerSocket("tcs=>tms", env.TMS_PORT, dataCapture).startListening();
 
 // Set an upper limit for the test to complete successfully
-setTimeout(() => {
-	console.log("Insufficient Data Received: ", rxBytes);
-	process.exit(1);
-}, 600000);
+sleep(600000).then(() => { console.log("Insufficient Data Received: ", rxBytes); process.exit(1); });

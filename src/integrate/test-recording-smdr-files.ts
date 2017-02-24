@@ -3,9 +3,9 @@
 import * as $ from "../share/constants";
 import { ClientSocket } from "../share/client-socket";
 import { Queue } from "../share/queue";
+import { sleep } from "../share/util";
 
-const routineName = "pbx-simulator";
-const pgp = require("pg-promise")();
+const routineName = "test-recording-smdr-files";
 
 const _ = require("lodash");
 const net = require("net");
@@ -130,7 +130,7 @@ const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
 
 		// Wait a bit and then confirm the count in the database
-		setTimeout(compareFiles, 10000);
+		sleep(1000).then(compareFiles);
 	}
 	else {
 
@@ -163,7 +163,7 @@ dir.files("/smdr-data/smdr-data-001", (error, files) => {
 });
 
 const sendData = () => {
-// Search the source directory looking for raw SMDR files
+	// Search the source directory looking for raw SMDR files
 	dir.files("./sample-data/smdr-data/smdr-one-file", (error, files) => {
 
 		if (error) {
@@ -189,9 +189,8 @@ const sendData = () => {
 }
 
 // Wait a bit to ensure SMDR-DATA-001 has been cleared
-setTimeout(() => {
-
-	// Open the link to the TCS and send SMDR messages to the TCS
-	tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData);
-
-}, 4000);
+sleep(4000)
+	.then(() => {
+		// Open the link to the TCS and send SMDR messages to the TCS
+		tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData);
+	});

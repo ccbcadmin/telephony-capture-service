@@ -3,6 +3,7 @@
 import * as $ from "../share/constants";
 import { ClientSocket } from "../share/client-socket";
 import { Queue } from "../share/queue";
+import { sleep } from "../share/util";
 
 const routineName = "pbx-simulator";
 const pgp = require("pg-promise")();
@@ -97,7 +98,7 @@ const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
 
 		// Wait a bit and then confirm the count in the database
-		setTimeout(checkRecordCount, 10000);
+		sleep(10000).then(checkRecordCount);
 	}
 	else {
 		sendSmdrRecords(smdrFiles[smdrFileNo]);
@@ -107,9 +108,6 @@ const nextFile = () => {
 
 ee.on("next", nextFile);
 
-// Connect to DB_QUEUE only to purge it
-const databaseQueue = new Queue(env.DB_QUEUE, null, null, null);
-
 db.none("delete from smdr;")
 	.then(() => _.noop)
 	.catch(error => {
@@ -118,7 +116,7 @@ db.none("delete from smdr;")
 	});
 
 const sendData = () => {
-	
+
 	// Search the source directory looking for raw SMDR files
 	dir.files("./sample-data/smdr-data/smdr-one-file", (err, files) => {
 		if (err) throw err;
@@ -135,15 +133,11 @@ const sendData = () => {
 			}
 		}
 		nextFile();
-	});	
+	});
 }
 
-// Wait a bit to ensure the queue is empty, then proceed
-setTimeout(() => {
-
-	// Start from a clean sheet
-	databaseQueue.purge();
-
-	tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData);
-
-}, 2000);
+// Connect to DB_QUEUE only to purge it
+const databaseQueue = new Queue(env.DB_QUEUE, null, null, null);
+sleep(2000)
+	.then(databaseQueue.purge)
+	.then(() => tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData));

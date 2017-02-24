@@ -4,6 +4,7 @@ import * as $ from "../share/constants";
 import { ClientSocket } from "../share/client-socket";
 import { ServerSocket } from "../share/server-socket";
 import { Queue } from "../share/queue";
+import { sleep } from "../share/util";
 
 const routineName = "test-tms-link-reopening";
 const _ = require("lodash");
@@ -46,22 +47,21 @@ const connectionHandler = () => {
 		process.exit(1);
 	}
 
-	// After a small timeout, close the circuit
-	console.log ("Destroy the link");
-	setTimeout(() => { tcsClient.destroy(); }, 500);
+	// Wait a bit and then close the circuit
+	console.log("Destroy the link");
+	sleep(500).then(() => { tcsClient.destroy(); });
 };
 
 const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
-setTimeout(() => {
+sleep(2000)
+	.then(tmsQueue.purge)
+	.then(() => {
+		const setIntervalId = setInterval(() => {
+			tcsClient = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT, connectionHandler);
+		}, 1000);
+	})
+	.catch((err) => { console.log('Err: ', JSON.stringify(err, null, 4)); });
 
-	// Start with a clean queue
-	tmsQueue.purge();
-
-	const setIntervalId = setInterval(() => {
-		tcsClient = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT, connectionHandler);
-	}, 1000);
-
-}, 2000);
 
 const testIterations = 20;
 let rxMatrix = Buffer.alloc(testIterations);
@@ -97,7 +97,7 @@ const dataCapture = (data: Buffer) => {
 // Start receiving data from tms-interface
 new ServerSocket("tcs=>tms", env.TMS_PORT, dataCapture, null).startListening();
 
-setTimeout(() => {
+sleep(150000).then(() => {
 	console.log("Test Failed: Max time to complete test");
 	process.exit(1);
-}, 150000);
+});

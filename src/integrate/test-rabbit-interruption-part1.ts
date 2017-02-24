@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import * as $ from "../share/constants";
-import { ClientSocket } from "../share/client-socket";
+import { ClientSocket, createClient } from "../share/client-socket";
 import { Queue } from "../share/queue";
+import { sleep } from "../share/util";
 
 const routineName = "test-rabbit-interruption-part1";
 
@@ -37,8 +38,6 @@ let tcsClient: ClientSocket;
 
 let masterIndex = 0;
 
-const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
-
 const sendData = () => {
 
 	const setIntervalId = setInterval(() => {
@@ -66,15 +65,14 @@ const sendData = () => {
 			console.log("Assertion Failure: masterIndex > testSize");
 			process.exit(1);
 		}
+
 	}, env.TEST_TRANSMIT_INTERVAL);
 }
 
-setTimeout(() => {
-
-	// Start with a clean sheet
-	tmsQueue.purge();
-
-	// Open the link to the TCS and send data when connected
-	tcsClient = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT, sendData);
-
-}, 2000);
+// Ensure a clean queue and then create a link to the TCS
+const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
+sleep(2000)
+	.then(tmsQueue.purge)
+	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData))
+	.then((client) => tcsClient = client)
+	.catch((err) => console.log('Err: ', JSON.stringify(err, null, 4)));
