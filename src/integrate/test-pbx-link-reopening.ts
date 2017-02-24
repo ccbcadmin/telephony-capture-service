@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import * as $ from "../share/constants";
-import { ClientSocket } from "../share/client-socket";
+import { ClientSocket, createClient } from "../share/client-socket";
 import { ServerSocket } from "../share/server-socket";
 import { Queue } from "../share/queue";
 import { sleep } from "../share/util";
@@ -31,7 +31,7 @@ const env = envalid.cleanEnv(process.env, {
 let tcsClient: ClientSocket;
 
 const nextChar = c => String.fromCharCode(c.charCodeAt(0) + 1);
-const dataLength = 40;
+const dataLength = 50;
 
 let testChar = "\x00";
 
@@ -47,21 +47,16 @@ const connectionHandler = () => {
 		process.exit(1);
 	}
 
-	// Wait a bit and then close the circuit
-	console.log("Destroy the link");
+	// Wait a bit then close the circuit
 	sleep(500).then(() => { tcsClient.destroy(); });
 };
 
 const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
 sleep(2000)
 	.then(tmsQueue.purge)
-	.then(() => {
-		const setIntervalId = setInterval(() => {
-			tcsClient = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT, connectionHandler);
-		}, 1000);
-	})
+	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, connectionHandler))
+	.then((client) => tcsClient = client)
 	.catch((err) => { console.log('Err: ', JSON.stringify(err, null, 4)); });
-
 
 const testIterations = 20;
 let rxMatrix = Buffer.alloc(testIterations);
@@ -69,7 +64,7 @@ rxMatrix.fill(0);
 
 const dataCapture = (data: Buffer) => {
 
-	console.log(data);
+	console.log(`Rx Length: ${data.length}, Data:\n${data.toString('hex')}`);
 
 	// Examine each data value and take note if received
 	for (let j = 0; j < testIterations; ++j) {
@@ -97,7 +92,7 @@ const dataCapture = (data: Buffer) => {
 // Start receiving data from tms-interface
 new ServerSocket("tcs=>tms", env.TMS_PORT, dataCapture, null).startListening();
 
-sleep(150000).then(() => {
+sleep(300000).then(() => {
 	console.log("Test Failed: Max time to complete test");
 	process.exit(1);
 });

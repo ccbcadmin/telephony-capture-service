@@ -9,12 +9,12 @@ NO_TRACE='&> /dev/null'
 execute-test-case () {
 	echo 'Test Case: '$1' ... '
 	if docker-compose $COMPOSE_ARGS run --rm --name $TCSENV-$1 --entrypoint bash integrate -c \
-		'./lib/integrate/'$1'.js '"$NO_TRACE"' || true; exit $?' ; then
+		'./lib/integrate/'$1'.js '"$NO_TRACE"'; exit $?' ; then
 		echo 'passed'
 	else
 		echo 'failed'
 		echo 'Testing Aborted'
-		exit 1
+		# exit 1
 	fi
 }
 
@@ -62,6 +62,11 @@ sleep 3 # Wait for the startup to settle
 # Execute the following several times
 for i in 1
 do
+	# TEST CASE DESCRIPTION 
+	# Test the link to the tms-interface to ensure that it recovers and 
+	# that that there is no data loss.
+	execute-test-case test-pbx-link-reopening
+
 
 	# TEST CASE DESCRIPTION 
 	# Ensure that a stream of data makes it round-trip.
@@ -113,13 +118,6 @@ do
 	# Send a file of SMDR messages through the TCS and ensure that a
 	# copy of the file is safely recorded in the SMDR_DATA-001 directory.
 	execute-test-case test-recording-smdr-files
-
-
-	# TEST CASE DESCRIPTION 
-	# Test the link to the tms-interface to ensure that it recovers and 
-	# that that there is no data loss.
-	# execute-test-case test-pbx-link-reopening
-
 done
 
 echo 'All Test Cases executed successfully'

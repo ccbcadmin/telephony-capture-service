@@ -62,13 +62,6 @@ const sendData = () => {
 	}, env.TEST_TRANSMIT_INTERVAL);
 }
 
-const linkClosed = () => {
-
-	// If the link to the TCS closes, this test fails
-	console.log("pbx=>tcs Closed Unexpectedly");
-	process.exit(1);
-}
-
 // Load the buffer with random data
 for (let index = 0; index < testSize; ++index) {
 	masterTxBuffer[index] = Math.floor(Math.random() * 255);
@@ -79,7 +72,7 @@ const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
 sleep(2000)
 	// Ensure an empty queue
 	.then(tmsQueue.purge)
-	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData, linkClosed))
+	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData))
 	.then((client) => tcsClient = client)
 	.catch((err) => { console.log('Err: ', JSON.stringify(err, null, 4));});
 
@@ -107,5 +100,5 @@ const dataCapture = (data: Buffer) => {
 // Start listening for messages directed to the TMS
 new ServerSocket("tcs=>tms", env.TMS_PORT, dataCapture).startListening();
 
-// Set an upper limit for the test to complete successfully
+// Set an upper limit for the test to complete
 sleep(600000).then(() => { console.log("Insufficient Data Received: ", rxBytes); process.exit(1); });

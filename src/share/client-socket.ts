@@ -62,8 +62,6 @@ export class ClientSocket {
 
 	private linkClosed = () => {
 
-		console.log(`${this.linkName}: Closed`);
-
 		// Stop listening to the link close event
 		this.linkCloseSubscription ? this.linkCloseSubscription.unsubscribe() : _.noop;
 		this.linkCloseSubscription = null;
@@ -71,12 +69,8 @@ export class ClientSocket {
 		// Retry the link
 		this.linkRetrySubscription = this.linkRetryTimer$.subscribe(this.linkRetry);
 
-		// If no specific disconnect handler, then exit
-		if (this.disconnectHandler) {
-			this.disconnectHandler();
-		} else {
-			process.exit(1);
-		}
+		console.log(`${this.linkName}: Closed`);
+		this.disconnectHandler ? this.disconnectHandler() : _.noop;
 	};
 
 	private linkRetry = () => {
@@ -93,6 +87,7 @@ export class ClientSocket {
 	};
 
 	public destroy = (): void => {
+		console.log(`${this.linkName}: Disconnected`);
 		this.socket.destroy();
 	}
 
