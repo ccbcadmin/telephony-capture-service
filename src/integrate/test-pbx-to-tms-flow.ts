@@ -34,6 +34,7 @@ const env = envalid.cleanEnv(process.env, {
 	TMS_QUEUE: str()
 });
 
+let rxBytes = 0;
 let txBytes = 0;
 let tcsClient: ClientSocket;
 
@@ -61,25 +62,33 @@ const sendData = () => {
 	}, env.TEST_TRANSMIT_INTERVAL);
 }
 
+const linkClosed = () => {
+
+	// If the link to the TCS closes, this test fails
+	console.log("pbx=>tcs Closed Unexpectedly");
+	process.exit(1);
+}
+
 // Load the buffer with random data
 for (let index = 0; index < testSize; ++index) {
 	masterTxBuffer[index] = Math.floor(Math.random() * 255);
 }
 
-const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
-
 // Ensure a channel to the queue...
+const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
 setTimeout(() => {
 
 	// ...then clear the queue
 	tmsQueue.purge();
 
 	// When the link opens, send the test data
-	tcsClient = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT, sendData);
+	setTimeout(() => {
+		
+		tcsClient = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT, sendData, linkClosed);
+	}, 2000);
 
 }, 2000);
 
-let rxBytes = 0;
 const dataCapture = (data: Buffer) => {
 
 	data.copy(masterRxBuffer, rxBytes, 0);

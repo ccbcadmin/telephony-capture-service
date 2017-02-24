@@ -45,7 +45,6 @@ export class ServerSocket {
 
 	public startListening = () => {
 
-		console.log(`${this.linkName}: Start Listening`);
 		this.server.addListener("connection", this.handleConnection);
 
 		this.server.listen({

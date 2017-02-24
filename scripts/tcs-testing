@@ -7,7 +7,7 @@ NO_TRACE='&> /dev/null'
 
 # 'execute-test-case' is the workhorse function to execute the various test cases
 execute-test-case () {
-	echo -n 'Test Case: '$1' ... '
+	echo 'Test Case: '$1' ... '
 	if docker-compose $COMPOSE_ARGS run --rm --name $TCSENV-$1 --entrypoint bash integrate -c \
 		'./lib/integrate/'$1'.js '"$NO_TRACE"'; exit $?' ; then
 		echo 'passed'
@@ -21,7 +21,7 @@ execute-test-case () {
 cleanup () {
 	echo $PROGNAME" Cleanup"
 	# Ensure the test environment is shutdown
-	docker-compose $COMPOSE_ARGS down 
+	# docker-compose $COMPOSE_ARGS down 
 }
 
 trap cleanup EXIT
@@ -64,11 +64,18 @@ for i in 1
 do
 
 	# TEST CASE DESCRIPTION 
+	# Test the link to the tms-interface to ensure that it recovers and 
+	# that that there is no data loss.
+	# execute-test-case test-pbx-link-reopening
+
+
+	# TEST CASE DESCRIPTION 
 	# Ensure that a stream of data makes it round-trip.
 	# input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
 	# input_testdata and output_testdata must be identical
 	execute-test-case test-pbx-to-tms-flow
 
+exit 0
 
 	# TEST CASE DESCRIPTION 
 	# Test the link to the tms-interface to ensure that it recovers and 
@@ -96,12 +103,6 @@ do
 	# Send a stream of data, shutdown the queue without acking last
 	# message, and then restart the queue - ensure no messages are lost.
 	execute-test-case test-queuing-no-ack
-
-
-	# TEST CASE DESCRIPTION 
-	# Test the link to the tms-interface to ensure that it recovers and 
-	# that that there is no data loss.
-	execute-test-case test-pbx-link-reopening	
 
 
 	# TEST CASE DESCRIPTION 
