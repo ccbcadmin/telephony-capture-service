@@ -510,7 +510,7 @@ pbx-simulator ()
     docker pull ccbcadmin/tcs-image$TCS_VERSION >> /dev/null || return 1;
     docker-compose $COMPOSE_ARGS run -d --name $TCSENV'-pbx-simulator' pbx-simulator || return 1;
 
-    enable-restart $TCSENV'-pbx-simulator' || return 1;
+    disable-restart $TCSENV'-pbx-simulator' || return 1;
 
     return 0
 }
