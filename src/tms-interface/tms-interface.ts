@@ -30,7 +30,7 @@ let tmsClient: ClientSocket;
 // Any data received from the queue, immediately forward on to the TMS
 const dataSink = msg => tmsClient.write(msg);
 
-const openQueueChannel = () => { tmsQueue = new Queue(env.TMS_QUEUE, null, dataSink, null); }
+const openQueueChannel = () => { tmsQueue = new Queue(env.TMS_QUEUE, dataSink); }
 
 const closeQueueChannel = () => {
 	tmsQueue ? tmsQueue.close() : _.noop;

@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
 import * as $ from "../share/constants";
-import { ClientSocket } from "../share/client-socket";
-import { Queue } from "../share/queue";
+import { ClientSocket, createClient } from "../share/client-socket";
 import { sleep } from "../share/util";
 
-const routineName = "test-recording-smdr-files";
+const routineName = "test-smdr-capture-files";
 
 const _ = require("lodash");
 const net = require("net");
@@ -144,22 +143,26 @@ const nextFile = () => {
 ee.on("next", nextFile);
 
 // Delete all files out of the SMDR-DATA-001 directory
-dir.files("/smdr-data/smdr-data-001", (error, files) => {
+const clearSMDR_DATA_001 = () => new Promise((resolve, reject) => {
 
-	if (error) {
-		console.log(JSON.stringify(error, null, 4));
-		process.exit(1);
-	}
+	dir.files("/smdr-data/smdr-data-001", (error, files) => {
 
-	files.forEach(file => {
-		fs.unlink(file, (error) => {
-			if (error) {
-				console.log(JSON.stringify(error, null, 4));
-				process.exit(1);
-			}
+		if (error) {
+			console.log(JSON.stringify(error, null, 4));
+			//process.exit(1);
+			return reject(error);
+		}
+
+		files.forEach(file => {
+			fs.unlink(file, (error) => {
+				if (error) {
+					console.log(JSON.stringify(error, null, 4));
+					process.exit(1);
+				}
+			});
 		});
+		resolve(null);
 	});
-
 });
 
 const sendData = () => {
@@ -190,7 +193,7 @@ const sendData = () => {
 
 // Wait a bit to ensure SMDR-DATA-001 has been cleared
 sleep(4000)
-	.then(() => {
-		// Open the link to the TCS and send SMDR messages to the TCS
-		tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData);
-	});
+	.then(clearSMDR_DATA_001)
+	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData))
+	.then((client: ClientSocket) => tcsClient = client)
+	.catch((err) => { console.log('Err: ', JSON.stringify(err, null, 4));});

@@ -208,4 +208,4 @@ const dataSink = (msg): boolean => {
 	return true;
 };
 
-const databaseQueue = new Queue(env.DB_QUEUE, null, dataSink, null);
+const databaseQueue = new Queue(env.DB_QUEUE, dataSink);

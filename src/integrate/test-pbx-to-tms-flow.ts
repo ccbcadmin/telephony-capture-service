@@ -68,12 +68,12 @@ for (let index = 0; index < testSize; ++index) {
 }
 
 // Ensure a clean queue and then create a link to send data to the TCS
-const tmsQueue = new Queue(env.TMS_QUEUE, null, null, null);
+const tmsQueue = new Queue(env.TMS_QUEUE);
 sleep(2000)
 	// Ensure an empty queue
 	.then(tmsQueue.purge)
 	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData))
-	.then((client) => tcsClient = client)
+	.then((client:ClientSocket) => tcsClient = client)
 	.catch((err) => { console.log('Err: ', JSON.stringify(err, null, 4));});
 
 const dataCapture = (data: Buffer) => {

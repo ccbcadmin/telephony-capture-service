@@ -51,12 +51,13 @@ const parseSmdrMessages = (data: Buffer) => {
 
 			// Send to the queue without the CRLF
 			databaseQueue.sendToQueue(unprocessedData.slice(nextMsg, crLfIndexOf));
-			
+
 			// Record a copy of each SMDR message to a file
-			fs.appendFile("/smdr-data/smdr-data-001/rw" + moment().format("YYMMDD") + ".001", 
-				smdrMessage, (err) => {
-				if (err) throw err;
-			});
+			fs.appendFile("/smdr-data/smdr-data-001/rw" + moment().format("YYMMDD") + ".001",
+				smdrMessage, 
+				(err) => {
+					if (err) throw err;
+				});
 		}
 		else {
 			console.log('Corrupt message detected:\n', smdrMessage.toString());
@@ -109,10 +110,10 @@ const dbQueueDisconnectHandler = () => {
 };
 
 // Setup the queue to the TMS (if needed)
-tmsQueue = env.TMS_ACTIVE ? new Queue(env.TMS_QUEUE, null, null, tmsQueueDisconnectHandler) : null;
+tmsQueue = env.TMS_ACTIVE ? new Queue(env.TMS_QUEUE, null, tmsQueueDisconnectHandler) : null;
 
 // Always need the database queue
-databaseQueue = new Queue(env.DB_QUEUE, null, null, dbQueueDisconnectHandler, dbQueueConnectHandler);
+databaseQueue = new Queue(env.DB_QUEUE, null, dbQueueDisconnectHandler, dbQueueConnectHandler);
 
 // And finally the server to listen for SMDR messages
 const pbxSocket = new ServerSocket("pbx=>tcs", env.TCS_PORT, dataSink, pbxLinkClosed);

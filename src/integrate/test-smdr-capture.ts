@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import * as $ from "../share/constants";
-import { ClientSocket } from "../share/client-socket";
+import { ClientSocket, createClient } from "../share/client-socket";
 import { Queue } from "../share/queue";
 import { sleep } from "../share/util";
 
@@ -59,7 +59,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 
 			if (!tcsClient.write(firstPart) || !tcsClient.write(secondPart)) {
 				console.log("Link to TCS unavailable...aborting.");
-				process.exit(-1);
+				process.exit(1);
 			}
 		}
 	}, env.TEST_TRANSMIT_INTERVAL);
@@ -108,13 +108,6 @@ const nextFile = () => {
 
 ee.on("next", nextFile);
 
-db.none("delete from smdr;")
-	.then(() => _.noop)
-	.catch(error => {
-		console.log("database purge error: ", JSON.stringify(error));
-		process.exit(1);
-	});
-
 const sendData = () => {
 
 	// Search the source directory looking for raw SMDR files
@@ -136,8 +129,11 @@ const sendData = () => {
 	});
 }
 
-// Connect to DB_QUEUE only to purge it
-const databaseQueue = new Queue(env.DB_QUEUE, null, null, null);
+// Clear both the DB_QUEUE and the smdr table
+const databaseQueue = new Queue(env.DB_QUEUE);
 sleep(2000)
 	.then(databaseQueue.purge)
-	.then(() => tcsClient = new ClientSocket("PBX->TCS", "localhost", env.TCS_PORT, sendData));
+	.then(() => db.none("delete from smdr;"))
+	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData))
+	.then((client: ClientSocket) => tcsClient = client)
+	.catch(error => { console.log(JSON.stringify(error, null, 4)); process.exit(1); });

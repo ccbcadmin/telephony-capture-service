@@ -46,7 +46,7 @@ const dataSink = msg => {
 		rxQueue = null;
 
 		// ... which is later restarted
-		sleep(2000).then (()=>rxQueue = new Queue("TEST_QUEUE", null, dataSink, null));
+		sleep(2000).then (()=>rxQueue = new Queue("TEST_QUEUE", dataSink));
 
 		return false;
 	}
@@ -56,10 +56,10 @@ const dataSink = msg => {
 const msgLength = 40;
 
 // Send to and receive from the same queue
-rxQueue = new Queue("TEST_QUEUE", null, dataSink, null);
+rxQueue = new Queue("TEST_QUEUE", dataSink);
 
 // Wait to connect to RabbitMQ and then send some data
-const txQueue = new Queue("TEST_QUEUE", null, null, null);
+const txQueue = new Queue("TEST_QUEUE");
 sleep(2000)
 	.then (()=>txQueue.purge())
 	.then(() => {

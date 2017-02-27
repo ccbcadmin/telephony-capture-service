@@ -94,5 +94,5 @@ export class ClientSocket {
 	public write = (msg: Buffer): boolean => this.socket.write(msg);
 }
 
-export const createClient = (linkName, host, port, connectHandler, disconnectHandler = null) =>
+export const createClient = (linkName, host, port, connectHandler=null, disconnectHandler = null) =>
 	new Promise((resolve) => resolve(new ClientSocket(linkName, host, port, connectHandler, disconnectHandler)));

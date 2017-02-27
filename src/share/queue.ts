@@ -23,11 +23,10 @@ export class Queue {
 	// Use connectHandler to inform the client that the channel to the queuing server is available
 	private connectHandler = null;
 
-	constructor(queueName: string, maxLength: number, consumer, disconnectHandler, connectHandler = null) {
+	constructor(queueName: string, consumer = null, disconnectHandler = null, connectHandler = null) {
 
 		this.queueName = queueName;
 		this.consumer = consumer;
-		this.maxLength = maxLength;
 		this.disconnectHandler = disconnectHandler;
 		this.connectHandler = connectHandler;
 		this.connection = null;
@@ -89,15 +88,10 @@ export class Queue {
 						process.exit(1);
 					}
 
-					console.log(`${this.queueName} Channel Created`);
-
-					if (this.maxLength) {
-						channel.assertQueue(this.queueName, { durable: true, maxLength: this.maxLength });
-					}
-					else {
-						channel.assertQueue(this.queueName, { durable: true });
-					}
+					channel.assertQueue(this.queueName, { durable: true });
 					this.channel = channel;
+
+					console.log(`${this.queueName} Channel Created`);
 
 					// Inform the client that a channel exists
 					this.connectHandler ? this.connectHandler() : _.noop;
@@ -121,20 +115,10 @@ export class Queue {
 		});
 	}
 
-	public sendToQueue = (msg: Buffer): boolean => {
+	public sendToQueue = (msg: Buffer): Promise<any> => this.channel.sendToQueue(this.queueName, msg, { persistent: true });
 
-		if (this.channel && this.channel.sendToQueue(this.queueName, msg, { persistent: true })) {
-			return true;
-		}
-		else {
-			// No channel to send the data to
-			console.log(`${this.queueName} Unable to Send to Queue`);
-			return false;
-		}
-	}
-
-	// The following routine facilitates testing; it is not for use in Production.
-	public purge = () => this.channel.purgeQueue();
+	// 'purge' facilitates testing; it is not for Production use.
+	public purge = (): Promise<any> => this.channel.purgeQueue();
 
 	public close = () => {
 

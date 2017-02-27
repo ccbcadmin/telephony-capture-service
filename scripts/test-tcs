@@ -63,22 +63,20 @@ sleep 3 # Wait for the startup to settle
 for i in 1
 do
 	# TEST CASE DESCRIPTION 
-	# Test the link to the tms-interface to ensure that it recovers and 
-	# that that there is no data loss.
-	execute-test-case test-pbx-link-reopening
+	# Send a file of SMDR messages through the TCS and ensure 
+	# that the database has recorded all records in the SMDR table.
+	execute-test-case test-smdr-capture
+	
+
+	# TEST CASE DESCRIPTION 
+	# Send a file of SMDR messages through the TCS and ensure that a
+	# copy of the file is safely recorded in the SMDR_DATA-001 directory.
+	execute-test-case test-smdr-capture-files
 
 
 	# TEST CASE DESCRIPTION 
-	# Ensure that a stream of data makes it round-trip.
-	# input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
-	# input_testdata and output_testdata must be identical
-	execute-test-case test-pbx-to-tms-flow
-
-
-	# TEST CASE DESCRIPTION 
-	# Send a stream of data, shutdown the queue without acking last
-	# message, and then restart the queue - ensure no messages are lost.
-	execute-test-case test-queuing-no-ack
+	# Ensure smdr capture is accurate down to the column level
+	execute-test-case test-smdr-capture-detail
 
 
 	# TEST CASE DESCRIPTION 
@@ -99,25 +97,29 @@ do
 
 	# TEST CASE DESCRIPTION 
 	# Test the link to the tms-interface to ensure that it recovers and 
+	# that that there is no data loss.
+	execute-test-case test-pbx-link-reopening
+
+
+	# TEST CASE DESCRIPTION 
+	# Ensure that a stream of data makes it round-trip.
+	# input_testdata=>pbx-interface=>rabbitmq=>tms-interface=>output_testdata
+	# input_testdata and output_testdata must be identical
+	execute-test-case test-pbx-to-tms-flow
+
+
+	# TEST CASE DESCRIPTION 
+	# Send a stream of data, shutdown the queue without acking last
+	# message, and then restart the queue - ensure no messages are lost.
+	execute-test-case test-queuing-no-ack
+
+
+	# TEST CASE DESCRIPTION 
+	# Test the link to the tms-interface to ensure that it recovers and 
 	# ensuring no data loss.
 	execute-test-case test-tms-link-reopening	
 
 
-	# TEST CASE DESCRIPTION 
-	# Send a file of SMDR messages through the TCS and ensure 
-	# that the database has recorded all records in the SMDR table.
-	execute-test-case test-smdr-capture
-
-
-	# TEST CASE DESCRIPTION 
-	# Send a stream of data, shutdown rabbitmq, then restart it.
-	execute-test-case test-smdr-capture-detail
-
-
-	# TEST CASE DESCRIPTION 
-	# Send a file of SMDR messages through the TCS and ensure that a
-	# copy of the file is safely recorded in the SMDR_DATA-001 directory.
-	execute-test-case test-recording-smdr-files
 done
 
 echo 'All Test Cases executed successfully'
