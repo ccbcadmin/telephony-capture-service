@@ -90,7 +90,7 @@ const dataCapture = (data: Buffer) => {
 };
 
 // Start receiving data from tms-interface
-new ServerSocket("tcs=>tms", env.TMS_PORT, dataCapture, null).startListening();
+new ServerSocket("tcs=>tms", env.TMS_PORT, dataCapture, undefined).startListening();
 
 sleep(300000).then(() => {
 	console.log("Test Failed: Max time to complete test");

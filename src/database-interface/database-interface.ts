@@ -1,13 +1,11 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
-import * as $ from "../share/constants";
 import { Queue } from "../share/queue";
 
 const routineName = "database-interface";
 
-const moment = require("moment");
-const _ = require("lodash");
-const pgp = require("pg-promise")();
+const pgPromise = require("pg-promise");
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
@@ -46,7 +44,7 @@ const connection = {
 	user: "postgres"
 };
 
-const db = pgp(connection);
+const db = pgPromise(connection);
 
 const insertCallRecords = (smdrRecord: SmdrRecord) =>
 	db.none(`INSERT INTO SMDR (
@@ -101,111 +99,112 @@ process.on("SIGTERM", (): void => {
 
 let badRawRecords = 0;
 
-const dataSink = (msg): boolean => {
-	
-	let raw_call = msg.toString().split(",");
+const dataSink = async (msg: Buffer): Promise<boolean> => {
 
-	if (raw_call.length !== 30) {
-		console.log ("bad call length: ", raw_call.length);
-		++badRawRecords;
-	} else {
+	try {
+		let raw_call = msg.toString().split(",");
 
-		let callStart = raw_call[0];
+		if (raw_call.length <= 30) {
+			console.log(`Bad SMDR Record Length: ${raw_call.length}, Bad SMDR Records: ${++badRawRecords}`);
+			++badRawRecords;
+		} else {
 
-		// Record Connected Time in seconds
-		let temp: string[] = raw_call[1].split(":");
-		let connectedTime = String(
-			Number(temp[0]) * 60 * 60 +
-			Number(temp[1]) * 60 +
-			Number(temp[2]));
-		// console.log('Connected Time (seconds): ', connectedTime);
+			let callStart = raw_call[0];
 
-		// Ring Time in seconds
-		let ringTime = raw_call[2];
+			// Record Connected Time in seconds
+			let temp: string[] = raw_call[1].split(":");
+			let connectedTime = String(
+				Number(temp[0]) * 60 * 60 +
+				Number(temp[1]) * 60 +
+				Number(temp[2]));
+			// console.log('Connected Time (seconds): ', connectedTime);
 
-		let caller = raw_call[3];
-		// console.log('Caller: ', caller);
+			// Ring Time in seconds
+			let ringTime = raw_call[2];
 
-		let direction = raw_call[4];
-		// console.log('Direction: ', direction);
+			let caller = raw_call[3];
+			// console.log('Caller: ', caller);
 
-		let calledNumber = raw_call[5];
-		// console.log('Called Number: ', calledNumber);
+			let direction = raw_call[4];
+			// console.log('Direction: ', direction);
 
-		let dialedNumber = raw_call[6];
-		// console.log('Dialed Number: ', dialedNumber);
+			let calledNumber = raw_call[5];
+			// console.log('Called Number: ', calledNumber);
 
-		let isInternal = raw_call[8];
-		// console.log('Is Internal: ', isInternal);
+			let dialedNumber = raw_call[6];
+			// console.log('Dialed Number: ', dialedNumber);
 
-		let callId = raw_call[9];
-		// console.log('Call ID: ', callId);
+			let isInternal = raw_call[8];
+			// console.log('Is Internal: ', isInternal);
 
-		let continuation = raw_call[10];
-		// console.log('Continuation: ', continuation);
+			let callId = raw_call[9];
+			// console.log('Call ID: ', callId);
 
-		let party1Device = raw_call[11];
-		// console.log('Party 1 Device: ', party1Device);
+			let continuation = raw_call[10];
+			// console.log('Continuation: ', continuation);
 
-		let party1Name = raw_call[12];
-		// console.log('Party 1 Name: ', party1Name);
+			let party1Device = raw_call[11];
+			// console.log('Party 1 Device: ', party1Device);
 
-		let party2Device = raw_call[13];
-		// console.log('Party 2 Device: ', party2Device);
+			let party1Name = raw_call[12];
+			// console.log('Party 1 Name: ', party1Name);
 
-		let party2Name = raw_call[14];
-		// console.log('Party 2 Name: ', party2Name);
+			let party2Device = raw_call[13];
+			// console.log('Party 2 Device: ', party2Device);
 
-		let holdTime = raw_call[15];
-		// console.log('Hold Time: ', holdTime);
+			let party2Name = raw_call[14];
+			// console.log('Party 2 Name: ', party2Name);
 
-		let parkTime = raw_call[16];
-		// console.log('Park Time: ', parkTime);
+			let holdTime = raw_call[15];
+			// console.log('Hold Time: ', holdTime);
 
-		let externalTargetingCause = raw_call[27];
-		// console.log('External Targetting Cause: ', externalTargetingCause);
+			let parkTime = raw_call[16];
+			// console.log('Park Time: ', parkTime);
 
-		let externalTargeterId = raw_call[28];
-		// console.log('External TargeterId: ', externalTargeterId);
+			let externalTargetingCause = raw_call[27];
+			// console.log('External Targetting Cause: ', externalTargetingCause);
 
-		let externalTargetedNumber = raw_call[29];
-		// console.log('External Targeted Number: ', externalTargetedNumber);
+			let externalTargeterId = raw_call[28];
+			// console.log('External TargeterId: ', externalTargeterId);
 
-		let smdrRecord: SmdrRecord = {
-			callStart: callStart,
-			connectedTime: connectedTime,
-			ringTime: ringTime,
-			caller: caller,
-			direction: direction,
-			calledNumber: calledNumber,
-			dialedNumber: dialedNumber,
-			isInternal: isInternal,
-			callId: callId,
-			continuation: continuation,
-			party1Device: party1Device,
-			party1Name: party1Name,
-			party2Device: party2Device,
-			party2Name: party2Name,
-			holdTime: holdTime,
-			parkTime: parkTime,
-			externalTargetingCause: externalTargetingCause,
-			externalTargeterId: externalTargeterId,
-			externalTargetedNumber: externalTargetedNumber
-		};
+			let externalTargetedNumber = raw_call[29];
+			// console.log('External Targeted Number: ', externalTargetedNumber);
 
-		insertCallRecords(smdrRecord)
-			// If OK, then move on the next record
-			.then(() => {
-				return true;
-			})
-			.catch(err => {
-				console.log("Database Insert Failure: ", err);
+			let smdrRecord: SmdrRecord = {
+				callStart: callStart,
+				connectedTime: connectedTime,
+				ringTime: ringTime,
+				caller: caller,
+				direction: direction,
+				calledNumber: calledNumber,
+				dialedNumber: dialedNumber,
+				isInternal: isInternal,
+				callId: callId,
+				continuation: continuation,
+				party1Device: party1Device,
+				party1Name: party1Name,
+				party2Device: party2Device,
+				party2Name: party2Name,
+				holdTime: holdTime,
+				parkTime: parkTime,
+				externalTargetingCause: externalTargetingCause,
+				externalTargeterId: externalTargeterId,
+				externalTargetedNumber: externalTargetedNumber
+			};
 
-				// Let the process restart
-				process.exit(1);
-			});
+			await insertCallRecords(smdrRecord);
+		}
+		return true;
+	} catch (err) {
+		console.log("Database Insert Failure: ", err);
+		return true;
 	}
-	return true;
 };
 
-const databaseQueue = new Queue(env.DB_QUEUE, dataSink);
+try {
+	new Queue(env.DB_QUEUE, dataSink);
+	console.log (`${routineName} Started`);
+
+} catch (err) {
+	console.log(err.message);
+}

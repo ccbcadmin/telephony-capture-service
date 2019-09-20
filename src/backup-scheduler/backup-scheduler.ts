@@ -6,7 +6,7 @@ const routineName = "backup-scheduler";
 const envalid = require("envalid");
 const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
-	BACKUP_SCHEDULE: str(),
+	BACKUP_SCHEDULE: str()
 });
 
 const exec = require("child_process").exec;
@@ -27,11 +27,18 @@ const barmanBackup = () => {
 console.log(`Backup Cron Pattern: '${env.BACKUP_SCHEDULE}'`);
 const CronJob = require("cron").CronJob;
 try {
-	new CronJob(env.BACKUP_SCHEDULE, barmanBackup, null, true, "America/Los_Angeles");
-}
-catch (e) {
+	new CronJob(
+		env.BACKUP_SCHEDULE,
+		barmanBackup,
+		null,
+		true,
+		"America/Los_Angeles"
+	);
+} catch (e) {
 	console.log(JSON.stringify(e, null, 4));
-	console.log(`BACKUP_SCHEDULE='${env.BACKUP_SCHEDULE}' is Not a Valid Cron Pattern`);
+	console.log(
+		`BACKUP_SCHEDULE='${env.BACKUP_SCHEDULE}' is Not a Valid Cron Pattern`
+	);
 	process.exit(1);
 }
 
@@ -51,8 +58,7 @@ process.on("SIGINT", () => {
 console.log(`${routineName}: Started`);
 
 // Routinely restart in order to remove defunct child processes
-sleep(86400*1000)
-	.then(() => {
-		console.log("Backup Scheduler Exiting");
-		process.exit(0);
-	});
+sleep(86400 * 1000).then(() => {
+	console.log("Backup Scheduler Exiting");
+	process.exit(0);
+});

@@ -1,19 +1,16 @@
+// tslint:disable: indent
+
 export class ServerSocket {
 
 	private net = require("net");
-	private linkName: string;
-	private host: string;
-	private port: number;
 	private server: any;
-	private dataSink: any; // Place to direct incoming data
-	private linkCloseHandler;
-	private connection = null;
+	private connection: any = null;
 
-	constructor(linkName, port, dataSink, linkCloseHandler = null) {
-		this.linkName = linkName;
-		this.port = port;
-		this.dataSink = dataSink;
-		this.linkCloseHandler = linkCloseHandler;
+	constructor(
+		private linkName: string,
+		private port: number,
+		private dataSink: any,
+		private linkCloseHandler: (() => void) | undefined = undefined) {
 
 		this.server = this.net.createServer();
 
@@ -48,7 +45,7 @@ export class ServerSocket {
 		this.server.addListener("connection", this.handleConnection);
 
 		this.server.listen({
-			host: '0.0.0.0',
+			host: "0.0.0.0",
 			port: this.port
 		}
 			, () => {

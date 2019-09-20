@@ -1,3 +1,5 @@
+// tslint:disable: indent
+
 // Return the machines local IP address
 const ifs = require("os").networkInterfaces();
 export const networkIP = Object.keys(ifs)
@@ -6,5 +8,5 @@ export const networkIP = Object.keys(ifs)
 
 export const sleep = (t: number) =>
 	new Promise((resolve) => {
-		setTimeout(resolve, t)
+		setTimeout(resolve, t);
 	});

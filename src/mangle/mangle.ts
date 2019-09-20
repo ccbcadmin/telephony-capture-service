@@ -1,6 +1,10 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
-import * as $ from "../share/constants";
+import {
+	CRLF,
+	REGEXP_SMDR_FILENAME
+} from "../share/constants";
 
 const routineName = "mangle";
 
@@ -19,16 +23,16 @@ const sourceDir = `/smdr-data/${env.SOURCE_DIRECTORY}`;
 const targetDir = `/smdr-data/${env.TARGET_DIRECTORY}`;
 
 const eventEmitter = require("events").EventEmitter;
-const ee = new eventEmitter;      //make an Event Emitter object
+const ee = new eventEmitter;
 
-const zeroPad = (num, places) => {
-	let zero = places - num.toString().length + 1;
+const zeroPad = (num: number, places: number) => {
+	const zero = places - num.toString().length + 1;
 	return Array(+(zero > 0 && zero)).join("0") + num;
 };
 
-let substitutePhoneNumberMap = new Map();
+let substitutePhoneNumberMap = new Map<string, string>();
 
-const substituteDummyPhoneNumber = (phoneNumber: string) => {
+const substituteDummyPhoneNumber = (phoneNumber: string): string | undefined => {
 
 	if (phoneNumber.length === 10) {
 		if (substitutePhoneNumberMap.has(phoneNumber)) {
@@ -66,9 +70,9 @@ process.on("SIGINT", () => {
 let smdrFiles: string[] = [];
 let smdrFileNo = 0;
 
-const replicateSmdrFile = (smdrFileName: string) => {
+const replicateSmdrFile = (smdrFileName: string): void => {
 
-	let data = fs.readFileSync(smdrFileName).toString();
+	const data = fs.readFileSync(smdrFileName).toString();
 
 	// Increment the file extension by 1 to get the output file name
 	let filePart = smdrFileName.split("/");
@@ -85,7 +89,7 @@ const replicateSmdrFile = (smdrFileName: string) => {
 	let index: number = 0;
 	let next_index: number = 0;
 
-	while ((next_index = data.indexOf($.CRLF, index)) > 0) {
+	while ((next_index = data.indexOf(CRLF, index)) > 0) {
 
 		const smdrMessage = data.slice(index, next_index);
 		index = next_index + 2;
@@ -108,13 +112,13 @@ const replicateSmdrFile = (smdrFileName: string) => {
 			raw_call[6] = substituteDummyPhoneNumber(raw_call[6]);
 
 			// Reconstitute the line
-			let testSmdr = raw_call.join(",") + $.CRLF;
+			let testSmdr = raw_call.join(",") + CRLF;
 			fs.writeSync(fd, testSmdr);
 
 		}
 	}
 
-	process.stdout.write("SMDR Records: " + recordCount + ", Unknown Records: " + unknownRecords + $.CRLF);
+	process.stdout.write("SMDR Records: " + recordCount + ", Unknown Records: " + unknownRecords + CRLF);
 
 	++smdrFileNo;
 	ee.emit("next");
@@ -141,7 +145,7 @@ dir.files(sourceDir, (err, files) => {
 	files.sort();
 	for (let file of files) {
 		let path = file.split("/");
-		if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
+		if (path[path.length - 1].match(REGEXP_SMDR_FILENAME)) {
 			smdrFiles.push(file);
 		}
 	}

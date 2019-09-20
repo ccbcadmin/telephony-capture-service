@@ -1,6 +1,6 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
-import * as $ from "../share/constants";
 import { ServerSocket } from "../share/server-socket";
 
 const routineName = "tms-simulator";
@@ -20,7 +20,7 @@ process.on("SIGINT", () => {
 });
 
 // Just discard the data
-const dataDump = (data) => {};
+const dataDump = (data: Buffer) => {};
 
 // Start listening for incoming messages
 new ServerSocket("tcs=>tms", env.TMS_PORT, dataDump).startListening();
