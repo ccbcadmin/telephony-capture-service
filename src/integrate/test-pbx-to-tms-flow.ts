@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
 import * as $ from "../share/constants";
 const moment = require("moment");
@@ -7,11 +8,13 @@ import { ClientSocket, createClient } from "../share/client-socket";
 import { ServerSocket } from "../share/server-socket";
 import { Queue } from "../share/queue";
 import { sleep } from "../share/util";
+import { trace } from "../Barrel";
+
 const routineName = "test-pbx-to-tms-flow";
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
-const { str, num} = envalid;
+const { str, num } = envalid;
 
 // Number of random bytes to send through the channel
 const testSize = 1000000;
@@ -19,11 +22,11 @@ const masterTxBuffer = Buffer.alloc(testSize);
 const masterRxBuffer = Buffer.alloc(testSize);
 
 process.on("SIGTERM", () => {
-	console.log(`${routineName} terminated`);
+	trace(`${routineName} terminated`);
 	process.exit(0);
 });
 process.on("SIGINT", () => {
-	console.log(`Ctrl-C received. ${routineName} terminated`);
+	trace(`Ctrl-C received. ${routineName} terminated`);
 	process.exit(0);
 });
 
@@ -52,7 +55,7 @@ const sendData = () => {
 		}
 
 		if (tcsClient.write(data) === false) {
-			console.log("Link to TCS unavailable ... aborting.");
+			trace("Link to TCS unavailable ... aborting.");
 			process.exit(1);
 		}
 
@@ -73,8 +76,8 @@ sleep(2000)
 	// Ensure an empty queue
 	.then(tmsQueue.purge)
 	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData))
-	.then((client:ClientSocket) => tcsClient = client)
-	.catch((err) => { console.log('Err: ', JSON.stringify(err, null, 4));});
+	.then((client: ClientSocket) => tcsClient = client)
+	.catch((err) => { trace('Err: ', JSON.stringify(err, null, 4)); });
 
 const dataCapture = (data: Buffer) => {
 
@@ -86,13 +89,13 @@ const dataCapture = (data: Buffer) => {
 			process.exit(0);
 		}
 		else {
-			console.log("Rx / Tx Data Not Consistent");
+			trace("Rx / Tx Data Not Consistent");
 			process.exit(1);
 		}
 	}
 	else if (rxBytes > testSize) {
 		// More data received than expected
-		console.log(`Excessive Data Received, Tx Bytes: ${testSize} Rx Bytes: ${rxBytes}`);
+		trace(`Excessive Data Received, Tx Bytes: ${testSize} Rx Bytes: ${rxBytes}`);
 		process.exit(1);
 	}
 };
@@ -101,4 +104,4 @@ const dataCapture = (data: Buffer) => {
 new ServerSocket("tcs=>tms", env.TMS_PORT, dataCapture).startListening();
 
 // Set an upper limit for the test to complete
-sleep(600000).then(() => { console.log("Insufficient Data Received: ", rxBytes); process.exit(1); });
+sleep(600000).then(() => { trace("Insufficient Data Received: ", rxBytes); process.exit(1); });

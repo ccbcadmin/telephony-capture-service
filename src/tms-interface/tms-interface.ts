@@ -7,6 +7,7 @@ import assert from "assert";
 
 import { Queue } from "../share/queue";
 import { ClientSocket } from "../share/client-socket";
+import { logError } from "../Barrel";
 
 const routineName = "tms-interface";
 
@@ -23,7 +24,7 @@ const env = envalid.cleanEnv(process.env, {
 });
 
 process.on("SIGTERM", () => {
-	console.log(`${routineName}: Terminated`);
+	logError(`${routineName}: Terminated`);
 	process.exit(0);
 });
 
@@ -59,9 +60,9 @@ export class TmsInterface {
 
 try {
 	new TmsInterface();
-	console.log(`${routineName} Started`);
+	logError(`${routineName} Started`);
 
 } catch (err) {
-	console.log(err.message);
+	logError(err.message);
 	process.exit(0);
 }

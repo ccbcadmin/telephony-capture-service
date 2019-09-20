@@ -1,5 +1,8 @@
 #!/usr/bin/env node
+// tslint:disable: indent
+
 import { sleep } from "../share/util";
+import { logError } from "../Barrel";
 const routineName = "backup-scheduler";
 
 // Ensure the presence of required environment variables
@@ -12,19 +15,23 @@ const env = envalid.cleanEnv(process.env, {
 const exec = require("child_process").exec;
 
 const barmanBackup = () => {
-	const child = exec(`barman backup pg1`, (error, stdout, stderr) => {
-		if (error) {
-			console.log(`Unable to backup pg1: `, JSON.stringify(error, null, 4));
-		}
-		if (stdout) {
-			console.log(`Backup Successful:\n${stdout}`);
-		}
-		if (stderr) {
-			console.log(`stderr:\n${stderr}`);
-		}
-	});
+	const child = exec(
+		`barman backup pg1`,
+		(error: Error, stdout: WindowConsole, stderr: WindowConsole) => {
+
+			if (error) {
+				logError(`Unable to backup pg1: `, JSON.stringify(error, null, 4));
+			}
+			if (stdout) {
+				logError(`Backup Successful:\n${stdout}`);
+			}
+			if (stderr) {
+				logError(`stderr:\n${stderr}`);
+			}
+		});
 };
-console.log(`Backup Cron Pattern: '${env.BACKUP_SCHEDULE}'`);
+
+logError(`Backup Cron Pattern: '${env.BACKUP_SCHEDULE}'`);
 const CronJob = require("cron").CronJob;
 try {
 	new CronJob(
@@ -35,8 +42,8 @@ try {
 		"America/Los_Angeles"
 	);
 } catch (e) {
-	console.log(JSON.stringify(e, null, 4));
-	console.log(
+	logError(JSON.stringify(e, null, 4));
+	logError(
 		`BACKUP_SCHEDULE='${env.BACKUP_SCHEDULE}' is Not a Valid Cron Pattern`
 	);
 	process.exit(1);
@@ -46,19 +53,19 @@ try {
 exec("cron");
 
 process.on("SIGTERM", () => {
-	console.log(`\r${routineName}: Terminated`);
+	logError(`\r${routineName}: Terminated`);
 	process.exit(0);
 });
 
 process.on("SIGINT", () => {
-	console.log(`\r${routineName}: Terminated`);
+	logError(`\r${routineName}: Terminated`);
 	process.exit(0);
 });
 
-console.log(`${routineName}: Started`);
+logError(`${routineName}: Started`);
 
 // Routinely restart in order to remove defunct child processes
 sleep(86400 * 1000).then(() => {
-	console.log("Backup Scheduler Exiting");
+	logError("Backup Scheduler Exiting");
 	process.exit(0);
 });

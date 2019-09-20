@@ -5,6 +5,7 @@ import {
 	CRLF,
 	REGEXP_SMDR_FILENAME
 } from "../share/constants";
+import { trace } from "../Barrel";
 
 const routineName = "mangle";
 
@@ -58,12 +59,12 @@ const substituteDummyPhoneNumber = (phoneNumber: string): string | undefined => 
 };
 
 process.on("SIGTERM", () => {
-	console.log("Telephony Capture Service: Terminated");
+	trace("Telephony Capture Service: Terminated");
 	process.exit(0);
 });
 
 process.on("SIGINT", () => {
-	console.log("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
+	trace("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
 	process.exit(0);
 });
 
@@ -126,7 +127,7 @@ const replicateSmdrFile = (smdrFileName: string): void => {
 
 const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
-		console.log(`That's All Folks !`);
+		trace(`That's All Folks !`);
 		process.exit(0);
 	}
 	else {
@@ -137,9 +138,9 @@ const nextFile = () => {
 ee.on("next", nextFile);
 
 // Search the current directory, if none specified
-dir.files(sourceDir, (err, files) => {
+dir.files(sourceDir, (err: Error, files: Array<string>) => {
 	if (err) {
-		console.log(`Source ${sourceDir} is not a directory...aborting.`);
+		trace(`Source ${sourceDir} is not a directory...aborting.`);
 		process.exit(1);
 	}
 	files.sort();

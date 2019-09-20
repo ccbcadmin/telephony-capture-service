@@ -7,9 +7,9 @@ import { Queue } from "../share/queue";
 import moment from "moment";
 import _ from "lodash";
 import fs from "fs";
+import { logError } from "../Barrel";
 
 const routineName = "pbx-interface";
-console.log(`Restarting ${routineName}`);
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
@@ -53,7 +53,7 @@ class PbxInterface {
 
 		process.on("SIGTERM", () => {
 			this.pbxSocket ? this.pbxSocket.close() : _.noop;
-			console.log("TCS Terminated (SIGTERM)");
+			logError("TCS Terminated (SIGTERM)");
 		});
 	}
 
@@ -84,7 +84,7 @@ class PbxInterface {
 					smdrMessage);
 			}
 			else {
-				console.log('Corrupt message detected:\n', smdrMessage.toString());
+				logError("Corrupt message detected:\n", smdrMessage.toString());
 			}
 
 			// Move to the next message
@@ -112,33 +112,33 @@ class PbxInterface {
 	}
 
 	private pbxLinkClosed = () => {
-		console.log("pbx=>pbx-interface Link Closed");
+		logError("pbx=>pbx-interface Link Closed");
 	}
 
 	private tmsQueueDisconnectHandler = () => {
-		console.log(`${env.TMS_QUEUE} Channel Down`);
+		logError(`${env.TMS_QUEUE} Channel Down`);
 	}
 
 	private dbQueueConnectHandler = () => {
 
 		// Start listening for pbx traffic
 		this.pbxSocket ? this.pbxSocket.startListening() : _.noop;
-		console.log(`${env.DB_QUEUE} Channel Up`);
+		logError(`${env.DB_QUEUE} Channel Up`);
 	}
 
 	private dbQueueDisconnectHandler = () => {
 
 		// If RabbitMQ connection is lost, then stop pbx reception immediately
-		console.log(`${env.DB_QUEUE} Down`);
+		logError(`${env.DB_QUEUE} Down`);
 		this.pbxSocket ? this.pbxSocket.close() : _.noop;
 	}
 }
 
 try {
 	new PbxInterface();
-	console.log(`${routineName} Started`);
+	logError(`${routineName} Started`);
 
 } catch (err) {
-	console.log(err.message);
+	logError(err.message);
 	process.exit(0);
 }

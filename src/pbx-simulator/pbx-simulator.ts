@@ -5,6 +5,7 @@ const routineName = "pbx-simulator";
 
 import _ from "lodash";
 import fs from "fs";
+import dir from "node-dir";
 
 import {
 	CRLF,
@@ -12,8 +13,8 @@ import {
 } from "../share/constants";
 
 import { ClientSocket } from "../share/client-socket";
+import { logFatal, logInfo } from "../Barrel";
 
-const dir = require("node-dir");
 const eventEmitter = require("events").EventEmitter;
 const ee = new eventEmitter;
 
@@ -77,7 +78,7 @@ class PbxSimulator {
 				const secondPart = nextMsg.slice(partition);
 
 				if (!this.tcsClient.write(firstPart) || !this.tcsClient.write(secondPart)) {
-					console.log("Link to TCS unavailable...aborting.");
+					logFatal("Link to TCS unavailable...aborting.");
 					process.exit(1);
 				}
 			}
@@ -101,8 +102,8 @@ class PbxSimulator {
 			const sourceDir = `/smdr-data/${env.PBX_SIMULATOR_SOURCE_DIRECTORY}`;
 
 			// Search the source directory looking for raw SMDR files
-			console.log("sourceDir: ", sourceDir);
-			const files = await dir.files(sourceDir);
+			logInfo("sourceDir: ", sourceDir);
+			const files = await dir.promiseFiles(sourceDir);
 
 			// Deliver the data in chronological order
 			files.sort();
@@ -127,10 +128,10 @@ class PbxSimulator {
 
 try {
 	new PbxSimulator();
-	console.log(`${routineName} Started`);
+	logInfo(`${routineName} Started`);
 
 } catch (err) {
-	console.log(err.message);
+	logFatal(err.message);
 	process.exit(0);
 }
 

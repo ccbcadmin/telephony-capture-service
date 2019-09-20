@@ -2,6 +2,16 @@
 // tslint:disable: indent
 
 import { Queue } from "../share/queue";
+import {
+	trace,
+	ConsoleConfig,
+	CloudWatchConfig,
+	LogConfigRecord,
+	Logger,
+	logInfo,
+	logFatal,
+	logConfig,
+} from "../Barrel";
 
 const routineName = "database-interface";
 
@@ -35,7 +45,7 @@ interface SmdrRecord {
 	externalTargetingCause: string;
 	externalTargeterId: string;
 	externalTargetedNumber: string;
-};
+}
 
 const connection = {
 	host: "localhost",
@@ -90,10 +100,11 @@ const insertCallRecords = (smdrRecord: SmdrRecord) =>
 			smdrRecord.externalTargetedNumber
 		]);
 
-console.log(`${routineName}: Started`);
+logInfo(`${routineName}: Started`);
 
 process.on("SIGTERM", (): void => {
-	console.log(`${routineName}: Terminated`);
+	const msg = `${routineName}: Terminated`;
+	logFatal(msg);
 	process.exit(0);
 });
 
@@ -105,7 +116,7 @@ const dataSink = async (msg: Buffer): Promise<boolean> => {
 		let raw_call = msg.toString().split(",");
 
 		if (raw_call.length <= 30) {
-			console.log(`Bad SMDR Record Length: ${raw_call.length}, Bad SMDR Records: ${++badRawRecords}`);
+			trace(`Bad SMDR Record Length: ${raw_call.length}, Bad SMDR Records: ${++badRawRecords}`);
 			++badRawRecords;
 		} else {
 
@@ -117,58 +128,58 @@ const dataSink = async (msg: Buffer): Promise<boolean> => {
 				Number(temp[0]) * 60 * 60 +
 				Number(temp[1]) * 60 +
 				Number(temp[2]));
-			// console.log('Connected Time (seconds): ', connectedTime);
+			// trace('Connected Time (seconds): ', connectedTime);
 
 			// Ring Time in seconds
 			let ringTime = raw_call[2];
 
 			let caller = raw_call[3];
-			// console.log('Caller: ', caller);
+			// trace('Caller: ', caller);
 
 			let direction = raw_call[4];
-			// console.log('Direction: ', direction);
+			// trace('Direction: ', direction);
 
 			let calledNumber = raw_call[5];
-			// console.log('Called Number: ', calledNumber);
+			// trace('Called Number: ', calledNumber);
 
 			let dialedNumber = raw_call[6];
-			// console.log('Dialed Number: ', dialedNumber);
+			// trace('Dialed Number: ', dialedNumber);
 
 			let isInternal = raw_call[8];
-			// console.log('Is Internal: ', isInternal);
+			// trace('Is Internal: ', isInternal);
 
 			let callId = raw_call[9];
-			// console.log('Call ID: ', callId);
+			// trace('Call ID: ', callId);
 
 			let continuation = raw_call[10];
-			// console.log('Continuation: ', continuation);
+			// trace('Continuation: ', continuation);
 
 			let party1Device = raw_call[11];
-			// console.log('Party 1 Device: ', party1Device);
+			// trace('Party 1 Device: ', party1Device);
 
 			let party1Name = raw_call[12];
-			// console.log('Party 1 Name: ', party1Name);
+			// trace('Party 1 Name: ', party1Name);
 
 			let party2Device = raw_call[13];
-			// console.log('Party 2 Device: ', party2Device);
+			// trace('Party 2 Device: ', party2Device);
 
 			let party2Name = raw_call[14];
-			// console.log('Party 2 Name: ', party2Name);
+			// trace('Party 2 Name: ', party2Name);
 
 			let holdTime = raw_call[15];
-			// console.log('Hold Time: ', holdTime);
+			// trace('Hold Time: ', holdTime);
 
 			let parkTime = raw_call[16];
-			// console.log('Park Time: ', parkTime);
+			// trace('Park Time: ', parkTime);
 
 			let externalTargetingCause = raw_call[27];
-			// console.log('External Targetting Cause: ', externalTargetingCause);
+			// trace('External Targetting Cause: ', externalTargetingCause);
 
 			let externalTargeterId = raw_call[28];
-			// console.log('External TargeterId: ', externalTargeterId);
+			// trace('External TargeterId: ', externalTargeterId);
 
 			let externalTargetedNumber = raw_call[29];
-			// console.log('External Targeted Number: ', externalTargetedNumber);
+			// trace('External Targeted Number: ', externalTargetedNumber);
 
 			let smdrRecord: SmdrRecord = {
 				callStart: callStart,
@@ -196,15 +207,20 @@ const dataSink = async (msg: Buffer): Promise<boolean> => {
 		}
 		return true;
 	} catch (err) {
-		console.log("Database Insert Failure: ", err);
+		trace("Database Insert Failure: ", err);
 		return true;
 	}
 };
 
 try {
+
 	new Queue(env.DB_QUEUE, dataSink);
-	console.log (`${routineName} Started`);
+
+	const msg = `(${routineName}) Started`;
+	trace(msg);
+	logInfo(msg);
 
 } catch (err) {
-	console.log(err.message);
+	trace(err.message);
+	logInfo(err);
 }

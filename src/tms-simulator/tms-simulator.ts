@@ -2,6 +2,7 @@
 // tslint:disable: indent
 
 import { ServerSocket } from "../share/server-socket";
+import { trace } from "../Barrel";
 
 const routineName = "tms-simulator";
 const envalid = require("envalid");
@@ -11,11 +12,11 @@ const env = envalid.cleanEnv(process.env, {
 });
 
 process.on("SIGTERM", () => {
-    console.log(`${routineName} terminated`);
+    trace(`${routineName} terminated`);
     process.exit(0);
 });
 process.on("SIGINT", () => {
-    console.log(`Ctrl-C received. ${routineName} terminated`);
+    trace(`Ctrl-C received. ${routineName} terminated`);
     process.exit(0);
 });
 

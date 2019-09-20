@@ -1,9 +1,14 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
-import * as $ from "../share/constants";
+import {
+	CRLF,
+	REGEXP_SMDR_FILENAME
+} from "../share/constants";
 import { ClientSocket, createClient } from "../share/client-socket";
 import { Queue } from "../share/queue";
 import { sleep } from "../share/util";
+import { trace } from "../Barrel";
 
 const routineName = "pbx-simulator";
 const pgp = require("pg-promise")();
@@ -17,7 +22,7 @@ const ee = new eventEmitter;
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
-const { str, num} = envalid;
+const { str, num } = envalid;
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
@@ -42,7 +47,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 
 	const intervalId = setInterval(() => {
 		// Look for SMDR record boundaries until there are no more
-		if ((next_index = data.indexOf($.CRLF, index)) < 0) {
+		if ((next_index = data.indexOf(CRLF, index)) < 0) {
 			process.stdout.write(`\bis complete.  ${smdrMsgsSent} SMDR records sent.\r\n`);
 			clearInterval(intervalId);
 			ee.emit("next");
@@ -58,7 +63,7 @@ const sendSmdrRecords = (smdrFileName: string): void => {
 			const secondPart = nextMsg.slice(partition);
 
 			if (!tcsClient.write(firstPart) || !tcsClient.write(secondPart)) {
-				console.log("Link to TCS unavailable...aborting.");
+				trace("Link to TCS unavailable...aborting.");
 				process.exit(1);
 			}
 		}
@@ -77,19 +82,19 @@ const db = pgp(connection);
 const checkRecordCount = () => {
 
 	db.one("select count(*) from smdr;")
-		.then(response => {
-			console.log(response.count);
+		.then((response: any) => {
+			trace(response.count);
 			if (response.count == smdrMsgsSent) {
-				console.log(`Passed: ${smdrMsgsSent} messages sent and received`);
+				trace(`Passed: ${smdrMsgsSent} messages sent and received`);
 				process.exit(0);
 			}
 			else {
-				console.log(`Failed: ${smdrMsgsSent} messages sent and ${response.count} received`);
+				trace(`Failed: ${smdrMsgsSent} messages sent and ${response.count} received`);
 				process.exit(1);
 			}
 		})
-		.catch(error => {
-			console.log("Postgres query failed: ", JSON.stringify(error));
+		.catch((error: Error) => {
+			trace("Postgres query failed: ", JSON.stringify(error));
 			process.exit(1);
 		});
 };
@@ -111,22 +116,25 @@ ee.on("next", nextFile);
 const sendData = () => {
 
 	// Search the source directory looking for raw SMDR files
-	dir.files("./sample-data/smdr-data/smdr-one-file", (err, files) => {
-		if (err) throw err;
+	dir.files(
+		"./sample-data/smdr-data/smdr-one-file",
+		(err: Error, files: Array<string>) => {
 
-		// Deliver the data in chronological order
-		files.sort();
+			if (err) throw err;
 
-		for (let file of files) {
-			let path = file.split("/");
+			// Deliver the data in chronological order
+			files.sort();
 
-			// Only interested in SMDR files
-			if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
-				smdrFiles.push(file);
+			for (let file of files) {
+				let path = file.split("/");
+
+				// Only interested in SMDR files
+				if (path[path.length - 1].match(REGEXP_SMDR_FILENAME)) {
+					smdrFiles.push(file);
+				}
 			}
-		}
-		nextFile();
-	});
+			nextFile();
+		});
 }
 
 // Clear both the DB_QUEUE and the smdr table
@@ -136,4 +144,4 @@ sleep(2000)
 	.then(() => db.none("delete from smdr;"))
 	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData))
 	.then((client: ClientSocket) => tcsClient = client)
-	.catch(error => { console.log(JSON.stringify(error, null, 4)); process.exit(1); });
+	.catch(error => { trace(JSON.stringify(error, null, 4)); process.exit(1); });

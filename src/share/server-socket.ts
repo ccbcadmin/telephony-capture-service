@@ -1,3 +1,5 @@
+import { trace } from "../Barrel";
+
 // tslint:disable: indent
 
 export class ServerSocket {
@@ -19,19 +21,19 @@ export class ServerSocket {
 		}
 	}
 
-	private handleConnection = connection => {
+	private handleConnection = (connection: any) => {
 
 		const remoteAddress = connection.remoteAddress + ":" + connection.remotePort;
-		console.log(`${this.linkName}: Connection Open: ${remoteAddress}`);
+		trace(`${this.linkName}: Connection Open: ${remoteAddress}`);
 
 		const onClose = () => {
-			console.log(`${this.linkName}: Connection Closed: from ${remoteAddress}`);
+			trace(`${this.linkName}: Connection Closed: from ${remoteAddress}`);
 			connection.removeListener("data", this.dataSink);
 			connection.removeListener("error", onError);
 		};
 
-		const onError = err => {
-			console.log(`${this.linkName}: Connection ${remoteAddress} error: ${err.message}`);
+		const onError = (err: Error) => {
+			trace(`${this.linkName}: Connection ${remoteAddress} error: ${err.message}`);
 		};
 
 		connection.addListener("data", this.dataSink);
@@ -49,12 +51,12 @@ export class ServerSocket {
 			port: this.port
 		}
 			, () => {
-				console.log(`${this.linkName}: Listening on: ${this.port}`);
+				trace(`${this.linkName}: Listening on: ${this.port}`);
 			});
 	}
 
 	public stopListening = () => {
-		console.log(`${this.linkName}: Stop Listening`);
+		trace(`${this.linkName}: Stop Listening`);
 		this.server.removeListener("connection", this.handleConnection);
 		this.server.close();
 	}

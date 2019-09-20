@@ -6,6 +6,7 @@ import assert from "assert";
 import { Observable } from "rxjs/Observable";
 import amqp from "amqplib";
 import { Subscription } from "rxjs";
+import { logError } from "../Barrel";
 
 export class Queue {
 
@@ -16,7 +17,7 @@ export class Queue {
 
 	constructor(
 		private queueName: string,
-		private consumer: ((Buffer) => Promise<boolean>) | undefined = undefined,
+		private consumer: ((Buffer: Buffer) => Promise<boolean>) | undefined = undefined,
 		private disconnectHandler: (() => void) | undefined = undefined,
 		private connectHandler: (() => void) | undefined = undefined) {
 
@@ -29,13 +30,13 @@ export class Queue {
 				this.connect();
 			},
 			err => {
-				console.log(`${this.queueName} Retry Error: ${JSON.stringify(err, null, 4)}`);
+				logError(`${this.queueName} Retry Error: ${JSON.stringify(err, null, 4)}`);
 			});
 	}
 
 	private closeEvent = () => {
 
-		console.log(`${this.queueName} Close Event`);
+		logError(`${this.queueName} Close Event`);
 
 		// Inform the client
 		this.disconnectHandler ? this.disconnectHandler() : _.noop;
@@ -47,10 +48,10 @@ export class Queue {
 		this.retryConnection();
 	}
 
-	private errorEvent = (err) => {
+	private errorEvent = (err: any) => {
 
 		// Take note of the error - no further action required
-		console.log(`${this.queueName} Error Event: ${JSON.stringify(err, null, 4)}`);
+		logError(`${this.queueName} Error Event: ${JSON.stringify(err, null, 4)}`);
 	}
 
 	private connect = async (): Promise<void> => {
@@ -71,7 +72,7 @@ export class Queue {
 
 			await this.channel.assertQueue(this.queueName, { durable: true });
 
-			console.log(`${this.queueName} Channel Created`);
+			logError(`${this.queueName} Channel Created`);
 
 			// Inform the client that a channel exists
 			this.connectHandler ? this.connectHandler() : _.noop;
@@ -129,7 +130,7 @@ export class Queue {
 		this.connection ? this.connection.removeListener("close", this.closeEvent) : _.noop;
 		this.connection ? this.connection.removeListener("error", this.errorEvent) : _.noop;
 
-		console.log(`${this.queueName} Channel Closed`);
+		logError(`${this.queueName} Channel Closed`);
 		this.connection ? this.connection.close() : _.noop;
 		this.connection = undefined;
 	}

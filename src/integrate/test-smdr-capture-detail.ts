@@ -1,9 +1,10 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
-import * as $ from "../share/constants";
 import { ClientSocket, createClient } from "../share/client-socket";
 import { Queue } from "../share/queue";
 import { sleep } from "../share/util";
+import { trace } from "../Barrel";
 
 const routineName = "test-smdr-capture-accuracy";
 const pgp = require("pg-promise")();
@@ -15,7 +16,7 @@ const ee = new eventEmitter;
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
-const { str, num} = envalid;
+const { str, num } = envalid;
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
@@ -23,18 +24,21 @@ const env = envalid.cleanEnv(process.env, {
 	DB_QUEUE: str()
 });
 
-const stringOccurrences = (string, subString, allowOverlapping = false): number => {
+const stringOccurrences = (
+	str: string,
+	subString: string,
+	allowOverlapping = false): number => {
 
-	string += "";
+	str += "";
 	subString += "";
-	if (subString.length <= 0) return (string.length + 1);
+	if (subString.length <= 0) return (str.length + 1);
 
-	var n = 0,
+	let n = 0,
 		pos = 0,
 		step = allowOverlapping ? 1 : subString.length;
 
 	while (true) {
-		pos = string.indexOf(subString, pos);
+		pos = str.indexOf(subString, pos);
 		if (pos >= 0) {
 			++n;
 			pos += step;
@@ -85,7 +89,7 @@ const sendSmdrRecords = (testMsgs: Buffer): void => {
 	smdrMsgsSent += stringOccurrences(testMsgs.toString(), "\x0d\x0a");
 
 	if (!tcsClient.write(testMsgs)) {
-		console.log("Link to TCS unavailable...aborting.");
+		trace("Link to TCS unavailable...aborting.");
 		process.exit(1);
 	}
 }
@@ -104,8 +108,8 @@ const testSelect = (query: string, expected: number): Promise<any> =>
 	new Promise((resolve, reject) =>
 
 		db.one(query)
-			.then(response => {
-				console.log(query);
+			.then((response: any) => {
+				trace(query);
 				if (response.count == expected) {
 					resolve('... passed');
 				}
@@ -113,7 +117,7 @@ const testSelect = (query: string, expected: number): Promise<any> =>
 					reject(`Query Failure: ${query}, ${response.count} Returned, ${expected} Expected`);
 				}
 			})
-			.catch(error => reject(error)));
+			.catch((error: Error) => reject(error)));
 
 const databaseCheck = () => {
 
@@ -149,8 +153,8 @@ const databaseCheck = () => {
 		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETER_ID = '';", 23))
 		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETED_NUMBER = 'Number1';", 1))
 		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETED_NUMBER = '';", 23))
-		.then(() => { console.log('Exiting Pass'); process.exit(0); })
-		.catch(error => { console.log(JSON.stringify(error, null, 4)); process.exit(1); });
+		.then(() => { trace('Exiting Pass'); process.exit(0); })
+		.catch(error => { trace(JSON.stringify(error, null, 4)); process.exit(1); });
 };
 
 const sendData = () => {
@@ -171,4 +175,4 @@ sleep(2000)
 	.then(() => db.none("delete from smdr;"))
 	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData))
 	.then((client: ClientSocket) => tcsClient = client)
-	.catch(error => { console.log(JSON.stringify(error, null, 4)); process.exit(1); });
+	.catch(error => { trace(JSON.stringify(error, null, 4)); process.exit(1); });
