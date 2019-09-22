@@ -526,22 +526,3 @@ tms-simulator ()
 
     return 0
 }
-
-# Move a git tag
-tag-mv () {
-    tag-rm $1 || return 1;
-    tag-add $1 || return 1;
-    return 0
-}
-
-tag-add () {
-    git tag $1 || return 1;
-    git push origin $1 | return 1;
-    return 0
-}
-
-tag-rm () {
-    git tag -d $1 || return 1;
-    git push origin :refs/tags/$1 || return 1;
-    return 0
-}
