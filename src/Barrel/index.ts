@@ -12,7 +12,7 @@ export const logConfig: LogConfigRecord = {
         logLevel: "info",
     },
     cloudWatch: {
-        enable: true,
+        enable: false,
         logLevel: "info",
     }
 };
@@ -20,3 +20,6 @@ export const logConfig: LogConfigRecord = {
 Logger.process = new Logger(
     "tcs",
     logConfig);
+
+const { promisify } = require("util");
+export const setTimeoutPromise = promisify(setTimeout);

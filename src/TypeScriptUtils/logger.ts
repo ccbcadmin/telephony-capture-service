@@ -1,9 +1,7 @@
 // tslint:disable
 import moment from 'moment';
 import _ from 'lodash';
-import {
-	trace
-} from "./debug";
+import { debugTcs } from '../Barrel';
 const bunyan = require('bunyan');
 const luvely = require('luvely');
 const cloudWatch = require('bunyan-cloudwatch');
@@ -32,7 +30,7 @@ export class Logger {
 		private logStreamName: string,
 		private logConfig: LogConfigRecord | undefined = undefined) {
 
-		trace({
+		debugTcs({
 			logGroupName: Logger.logGroupName,
 			logStreamName,
 			logConfig
@@ -49,7 +47,7 @@ export class Logger {
 		}
 	}
 
-	public trace = (...args: Array<any>) => this.logger.trace(...args);
+	public debugTcs = (...args: Array<any>) => this.logger.debugTcs(...args);
 	public debug = (...args: Array<any>) => this.logger.debug(...args);
 	public info = (...args: Array<any>) => this.logger.info(...args);
 	public warn = (...args: Array<any>) => this.logger.warn(...args);
@@ -114,7 +112,7 @@ const log = (logLevel: LogLevel, msg: string, errObj: any | undefined = undefine
 				logLevelHandler = Logger.process.debug;
 				break;
 			case LogLevel.Trace:
-				logLevelHandler = Logger.process.trace;
+				logLevelHandler = Logger.process.debugTcs;
 				break;
 		}
 

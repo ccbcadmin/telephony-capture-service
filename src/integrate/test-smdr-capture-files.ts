@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 // tslint:disable: indent
 
-
 import {
 	CRLF,
 	REGEXP_SMDR_FILENAME
@@ -9,14 +8,12 @@ import {
 import { ClientSocket, createClient } from "../share/client-socket";
 import { sleep } from "../share/util";
 
-const routineName = "test-smdr-capture-files";
-
 import _ from "lodash";
 import fs from "fs";
 import dir from "node-dir";
 const net = require("net");
-const eventEmitter = require("events").EventEmitter;
-const ee = new eventEmitter;
+import { EventEmitter } from "events";
+const ee = new EventEmitter();
 const path = require("path");
 const testName = path.basename(__filename).split(".")[0];
 
@@ -119,7 +116,7 @@ const compareFiles = async () => {
 			process.exit(1);
 		}
 	} catch (err) {
-		console.log (err);
+		console.log(err);
 		process.exit(1);
 	}
 };

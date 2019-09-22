@@ -15,8 +15,8 @@ import {
 import { ClientSocket } from "../share/client-socket";
 import { logFatal, logInfo } from "../Barrel";
 
-const eventEmitter = require("events").EventEmitter;
-const ee = new eventEmitter;
+import { EventEmitter } from "events";
+const ee = new EventEmitter();
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
@@ -37,7 +37,12 @@ class PbxSimulator {
 	constructor() {
 
 		ee.addListener("next", this.nextFile);
-		this.tcsClient = new ClientSocket("pbx=>tcs", "localhost", env.TCS_PORT, this.sendData);
+		this.tcsClient = new ClientSocket({
+			linkName: "pbx=>tcs",
+			host: "localhost",
+			port: env.TCS_PORT,
+			connectHandler: this.sendData
+		});
 	}
 
 	private sendSmdrRecords = async (smdrFileName: string): Promise<void> => {

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+source ./scripts/bash-functions
+
+DATABASE=dev \
+DB_QUEUE=DEV_DB_QUEUE \
+node lib/database-interface/database-interface.js
+exit $?

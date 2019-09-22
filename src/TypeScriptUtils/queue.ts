@@ -1,6 +1,6 @@
 import async from "async";
 import { logError } from "./logger";
-import { trace } from "../Barrel";
+import { debugTcs } from "../Barrel";
 
 // tslint:disable
 const timer = (timeout: number) => new Promise((resolve, reject) => {
@@ -72,7 +72,7 @@ const queuePush = (q: async.AsyncQueue<any>, task: any): Promise<void> =>
 
         logError('finished processing item');
 
-        trace({ data });
+        debugTcs({ data });
     });
 
     // add some items to the front of the queue

@@ -1,19 +1,17 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
-import * as $ from "../share/constants";
+import _ from "lodash";
 import { Queue } from "../share/queue";
 import { sleep } from "../share/util";
-import { trace } from "../Barrel";
+import { debugTcs, setTimeoutPromise } from "../Barrel";
 
 const routineName = "test-queuing-no-ack";
 
-const _ = require("lodash");
-const moment = require("moment");
-
-trace(`${routineName}: Started`);
+debugTcs(`${routineName}: Started`);
 
 process.on("SIGTERM", () => {
-	trace(`${routineName}: Terminated`);
+	debugTcs(`${routineName}: Terminated`);
 	process.exit(0);
 });
 
@@ -32,7 +30,7 @@ let rxQueue: Queue | undefined;
 // 'dataSink' returns a boolean indicating success or not
 const dataSink = async (msg: Buffer): Promise<boolean> => {
 
-	trace("Received Msg: ", msg);
+	debugTcs("Received Msg: ", msg);
 
 	++receiveCount;
 	if (receiveCount % failModule !== 0) {
@@ -47,7 +45,8 @@ const dataSink = async (msg: Buffer): Promise<boolean> => {
 		rxQueue = undefined;
 
 		// ... which is later restarted
-		sleep(2000).then (()=>rxQueue = new Queue("TEST_QUEUE", dataSink));
+		await setTimeoutPromise(2000);
+		rxQueue = new Queue({ queueName: "TEST_QUEUE", consumer: dataSink });
 
 		return false;
 	}
@@ -57,12 +56,12 @@ const dataSink = async (msg: Buffer): Promise<boolean> => {
 const msgLength = 40;
 
 // Send to and receive from the same queue
-rxQueue = new Queue("TEST_QUEUE", dataSink);
+rxQueue = new Queue({ queueName: "TEST_QUEUE", consumer: dataSink });
 
 // Wait to connect to RabbitMQ and then send some data
-const txQueue = new Queue("TEST_QUEUE");
+const txQueue = new Queue({ queueName: "TEST_QUEUE" });
 sleep(2000)
-	.then (()=>txQueue.purge())
+	.then(() => txQueue.purge())
 	.then(() => {
 
 		for (let i = 0; i < testMsgCount; ++i) {
@@ -75,7 +74,7 @@ sleep(2000)
 			txQueue.sendToQueue(sendBuffer);
 		}
 	})
-	.catch((err) => { trace('Err: ', JSON.stringify(err, null, 4));});
+	.catch((err) => { debugTcs("Err: ", JSON.stringify(err, null, 4)); });
 
 // Wait for a while, then check several times to see if all is received
 sleep(30000)
@@ -85,7 +84,7 @@ sleep(30000)
 
 		setInterval(() => {
 
-			trace("Check If All Messages Received");
+			debugTcs("Check If All Messages Received");
 
 			let allReceived = true;
 
@@ -97,11 +96,11 @@ sleep(30000)
 				}
 			}
 			if (allReceived === true) {
-				trace("All Messages Received");
+				debugTcs("All Messages Received");
 				process.exit(0);
 			}
 			if (18 < ++recheckCounter) {
-				trace(`Not All Messages Received`);
+				debugTcs(`Not All Messages Received`);
 				process.exit(1);
 			}
 		}, 5000);

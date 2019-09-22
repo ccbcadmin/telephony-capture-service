@@ -4,15 +4,15 @@
 import { ClientSocket, createClient } from "../share/client-socket";
 import { Queue } from "../share/queue";
 import { sleep } from "../share/util";
-import { trace } from "../Barrel";
+import { debugTcs, setTimeoutPromise } from "../Barrel";
 
 const routineName = "test-smdr-capture-accuracy";
 const pgp = require("pg-promise")();
 
-const _ = require("lodash");
+import _ from "lodash";
 const net = require("net");
-const eventEmitter = require("events").EventEmitter;
-const ee = new eventEmitter;
+import { EventEmitter } from "events";
+const ee = new EventEmitter();
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
@@ -89,7 +89,7 @@ const sendSmdrRecords = (testMsgs: Buffer): void => {
 	smdrMsgsSent += stringOccurrences(testMsgs.toString(), "\x0d\x0a");
 
 	if (!tcsClient.write(testMsgs)) {
-		trace("Link to TCS unavailable...aborting.");
+		debugTcs("Link to TCS unavailable...aborting.");
 		process.exit(1);
 	}
 }
@@ -109,7 +109,7 @@ const testSelect = (query: string, expected: number): Promise<any> =>
 
 		db.one(query)
 			.then((response: any) => {
-				trace(query);
+				debugTcs(query);
 				if (response.count == expected) {
 					resolve('... passed');
 				}
@@ -153,11 +153,11 @@ const databaseCheck = () => {
 		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETER_ID = '';", 23))
 		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETED_NUMBER = 'Number1';", 1))
 		.then(() => testSelect("select count(*) from smdr where EXTERNAL_TARGETED_NUMBER = '';", 23))
-		.then(() => { trace('Exiting Pass'); process.exit(0); })
-		.catch(error => { trace(JSON.stringify(error, null, 4)); process.exit(1); });
+		.then(() => { debugTcs('Exiting Pass'); process.exit(0); })
+		.catch(error => { debugTcs(JSON.stringify(error, null, 4)); process.exit(1); });
 };
 
-const sendData = () => {
+const sendData = async () => {
 
 	// Send some canned messages
 	sendSmdrRecords(test1SmdrMessages);
@@ -165,14 +165,28 @@ const sendData = () => {
 	sendSmdrRecords(test3SmdrMessages);
 
 	// Wait a bit and then check the database
-	sleep(2000).then(databaseCheck);
+	await sleep(2000);
+	await databaseCheck();
 }
 
-// Connect to DB_QUEUE only to purge it
-const databaseQueue = new Queue(env.DB_QUEUE);
-sleep(2000)
-	.then(databaseQueue.purge)
-	.then(() => db.none("delete from smdr;"))
-	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData))
-	.then((client: ClientSocket) => tcsClient = client)
-	.catch(error => { trace(JSON.stringify(error, null, 4)); process.exit(1); });
+(async () => {
+	try {
+		// Connect to DB_QUEUE only to purge it
+		const databaseQueue = new Queue(env.DB_QUEUE);
+
+		await setTimeoutPromise(2000);
+		await databaseQueue.purge();
+		await db.none("delete from smdr;");
+
+		tcsClient = new ClientSocket({
+			linkName: "pbx=>tcs",
+			host: "localhost",
+			port: env.TCS_PORT,
+			connectHandler: sendData
+		});
+
+	} catch (err) {
+		debugTcs(err);
+		process.exit(1)
+	}
+})();

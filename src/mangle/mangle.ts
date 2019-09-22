@@ -5,7 +5,7 @@ import {
 	CRLF,
 	REGEXP_SMDR_FILENAME
 } from "../share/constants";
-import { trace } from "../Barrel";
+import { debugTcs } from "../Barrel";
 
 const routineName = "mangle";
 
@@ -23,8 +23,8 @@ const env = envalid.cleanEnv(process.env, {
 const sourceDir = `/smdr-data/${env.SOURCE_DIRECTORY}`;
 const targetDir = `/smdr-data/${env.TARGET_DIRECTORY}`;
 
-const eventEmitter = require("events").EventEmitter;
-const ee = new eventEmitter;
+import { EventEmitter } from "events";
+const ee = new EventEmitter();
 
 const zeroPad = (num: number, places: number) => {
 	const zero = places - num.toString().length + 1;
@@ -59,12 +59,12 @@ const substituteDummyPhoneNumber = (phoneNumber: string): string | undefined => 
 };
 
 process.on("SIGTERM", () => {
-	trace("Telephony Capture Service: Terminated");
+	debugTcs("Telephony Capture Service: Terminated");
 	process.exit(0);
 });
 
 process.on("SIGINT", () => {
-	trace("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
+	debugTcs("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
 	process.exit(0);
 });
 
@@ -127,7 +127,7 @@ const replicateSmdrFile = (smdrFileName: string): void => {
 
 const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
-		trace(`That's All Folks !`);
+		debugTcs(`That's All Folks !`);
 		process.exit(0);
 	}
 	else {
@@ -140,7 +140,7 @@ ee.on("next", nextFile);
 // Search the current directory, if none specified
 dir.files(sourceDir, (err: Error, files: Array<string>) => {
 	if (err) {
-		trace(`Source ${sourceDir} is not a directory...aborting.`);
+		debugTcs(`Source ${sourceDir} is not a directory...aborting.`);
 		process.exit(1);
 	}
 	files.sort();

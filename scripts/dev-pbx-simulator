@@ -1,0 +1,11 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+source ./scripts/bash-functions
+
+
+TCS_PORT=5001 \
+PBX_SIMULATOR_SOURCE_DIRECTORY=smdr-data-002 \
+PBX_SIMULATOR_INPUT_FREQUENCY=200 \
+node lib/pbx-simulator/pbx-simulator.js
+exit $?

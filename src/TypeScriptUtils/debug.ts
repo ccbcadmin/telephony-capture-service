@@ -1,4 +1,4 @@
 import debug from "debug";
 
-export const trace = debug("general");
+export const debugTcs = debug("tcs");
 export const debugBroker = debug("broker");

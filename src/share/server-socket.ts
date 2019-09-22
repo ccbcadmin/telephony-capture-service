@@ -1,6 +1,8 @@
-import { trace } from "../Barrel";
+import { debugTcs } from "../Barrel";
 
 // tslint:disable: indent
+
+
 
 export class ServerSocket {
 
@@ -8,35 +10,38 @@ export class ServerSocket {
 	private server: any;
 	private connection: any = null;
 
-	constructor(
-		private linkName: string,
-		private port: number,
-		private dataSink: any,
-		private linkCloseHandler: (() => void) | undefined = undefined) {
+	constructor(private params: {
+		linkName: string;
+		port: number;
+		dataSink: ((Buffer: Buffer) => Promise<void>);
+		disconnectHandler?: (() => void),
+	}) {
 
 		this.server = this.net.createServer();
 
-		if (linkCloseHandler) {
-			this.server.addListener("close", this.linkCloseHandler);
+		if (this.params.disconnectHandler) {
+			this.server.addListener("close", this.params.disconnectHandler);
 		}
 	}
 
 	private handleConnection = (connection: any) => {
 
+		const { dataSink, linkName } = this.params;
+
 		const remoteAddress = connection.remoteAddress + ":" + connection.remotePort;
-		trace(`${this.linkName}: Connection Open: ${remoteAddress}`);
+		debugTcs(`${linkName}: Connection Open: ${remoteAddress}`);
 
 		const onClose = () => {
-			trace(`${this.linkName}: Connection Closed: from ${remoteAddress}`);
-			connection.removeListener("data", this.dataSink);
+			debugTcs(`${linkName}: Connection Closed: from ${remoteAddress}`);
+			connection.removeListener("data", dataSink);
 			connection.removeListener("error", onError);
 		};
 
 		const onError = (err: Error) => {
-			trace(`${this.linkName}: Connection ${remoteAddress} error: ${err.message}`);
+			debugTcs(`${this.params.linkName}: Connection ${remoteAddress} error: ${err.message}`);
 		};
 
-		connection.addListener("data", this.dataSink);
+		connection.addListener("data", dataSink);
 		connection.prependOnceListener("close", onClose);
 		connection.addListener("error", onError);
 		this.connection = connection;
@@ -44,19 +49,22 @@ export class ServerSocket {
 
 	public startListening = () => {
 
+		const { port, linkName } = this.params;
+
 		this.server.addListener("connection", this.handleConnection);
 
-		this.server.listen({
-			host: "0.0.0.0",
-			port: this.port
-		}
-			, () => {
-				trace(`${this.linkName}: Listening on: ${this.port}`);
+		this.server.listen(
+			{
+				host: "0.0.0.0",
+				port
+			},
+			() => {
+				debugTcs(`${linkName}: Listening on: ${port}`);
 			});
 	}
 
 	public stopListening = () => {
-		trace(`${this.linkName}: Stop Listening`);
+		debugTcs(`${this.params.linkName}: Stop Listening`);
 		this.server.removeListener("connection", this.handleConnection);
 		this.server.close();
 	}

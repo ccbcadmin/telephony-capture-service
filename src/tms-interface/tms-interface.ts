@@ -35,12 +35,12 @@ export class TmsInterface {
 
 	constructor() {
 
-		this.tmsClient = new ClientSocket(
+		this.tmsClient = new ClientSocket({
 			linkName,
-			env.TMS_HOST,
-			env.TMS_PORT,
-			this.openQueueChannel,
-			this.closeQueueChannel);
+			host: env.TMS_HOST,
+			port: env.TMS_PORT,
+			connectHandler: this.openQueueChannel,
+			disconnectHandler: this.closeQueueChannel});
 	}
 
 	// Data received from the queue is immediately forward to the TMS
@@ -50,7 +50,11 @@ export class TmsInterface {
 	private openQueueChannel = () => {
 
 		// When the link opens, take from the queue and forward to the TMS
-		this.tmsQueue = new Queue(env.TMS_QUEUE, this.dataSink);
+		this.tmsQueue =
+			new Queue({
+				queueName: env.TMS_QUEUE,
+				consumer: this.dataSink,
+			});
 	}
 
 	private closeQueueChannel = () => {

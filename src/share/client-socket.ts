@@ -22,16 +22,19 @@ export class ClientSocket {
 	private linkConnect$ = Observable.fromEvent(this.socket, "connect").map(() => moment());
 	private linkClose$ = Observable.fromEvent(this.socket, "close").map(() => moment());
 
-	constructor(
-		private linkName: string,
-		private host: string,
-		private port: number,
-		private connectHandler: callback = undefined,
-		private disconnectHandler: callback = undefined) {
+	constructor(private params: {
+		linkName: string,
+		host: string,
+		port: number,
+		connectHandler?: callback,
+		disconnectHandler?: callback,
+	}) {
+
+		const { linkName } = params;
 
 		// Routinely track socket errors
 		Observable.fromEvent(this.socket, "error").subscribe((error) => {
-			logError(`${this.linkName} Link Error:\n${JSON.stringify(error, null, 4)}`);
+			logError(`${linkName} Link Error:\n${JSON.stringify(error, null, 4)}`);
 		});
 
 		// Begin the show
@@ -40,7 +43,9 @@ export class ClientSocket {
 
 	private linkConnect = () => {
 
-		logInfo(`${this.linkName}: Connected`);
+		const { connectHandler, linkName } = this.params;
+
+		logInfo(`${linkName}: Connected`);
 
 		// Stop listening to the close link connect event
 		this.linkConnectSubscription ?
@@ -56,10 +61,12 @@ export class ClientSocket {
 		// Listen for the socket close
 		this.linkCloseSubscription = this.linkClose$.subscribe(this.linkClosed);
 
-		this.connectHandler ? this.connectHandler() : _.noop;
+		connectHandler ? connectHandler() : _.noop;
 	};
 
 	private linkClosed = () => {
+
+		const { disconnectHandler, linkName } = this.params;
 
 		// Stop listening to the link close event
 		this.linkCloseSubscription ? this.linkCloseSubscription.unsubscribe() : _.noop;
@@ -68,15 +75,17 @@ export class ClientSocket {
 		// Retry the link
 		this.linkRetrySubscription = this.linkRetryTimer$.subscribe(this.linkRetry);
 
-		logError(`${this.linkName}: Closed`);
-		this.disconnectHandler ? this.disconnectHandler() : _.noop;
+		logError(`${linkName}: Closed`);
+		disconnectHandler ? disconnectHandler() : _.noop;
 	};
 
 	private linkRetry = () => {
 
-		logError(`${this.linkName}: Retry`);
+		const { disconnectHandler, host, linkName, port } = this.params;
 
-		this.socket.connect(this.port, this.host);
+		logError(`${linkName}: Retry`);
+
+		this.socket.connect(port, host);
 		this.socket.setKeepAlive(true);
 
 		// Start listening for the connect event
@@ -86,7 +95,8 @@ export class ClientSocket {
 	};
 
 	public destroy = (): void => {
-		logError(`${this.linkName}: Disconnected`);
+		const { linkName, } = this.params;
+		logError(`${linkName}: Disconnected`);
 		this.socket.destroy();
 	}
 
@@ -100,9 +110,10 @@ export const createClient = (
 	connectHandler: callback = undefined,
 	disconnectHandler: callback = undefined) =>
 	new Promise((resolve) => resolve(
-		new ClientSocket(
+		new ClientSocket({
 			linkName,
 			host,
 			port,
 			connectHandler,
-			disconnectHandler)));
+			disconnectHandler
+		})));

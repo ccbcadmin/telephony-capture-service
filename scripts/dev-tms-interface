@@ -1,0 +1,10 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+source ./scripts/bash-functions
+
+TMS_PORT=6544 \
+TMS_HOST=localhost \
+TMS_QUEUE=DEV_TMS_QUEUE \
+node lib/tms-interface/tms-interface.js
+exit $?
