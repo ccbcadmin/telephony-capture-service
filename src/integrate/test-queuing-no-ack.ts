@@ -5,6 +5,7 @@ import _ from "lodash";
 import { Queue } from "../share/queue";
 import { sleep } from "../share/util";
 import { debugTcs, setTimeoutPromise } from "../Barrel";
+import { Message } from "amqplib";
 
 const routineName = "test-queuing-no-ack";
 
@@ -28,7 +29,7 @@ rxMatrix.fill(false);
 let rxQueue: Queue | undefined;
 
 // 'dataSink' returns a boolean indicating success or not
-const dataSink = async (msg: Buffer): Promise<boolean> => {
+const dataSink = async (msg: Message): Promise<boolean> => {
 
 	debugTcs("Received Msg: ", msg);
 
@@ -36,7 +37,7 @@ const dataSink = async (msg: Buffer): Promise<boolean> => {
 	if (receiveCount % failModule !== 0) {
 
 		// Record when a message has been received
-		rxMatrix[msg[0]] = true;
+		rxMatrix[msg.content[0]] = true;
 
 		return true;
 	} else {

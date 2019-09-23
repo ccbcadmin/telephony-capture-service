@@ -4,9 +4,9 @@ import moment from "moment";
 import _ from "lodash";
 import assert from "assert";
 import { Observable } from "rxjs/Observable";
-import amqp from "amqplib";
+import amqp, { Message } from "amqplib";
 import { Subscription } from "rxjs";
-import { logError, debugTcs } from "../Barrel";
+import { logError, debugTcs, setTimeoutPromise } from "../Barrel";
 
 export class Queue {
 
@@ -17,7 +17,7 @@ export class Queue {
 
 	constructor(private queueParams: {
 		queueName: string;
-		consumer?: ((Buffer: Buffer) => Promise<boolean>);
+		consumer?: ((Buffer: Message) => Promise<boolean>);
 		disconnectHandler?: (() => void);
 		connectHandler?: (() => void);
 	}) {
@@ -43,7 +43,7 @@ export class Queue {
 
 					} catch (err) {
 						const log = `retryConnection failed: ${err.message}`;
-						logError (log);
+						logError(log);
 					}
 				},
 				err => {
@@ -111,18 +111,21 @@ export class Queue {
 
 			logError(`${queueName} Channel Created`);
 
+			this.channel.prefetch(1);
+
 			// Inform the client that a channel exists
 			connectHandler ? connectHandler() : _.noop;
 
 			if (consumer) {
 
-				// The client wants to listen to incoming data
-				await this.channel.consume(queueName, async (msg: any) => {
+				// The client expects messages
+				await this.channel.consume(queueName, async (msg: Message) => {
 
 					try {
-						if (consumer && await consumer(msg.content)) {
-							this.channel ? this.channel.ack(msg) : _.noop;
-						}
+
+						await consumer(msg);
+						this.channel ? this.channel.ack(msg) : _.noop;
+
 					} catch (err) {
 						// If the client is not able to handle the message at this time,
 						// then no Ack is returned to the queuing service, meaning that it
@@ -148,7 +151,7 @@ export class Queue {
 
 		if (this.channel) {
 
-			debugTcs ("sendToQueue()");
+			debugTcs("sendToQueue()");
 			this.channel.sendToQueue(queueName, msg, { persistent: true });
 		}
 	}

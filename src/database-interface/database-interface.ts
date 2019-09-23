@@ -8,6 +8,8 @@ import {
 	logFatal,
 	logError,
 } from "../Barrel";
+import { Message } from "amqplib";
+import { setTimeoutPromise } from '../Barrel/index';
 
 const routineName = "database-interface";
 
@@ -69,7 +71,10 @@ class DatabaseInterface {
 
 	private insertCallRecords = async (smdrRecord: SmdrRecord): Promise<void> => {
 
-		return db.none(`INSERT INTO SMDR (
+		try {
+			debugTcs({ smdrRecord });
+
+			await db.none(`INSERT INTO SMDR (
 					CALL_TIME,
 					CONNECTED_TIME,
 					RING_TIME,
@@ -90,39 +95,52 @@ class DatabaseInterface {
 					EXTERNAL_TARGETER_ID,
 					EXTERNAL_TARGETED_NUMBER)
     			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
-			[
-				smdrRecord.callStart,
-				smdrRecord.connectedTime,
-				smdrRecord.ringTime,
-				smdrRecord.caller,
-				smdrRecord.direction,
-				smdrRecord.calledNumber,
-				smdrRecord.dialedNumber,
-				smdrRecord.isInternal,
-				smdrRecord.callId,
-				smdrRecord.continuation,
-				smdrRecord.party1Device,
-				smdrRecord.party1Name,
-				smdrRecord.party2Device,
-				smdrRecord.party2Name,
-				smdrRecord.holdTime,
-				smdrRecord.parkTime,
-				smdrRecord.externalTargetingCause,
-				smdrRecord.externalTargeterId,
-				smdrRecord.externalTargetedNumber
-			]);
+				[
+					smdrRecord.callStart,
+					smdrRecord.connectedTime,
+					smdrRecord.ringTime,
+					smdrRecord.caller,
+					smdrRecord.direction,
+					smdrRecord.calledNumber,
+					smdrRecord.dialedNumber,
+					smdrRecord.isInternal,
+					smdrRecord.callId,
+					smdrRecord.continuation,
+					smdrRecord.party1Device,
+					smdrRecord.party1Name,
+					smdrRecord.party2Device,
+					smdrRecord.party2Name,
+					smdrRecord.holdTime,
+					smdrRecord.parkTime,
+					smdrRecord.externalTargetingCause,
+					smdrRecord.externalTargeterId,
+					smdrRecord.externalTargetedNumber
+				]);
+
+
+		} catch (err) {
+			debugTcs({ err });
+			return Promise.reject(err);
+		}
 	}
 
-	private dataSink = async (msg: Buffer): Promise<boolean> => {
+	private dataSink = async (msg: Message): Promise<boolean> => {
 
 		try {
-			const raw_call = msg.toString().split(",");
+			const raw_call = msg.content.toString().split(",");
 
-			if (raw_call.length < 30) {
+			if (raw_call.length !== 30) {
 
 				const log =
 					`Bad SMDR Record Length: ${raw_call.length}, ` +
 					`Bad SMDR Records: ${++this.badRawRecords}`;
+
+				/*
+				if (raw_call.length > 30) {
+					console.log({ raw_call });
+					process.exit(0);
+				}
+				*/
 
 				logError(log);
 				++this.badRawRecords;
@@ -221,6 +239,7 @@ class DatabaseInterface {
 
 		} catch (err) {
 			logError("Database Insert Failure: ", err);
+			process.exit(1);
 			return true;
 		}
 	}

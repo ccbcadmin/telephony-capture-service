@@ -8,6 +8,7 @@ import assert from "assert";
 import { Queue } from "../share/queue";
 import { ClientSocket } from "../share/client-socket";
 import { logError } from "../Barrel";
+import { Message } from "amqplib";
 
 const routineName = "tms-interface";
 
@@ -44,8 +45,8 @@ export class TmsInterface {
 	}
 
 	// Data received from the queue is immediately forward to the TMS
-	private dataSink = (msg: Buffer): Promise<boolean> =>
-		Promise.resolve(this.tmsClient.write(msg))
+	private dataSink = (msg: Message): Promise<boolean> =>
+		Promise.resolve(this.tmsClient.write(msg.content))
 
 	private openQueueChannel = () => {
 
