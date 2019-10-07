@@ -21,5 +21,6 @@ Logger.process = new Logger(
     "tcs",
     logConfig);
 
-const { promisify } = require("util");
+import { promisify } from "util";
+// const { promisify } = require("util");
 export const setTimeoutPromise = promisify(setTimeout);

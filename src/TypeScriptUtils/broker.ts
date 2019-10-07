@@ -16,17 +16,10 @@ import amqp from "amqplib";
 
 const envalid = require("envalid");
 const { str, num } = envalid;
-const env = envalid.cleanEnv(process.env, {
-    RABBITMQ_DEFAULT_USER: str(),
-    RABBITMQ_DEFAULT_PASS: str(),
-    RABBITMQ_NODE_PORT: str(),
-    RABBITMQ_HOST: str(),
-    RABBITMQ_EXCHANGE: str()
-});
 
 export interface BrokerParams {
     disconnectHandler: any,
-    connectHandler? (): Promise<void>,
+    connectHandler?(): Promise<void>,
     topics: Array<{ routingKey: string, dataSink: any }>;
     dataSinkError?: any
 }
@@ -37,6 +30,14 @@ export class Broker {
     public channel: amqp.Channel | undefined;
     private retryConnectTimer$ = Observable.timer(0, 5000).startWith();
     private retryConnectSubscription: Subscription | undefined;
+
+    private env = envalid.cleanEnv(process.env, {
+        RABBITMQ_DEFAULT_USER: str(),
+        RABBITMQ_DEFAULT_PASS: str(),
+        RABBITMQ_NODE_PORT: str(),
+        RABBITMQ_HOST: str(),
+        RABBITMQ_EXCHANGE: str()
+    })
 
     constructor(private brokerParams: BrokerParams) {
 
@@ -90,7 +91,9 @@ export class Broker {
 
         try {
 
-            const connectString = `amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}@${process.env.RABBITMQ_HOST}:${process.env.RABBITMQ_NODE_PORT}`;
+            const { env } = this;
+
+            const connectString = `amqp://${env.RABBITMQ_DEFAULT_USER}:${env.RABBITMQ_DEFAULT_PASS}@${env.RABBITMQ_HOST}:${env.RABBITMQ_NODE_PORT}`;
             this.connection = await amqp.connect(connectString);
 
             // Stop retrying
@@ -106,12 +109,12 @@ export class Broker {
 
             debugBroker('Channel Created');
 
-            await this.channel.assertExchange(process.env.RABBITMQ_EXCHANGE!, 'topic', { durable: true });
+            await this.channel.assertExchange(env.RABBITMQ_EXCHANGE!, 'topic', { durable: true });
 
             for (const topic of this.brokerParams.topics) {
 
                 const q = await this.channel.assertQueue(topic.routingKey, { durable: false });
-                await this.channel.bindQueue(q.queue, process.env.RABBITMQ_EXCHANGE!, topic.routingKey);
+                await this.channel.bindQueue(q.queue, env.RABBITMQ_EXCHANGE!, topic.routingKey);
 
                 await this.channel.consume(q.queue, async (msg: any) => {
 
@@ -141,7 +144,7 @@ export class Broker {
 
     public publish = (key: string, msg: Buffer): boolean =>
         this.channel ?
-            this.channel.publish(process.env.RABBITMQ_EXCHANGE!, key, msg, { persistent: false }) :
+            this.channel.publish(this.env.RABBITMQ_EXCHANGE!, key, msg, { persistent: false }) :
             false;
 
     public close = () => {

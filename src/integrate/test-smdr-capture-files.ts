@@ -162,7 +162,7 @@ const clearSMDR_DATA_001 = () => new Promise((resolve, reject) => {
 					}
 				});
 			});
-			resolve(null);
+			resolve();
 		});
 });
 
