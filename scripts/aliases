@@ -3,6 +3,7 @@ alias build-qa='docker-compose '"$QA_COMPOSE_ARGS"' build'
 alias build-prod='docker-compose '"$PROD_COMPOSE_ARGS"' build'
 alias pg1-exec='docker exec -it pg1 /bin/bash'
 alias pg2-exec='docker exec -it pg2 /bin/bash'
+alias barman-exec='docker exec -it barman /bin/bash'
 
 # Aliases to manage Docker
 alias rm-containers='docker rm $(docker ps -q)'
@@ -10,7 +11,6 @@ alias rm-images='docker rmi $(docker images -q)'
 alias rm-exited='docker rm $(docker ps -a -f status=exited -q)'
 alias rm-dangling-volumes='docker volume rm $(docker volume ls -f dangling=true -q) >> /dev/null'
 alias ls-exited='docker ps -aq -f status=exited'
-alias barman-exec='docker exec -it barman /bin/bash'
 alias rm-pg-volumes='docker volume rm stores_postgres1_data stores_postgres2_data'
 
 # Git Aliases

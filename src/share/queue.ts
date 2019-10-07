@@ -17,7 +17,7 @@ export class Queue {
 
 	constructor(private queueParams: {
 		queueName: string;
-		consumer?: ((Buffer: Message) => Promise<boolean>);
+		consumer?: ((msg: Message) => Promise<boolean>);
 		disconnectHandler?: (() => void);
 		connectHandler?: (() => void);
 	}) {

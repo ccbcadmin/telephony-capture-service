@@ -1,7 +1,5 @@
+# vim:set ft=dockerfile:
 FROM debian:stretch-slim
-
-# grab gosu for easy step-down from root
-ENV GOSU_VERSION 1.7
 
 RUN set -ex; \
 	if ! command -v gpg > /dev/null; then \
@@ -72,8 +70,8 @@ RUN set -ex; \
 	rm -rf "$GNUPGHOME"; \
 	apt-key list
 
-ENV PG_MAJOR 9.6
-ENV PG_VERSION 9.6.15-1.pgdg90+1
+ENV PG_MAJOR 10
+ENV PG_VERSION 10.10-1.pgdg90+1
 
 RUN set -ex; \
 	\
@@ -141,7 +139,6 @@ RUN set -ex; \
 	sed -ri 's/#(create_main_cluster) .*$/\1 = false/' /etc/postgresql-common/createcluster.conf; \
 	apt-get install -y \
 		"postgresql-$PG_MAJOR=$PG_VERSION" \
-		"postgresql-contrib-$PG_MAJOR=$PG_VERSION" \
 	; \
 	\
 	rm -rf /var/lib/apt/lists/*; \
@@ -169,62 +166,11 @@ ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ENV PGDATA /var/lib/postgresql/data
 # this 777 will be replaced by 700 at runtime (allows semi-arbitrary "--user" values)
 RUN mkdir -p "$PGDATA" && chown -R postgres:postgres "$PGDATA" && chmod 777 "$PGDATA"
-# VOLUME /var/lib/postgresql/data
+VOLUME /var/lib/postgresql/data
 
-RUN mkdir -p /postgres_backup_xlogs
-RUN chmod 777 /postgres_backup_xlogs
-# If creating a new database, clearout historical xlogs
-RUN rm -rf /postgres_backup_xlogs/*
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN ln -s usr/local/bin/docker-entrypoint.sh / # backwards compat
+ENTRYPOINT ["docker-entrypoint.sh"]
 
-COPY ./src/tcs-image/docker-entrypoint.sh /
-COPY ./src/tcs-image/init_pg_hba.sh /docker-entrypoint-initdb.d/
-COPY ./src/tcs-image/init.sql /docker-entrypoint-initdb.d/
-
-RUN apt-get update
-RUN apt-get -qq update
-RUN apt-get -qq install curl -y
-
-# barman
-RUN apt-get install -y barman
-
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
-RUN apt-get install -y nodejs
-
-# Install app dependencies
-RUN mkdir -p /app
-WORKDIR /app
-
-COPY package.json /app
-RUN npm install
-
-# scoop up all the NodeJS code
-COPY ./lib /app/lib
-RUN chmod -R +x /app/lib
-COPY ./src /app/src
-
-# Also the sample data
-COPY ./sample-data /app/sample-data
-
-# And the docker-compose folder and env information
-COPY ./docker-compose.yml /app/
-COPY env_QA /app
-COPY env_DEV /app
-COPY env_PROD /app
-
-# Prep for barman
-COPY ./src/tcs-image/barman.conf /etc/
-RUN mkdir -p /var/lib/barman
-RUN chown -R barman.barman /var/lib/barman
-RUN mkdir -p /pg1_data
-RUN mkdir -p /pg2_data
-RUN chown barman.barman /pg1_data
-RUN chown barman.barman /pg2_data
-RUN chmod 775 /pg1_data
-RUN chmod 775 /pg2_data
-
-# Give us an editor too
-ENV TERM xterm
-RUN apt-get install nano
-
-# Create the cron log file to be able to run tail -f
-RUN touch /var/log/cron.log
+EXPOSE 5432
+CMD ["postgres"]
