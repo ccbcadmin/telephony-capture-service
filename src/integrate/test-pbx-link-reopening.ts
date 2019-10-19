@@ -1,26 +1,28 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
 import * as $ from "../share/constants";
 import { ClientSocket, createClient } from "../share/client-socket";
 import { ServerSocket } from "../share/server-socket";
 import { Queue } from "../share/queue";
 import { sleep } from "../share/util";
+import { debugTcs } from "../Barrel";
 
 const routineName = "test-tms-link-reopening";
-const _ = require("lodash");
+import _ from "lodash";
 
 process.on("SIGTERM", () => {
-	console.log(`${routineName} terminated`);
+	debugTcs(`${routineName} terminated`);
 	process.exit(0);
 });
 process.on("SIGINT", () => {
-	console.log(`Ctrl-C received. ${routineName} terminated`);
+	debugTcs(`Ctrl-C received. ${routineName} terminated`);
 	process.exit(0);
 });
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
-const { str, num} = envalid;
+const { str, num } = envalid;
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
 	TEST_TRANSMIT_INTERVAL: num(),
@@ -30,7 +32,7 @@ const env = envalid.cleanEnv(process.env, {
 
 let tcsClient: ClientSocket;
 
-const nextChar = c => String.fromCharCode(c.charCodeAt(0) + 1);
+const nextChar = (c: string) => String.fromCharCode(c.charCodeAt(0) + 1);
 const dataLength = 50;
 
 let testChar = "\x00";
@@ -43,7 +45,7 @@ const connectionHandler = () => {
 	testChar = nextChar(testChar);
 
 	if (tcsClient.write(data) === false) {
-		console.log("Link to TCS unavailable ... aborting.");
+		debugTcs("Link to TCS unavailable ... aborting.");
 		process.exit(1);
 	}
 
@@ -52,19 +54,20 @@ const connectionHandler = () => {
 };
 
 const tmsQueue = new Queue(env.TMS_QUEUE);
+
 sleep(2000)
 	.then(tmsQueue.purge)
 	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, connectionHandler))
-	.then((client:ClientSocket) => tcsClient = client)
-	.catch((err) => { console.log('Err: ', JSON.stringify(err, null, 4)); });
+	.then((client: ClientSocket) => tcsClient = client)
+	.catch((err) => { debugTcs("Err: ", JSON.stringify(err, null, 4)); });
 
 const testIterations = 20;
 let rxMatrix = Buffer.alloc(testIterations);
 rxMatrix.fill(0);
 
-const dataCapture = (data: Buffer) => {
+const dataSink = async (data: Buffer) => {
 
-	console.log(`Rx Length: ${data.length}, Data:\n${data.toString('hex')}`);
+	debugTcs(`Rx Length: ${data.length}, Data:\n${data.toString("hex")}`);
 
 	// Examine each data value and take note if received
 	for (let j = 0; j < testIterations; ++j) {
@@ -86,13 +89,17 @@ const dataCapture = (data: Buffer) => {
 
 	if (allReceived) {
 		process.exit(0);
-	};
+	}
 };
 
 // Start receiving data from tms-interface
-new ServerSocket("tcs=>tms", env.TMS_PORT, dataCapture, null).startListening();
+new ServerSocket({
+	linkName: "tcs=>tms",
+	port: env.TMS_PORT,
+	dataSink,
+}).startListening();
 
 sleep(300000).then(() => {
-	console.log("Test Failed: Max time to complete test");
+	debugTcs("Test Failed: Max time to complete test");
 	process.exit(1);
 });

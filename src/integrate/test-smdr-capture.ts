@@ -1,23 +1,29 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
-import * as $ from "../share/constants";
+import { EventEmitter } from "events";
+import _ from "lodash";
+import fs from "fs";
+import dir from "node-dir";
+
+import {
+	CRLF,
+	REGEXP_SMDR_FILENAME
+} from "../share/constants";
 import { ClientSocket, createClient } from "../share/client-socket";
 import { Queue } from "../share/queue";
 import { sleep } from "../share/util";
+import { debugTcs } from "../Barrel";
 
-const routineName = "pbx-simulator";
 const pgp = require("pg-promise")();
 
-const _ = require("lodash");
 const net = require("net");
-const fs = require("fs");
-const dir = require("node-dir");
-const eventEmitter = require("events").EventEmitter;
-const ee = new eventEmitter;
+
+const ee = new EventEmitter();
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
-const { str, num} = envalid;
+const { str, num } = envalid;
 
 const env = envalid.cleanEnv(process.env, {
 	TCS_PORT: num(),
@@ -31,38 +37,45 @@ let smdrFileNo = 0;
 let smdrMsgsSent: number = 0;
 let tcsClient: ClientSocket;
 
-const sendSmdrRecords = (smdrFileName: string): void => {
+const sendSmdrRecords = async (smdrFileName: string): Promise<void> => {
 
-	let data: Buffer = fs.readFileSync(smdrFileName);
+	try {
+		const data = await fs.promises.readFile(smdrFileName);
 
-	process.stdout.write("Sending " + smdrFileName + "  ");
+		process.stdout.write("Sending " + smdrFileName + "  ");
 
-	let index: number = 0;
-	let next_index: number = 0;
+		let index: number = 0;
+		let next_index: number = 0;
 
-	const intervalId = setInterval(() => {
-		// Look for SMDR record boundaries until there are no more
-		if ((next_index = data.indexOf($.CRLF, index)) < 0) {
-			process.stdout.write(`\bis complete.  ${smdrMsgsSent} SMDR records sent.\r\n`);
-			clearInterval(intervalId);
-			ee.emit("next");
-		} else {
-			++smdrMsgsSent;
-			const nextMsg = data.slice(index, next_index + 2);
+		const intervalId = setInterval(() => {
 
-			index = next_index + 2;
+			// Look for SMDR record boundaries until there are no more
+			if ((next_index = data.indexOf(CRLF, index)) < 0) {
+				process.stdout.write(
+					`\bis complete.  ${smdrMsgsSent} SMDR records sent.\r\n`);
+				clearInterval(intervalId);
+				ee.emit("next");
+			} else {
+				++smdrMsgsSent;
+				const nextMsg = data.slice(index, next_index + 2);
 
-			// Randomly partition socket writes to ensure TCS handles gracefully
-			const partition = Math.floor(Math.random() * nextMsg.length);
-			const firstPart = nextMsg.slice(0, partition);
-			const secondPart = nextMsg.slice(partition);
+				index = next_index + 2;
 
-			if (!tcsClient.write(firstPart) || !tcsClient.write(secondPart)) {
-				console.log("Link to TCS unavailable...aborting.");
-				process.exit(1);
+				// Randomly partition socket writes to ensure TCS handles gracefully
+				const partition = Math.floor(Math.random() * nextMsg.length);
+				const firstPart = nextMsg.slice(0, partition);
+				const secondPart = nextMsg.slice(partition);
+
+				if (!tcsClient.write(firstPart) || !tcsClient.write(secondPart)) {
+					debugTcs("Link to TCS unavailable...aborting.");
+					process.exit(1);
+				}
 			}
-		}
-	}, env.TEST_TRANSMIT_INTERVAL);
+		}, env.TEST_TRANSMIT_INTERVAL);
+
+	} catch (err) {
+		debugTcs(err);
+	}
 };
 
 const connection = {
@@ -74,60 +87,66 @@ const connection = {
 
 const db = pgp(connection);
 
-const checkRecordCount = () => {
+const checkRecordCount = async () => {
 
-	db.one("select count(*) from smdr;")
-		.then(response => {
-			console.log(response.count);
-			if (response.count == smdrMsgsSent) {
-				console.log(`Passed: ${smdrMsgsSent} messages sent and received`);
-				process.exit(0);
-			}
-			else {
-				console.log(`Failed: ${smdrMsgsSent} messages sent and ${response.count} received`);
-				process.exit(1);
-			}
-		})
-		.catch(error => {
-			console.log("Postgres query failed: ", JSON.stringify(error));
+	try {
+		const response = await db.one("select count(*) from smdr;");
+		debugTcs(response.count);
+		if (response.count === smdrMsgsSent) {
+			debugTcs(`Passed: ${smdrMsgsSent} messages sent and received`);
+			process.exit(0);
+		}
+		else {
+			debugTcs(`Failed: ${smdrMsgsSent} messages sent and ${response.count} received`);
 			process.exit(1);
-		});
+		}
+	} catch (err) {
+		debugTcs("Postgres query failed: ", err);
+		process.exit(1);
+	}
 };
 
-const nextFile = () => {
-	if (smdrFileNo === smdrFiles.length) {
+const nextFile = async () => {
 
-		// Wait a bit and then confirm the count in the database
-		sleep(10000).then(checkRecordCount);
-	}
-	else {
-		sendSmdrRecords(smdrFiles[smdrFileNo]);
-		++smdrFileNo;
+	try {
+		if (smdrFileNo === smdrFiles.length) {
+
+			// Wait a bit and then confirm the count in the database
+			await sleep(10000);
+			await checkRecordCount();
+		}
+		else {
+			sendSmdrRecords(smdrFiles[smdrFileNo]);
+			++smdrFileNo;
+		}
+	} catch (err) {
+		debugTcs(err);
+		process.exit(1);
 	}
 };
 
 ee.on("next", nextFile);
 
-const sendData = () => {
+const sendData = async () => {
 
 	// Search the source directory looking for raw SMDR files
-	dir.files("./sample-data/smdr-data/smdr-one-file", (err, files) => {
-		if (err) throw err;
+	const files =
+		await dir.promiseFiles("./sample-data/smdr-data/smdr-one-file");
 
-		// Deliver the data in chronological order
-		files.sort();
+	// Deliver the data in chronological order
+	files.sort();
 
-		for (let file of files) {
-			let path = file.split("/");
+	for (let file of files) {
 
-			// Only interested in SMDR files
-			if (path[path.length - 1].match($.REGEXP_SMDR_FILENAME)) {
-				smdrFiles.push(file);
-			}
+		let path = file.split("/");
+
+		// Only interested in SMDR files
+		if (path[path.length - 1].match(REGEXP_SMDR_FILENAME)) {
+			smdrFiles.push(file);
 		}
-		nextFile();
-	});
-}
+	}
+	await nextFile();
+};
 
 // Clear both the DB_QUEUE and the smdr table
 const databaseQueue = new Queue(env.DB_QUEUE);
@@ -136,4 +155,4 @@ sleep(2000)
 	.then(() => db.none("delete from smdr;"))
 	.then(() => createClient("pbx=>tcs", "localhost", env.TCS_PORT, sendData))
 	.then((client: ClientSocket) => tcsClient = client)
-	.catch(error => { console.log(JSON.stringify(error, null, 4)); process.exit(1); });
+	.catch(error => { debugTcs(JSON.stringify(error, null, 4)); process.exit(1); });

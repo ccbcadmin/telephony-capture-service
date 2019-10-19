@@ -1,0 +1,10 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+
+TCS_PORT=5001 \
+TMS_QUEUE=DEV_TMS_QUEUE \
+TMS_ACTIVE=1 \
+DB_QUEUE=DEV_DB_QUEUE \
+node lib/pbx-interface/pbx-interface.js
+exit $?

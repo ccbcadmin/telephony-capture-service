@@ -1,137 +1,193 @@
-import { networkIP } from "./util";
-import "rxjs/Rx";
-import { Observable } from "rxjs/Observable";
+// tslint:disable: indent
 
-const moment = require("moment");
-const _ = require("lodash");
+import moment from "moment";
+import _ from "lodash";
+import assert from "assert";
+import { Observable } from "rxjs/Observable";
+import amqp, { Message } from "amqplib";
+import { Subscription } from "rxjs";
+import { logError, debugTcs, setTimeoutPromise } from "../Barrel";
 
 export class Queue {
 
-	private amqp = require("amqplib/callback_api");
-	private connection;
-	private channel;
-	private queueName: string;
-	private messageCounter = 0;
-	private consumer;
-	private maxLength;
+	private connection: amqp.Connection | undefined;
+	private channel: amqp.Channel | undefined;
 	private retryConnectTimer$ = Observable.timer(0, 5000).startWith();
-	private retryConnectSubscription;
+	private retryConnectSubscription: Subscription | undefined;
 
-	// Use disconnectHandler to inform the client that the channel to the queuing server is unavailable
-	private disconnectHandler = null;
-
-	// Use connectHandler to inform the client that the channel to the queuing server is available
-	private connectHandler = null;
-
-	constructor(queueName: string, consumer = null, disconnectHandler = null, connectHandler = null) {
-
-		this.queueName = queueName;
-		this.consumer = consumer;
-		this.disconnectHandler = disconnectHandler;
-		this.connectHandler = connectHandler;
-		this.connection = null;
-
-		this.retryConnection();
+	constructor(private queueParams: {
+		queueName: string;
+		consumer?: ((msg: Message) => Promise<boolean>);
+		disconnectHandler?: (() => void);
+		connectHandler?: (() => void);
+	}) {
+		try {
+			setImmediate(this.retryConnection);
+		} catch (err) {
+			debugTcs(err.message);
+		}
 	}
 
-	private retryConnection = () => {
-		this.retryConnectSubscription = this.retryConnectTimer$.subscribe(
-			data => {
-				this.connect();
-			},
-			err => {
-				console.log(`${this.queueName} Retry Error: ${JSON.stringify(err, null, 4)}`);
-			});
+	private retryConnection = async () => {
+
+		const { queueName } = this.queueParams;
+
+		try {
+
+			this.retryConnectSubscription = this.retryConnectTimer$.subscribe(
+
+				async (): Promise<void> => {
+
+					try {
+						await this.connect();
+
+					} catch (err) {
+						const log = `retryConnection failed: ${err.message}`;
+						logError(log);
+					}
+				},
+				err => {
+					const msg = `${queueName} Retry Error: ${err.message}}`;
+					debugTcs(msg);
+					logError(msg);
+				});
+
+		} catch (err) {
+			const msg = `${queueName} Retry Error: ${err.message}}`;
+			logError(msg);
+		}
 	}
 
-	private closeEvent = () => {
+	private closeEvent = async () => {
 
-		console.log(`${this.queueName} Close Event`);
+		const {
+			queueName,
+			disconnectHandler,
+		} = this.queueParams;
+
+		logError(`${queueName} Close Event`);
 
 		// Inform the client
-		this.disconnectHandler ? this.disconnectHandler() : _.noop;
+		disconnectHandler ? disconnectHandler() : _.noop;
 
 		// Stop listening to queue events
 		this.connection ? this.connection.removeListener("close", this.closeEvent) : _.noop;
 		this.connection ? this.connection.removeListener("error", this.errorEvent) : _.noop;
 
-		this.retryConnection();
+		await this.retryConnection();
 	}
 
-	private errorEvent = (err) => {
+	private errorEvent = (err: any) => {
+
+		const { queueName } = this.queueParams;
 
 		// Take note of the error - no further action required
-		console.log(`${this.queueName} Error Event: ${JSON.stringify(err, null, 4)}`);
+		logError(`${queueName} Error Event: ${JSON.stringify(err, null, 4)}`);
 	}
 
-	private connect = () => {
+	private connect = async (): Promise<void> => {
 
-		this.amqp.connect((err, queueConnection) => {
+		try {
 
-			// Errors can safely be ignored
-			if (!err) {
+			const {
+				queueName,
+				connectHandler,
+				consumer,
+			} = this.queueParams;
 
-				// Stop retrying
-				this.retryConnectSubscription.unsubscribe();
+			this.connection = await amqp.connect("amqp://localhost");
 
-				queueConnection.addListener("error", this.errorEvent);
-				queueConnection.addListener("close", this.closeEvent);
+			// Stop retrying
+			this.retryConnectSubscription ?
+				this.retryConnectSubscription.unsubscribe() :
+				_.noop;
 
-				this.connection = queueConnection;
+			this.connection.addListener("error", this.errorEvent);
+			this.connection.addListener("close", this.closeEvent);
 
-				this.connection.createChannel((err, channel) => {
+			this.channel = await this.connection.createChannel();
 
-					if (err) {
-						console.log(`${this.queueName} createChannel Error: ${JSON.stringify(err, null, 4)}`);
+			await this.channel.assertQueue(queueName, { durable: true });
 
-						// This is a very strange error in this context, hence best to give up altogether
-						process.exit(1);
+			logError(`${queueName} Channel Created`);
+
+			this.channel.prefetch(1);
+
+			// Inform the client that a channel exists
+			connectHandler ? connectHandler() : _.noop;
+
+			if (consumer) {
+
+				// The client expects messages
+				await this.channel.consume(queueName, async (msg: Message) => {
+
+					try {
+
+						await consumer(msg);
+						this.channel ? this.channel.ack(msg) : _.noop;
+
+					} catch (err) {
+						// If the client is not able to handle the message at this time,
+						// then no Ack is returned to the queuing service, meaning that it
+						// will retry later.
+						const log = `Failed to Consume Queue Message, Error: ${err.message}`;
+						logError(log);
+						debugTcs(log);
+						// But do not throw;
 					}
-
-					channel.assertQueue(this.queueName, { durable: true });
-					this.channel = channel;
-
-					console.log(`${this.queueName} Channel Created`);
-
-					// Inform the client that a channel exists
-					this.connectHandler ? this.connectHandler() : _.noop;
-
-					if (this.consumer) {
-
-						// The client wants to listen to incoming data
-						channel.consume(this.queueName, (msg) => {
-
-							if (this.consumer(msg.content)) {
-								this.channel.ack(msg);
-
-								// If the client is not able to handle the message at this time,
-								// then no Ack is returned to the queuing service, meaning that it
-								// will retry later.
-							}
-						}, { noAck: false });
-					}
-				});
+				}, { noAck: false });
 			}
-		});
+		} catch (err) {
+			return Promise.reject(err);
+		}
 	}
 
-	public sendToQueue = (msg: Buffer): Promise<any> => this.channel.sendToQueue(this.queueName, msg, { persistent: true });
+	public sendToQueue = (msg: Buffer) => {
+
+		assert(this.channel, "Software Anomaly");
+
+		const { queueName } = this.queueParams;
+
+
+		if (this.channel) {
+
+			debugTcs("sendToQueue()");
+			this.channel.sendToQueue(queueName, msg, { persistent: true });
+		}
+	}
 
 	// 'purge' facilitates testing; it is not for Production use.
-	public purge = (): Promise<any> => this.channel.purgeQueue();
+	public purge = async (): Promise<any> => {
 
-	public close = () => {
+		try {
+
+			const { queueName } = this.queueParams;
+
+			if (this.channel) {
+				return await this.channel.purgeQueue(queueName);
+			} else {
+				return Promise.reject(new Error("Channel Not Defined"));
+			}
+		} catch (err) {
+			return Promise.reject(new Error(err.message));
+		}
+	}
+
+	public close = async () => {
 
 		// Stop listening to queue events
+
+		const { queueName } = this.queueParams;
+
 		if (this.channel) {
-			this.channel.close();
-			this.channel = null;
+			await this.channel.close();
+			this.channel = undefined;
 		}
 		this.connection ? this.connection.removeListener("close", this.closeEvent) : _.noop;
 		this.connection ? this.connection.removeListener("error", this.errorEvent) : _.noop;
 
-		console.log(`${this.queueName} Channel Closed`);
-		this.connection.close();
-		this.connection = null;
+		logError(`${queueName} Channel Closed`);
+		this.connection ? await this.connection.close() : _.noop;
+		this.connection = undefined;
 	}
 }

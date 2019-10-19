@@ -1,14 +1,19 @@
 #!/usr/bin/env node
+// tslint:disable: indent
+
+import moment from "moment";
+import _ from "lodash";
+import assert from "assert";
 
 import { Queue } from "../share/queue";
 import { ClientSocket } from "../share/client-socket";
+import { logError } from "../Barrel";
+import { Message } from "amqplib";
 
 const routineName = "tms-interface";
 
-const _ = require("lodash");
-const moment = require("moment");
 const net = require("net");
-let linkName = "tcs=>tms";
+const linkName = "tcs=>tms";
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
@@ -20,23 +25,49 @@ const env = envalid.cleanEnv(process.env, {
 });
 
 process.on("SIGTERM", () => {
-	console.log(`${routineName}: Terminated`);
+	logError(`${routineName}: Terminated`);
 	process.exit(0);
 });
 
-let tmsQueue = null;
-let tmsClient: ClientSocket;
+export class TmsInterface {
 
-// Any data received from the queue, immediately forward on to the TMS
-const dataSink = msg => tmsClient.write(msg);
+	private tmsQueue: Queue | undefined;
+	private tmsClient: ClientSocket;
 
-const openQueueChannel = () => { tmsQueue = new Queue(env.TMS_QUEUE, dataSink); }
+	constructor() {
 
-const closeQueueChannel = () => {
-	tmsQueue ? tmsQueue.close() : _.noop;
+		this.tmsClient = new ClientSocket({
+			linkName,
+			host: env.TMS_HOST,
+			port: env.TMS_PORT,
+			connectHandler: this.openQueueChannel,
+			disconnectHandler: this.closeQueueChannel});
+	}
+
+	// Data received from the queue is immediately forward to the TMS
+	private dataSink = (msg: Message): Promise<boolean> =>
+		Promise.resolve(this.tmsClient.write(msg.content))
+
+	private openQueueChannel = () => {
+
+		// When the link opens, take from the queue and forward to the TMS
+		this.tmsQueue =
+			new Queue({
+				queueName: env.TMS_QUEUE,
+				consumer: this.dataSink,
+			});
+	}
+
+	private closeQueueChannel = () => {
+		this.tmsQueue != null ? this.tmsQueue.close() : _.noop;
+	}
 }
 
-// When the link opens, start taking data from the queue, and forward it on to the TMS
-tmsClient = new ClientSocket("tcs=>tms", env.TMS_HOST, env.TMS_PORT, openQueueChannel, closeQueueChannel);
+try {
+	new TmsInterface();
+	logError(`${routineName} Started`);
 
-console.log(`${routineName}: Started`);
+} catch (err) {
+	logError(err.message);
+	process.exit(0);
+}

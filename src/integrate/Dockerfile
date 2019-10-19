@@ -1,4 +1,4 @@
-FROM jenkins:2.32.1
+FROM jenkins/jenkins:lts
 USER root
 RUN echo "deb http://apt.dockerproject.org/repo debian-jessie main" \
 > /etc/apt/sources.list.d/docker.list \

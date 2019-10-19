@@ -15,7 +15,6 @@
     "lib"
   ],
   "main": "lib/telephony-capture-server.js",
-  "typings": "lib/index.d.ts",
   "scripts": {
     "start": "node lib/telephony-capture-service.js",
     "clean": "rimraf lib",
@@ -26,28 +25,46 @@
     "watch:test": "npm run test -- --watch"
   },
   "dependencies": {
-    "amqplib": ">=0.4.2",
+    "@types/ajv": "^1.0.0",
+    "@types/amqplib": "^0.5.13",
+    "@types/async": "^3.0.2",
+    "@types/bunyan": "^1.8.6",
+    "@types/debug": "^4.1.5",
+    "@types/events": "^3.0.0",
+    "@types/lodash": "^4.14.141",
+    "@types/node-dir": "0.0.33",
+    "@types/pg": "^7.11.2",
+    "@types/pg-promise": "^5.4.3",
+    "amqplib": "^0.5.5",
+    "async": "^3.1.0",
+    "bunyan": "^1.8.12",
+    "bunyan-cloudwatch": "^2.2.0",
     "cron": "^1.2.1",
-    "envalid": "^2.4.2",
+    "debug": "^4.1.1",
+    "envalid": "^5.0.0",
     "es6-shim": "^0.35.3",
     "ip": "^1.1.4",
     "line-by-line": "^0.1.5",
     "lodash": "^4.17.4",
+    "luvely": "^0.10.3",
     "moment": "^2.15.2",
     "node-dir": "^0.1.16",
     "node-schedule": "^1.2.0",
+    "pg": "^7.12.1",
     "pg-promise": "^5.5.6",
-    "rxjs": "^5.1.0"
+    "rxjs": "^5.5.12",
+    "util": "^0.12.1"
   },
   "devDependencies": {
-    "@types/chai": ">=3.4.30",
-    "@types/mocha": "^2.2.39",
-    "@types/node": "^7.0.5",
-    "chai": "^3.5.0",
-    "mocha": "^3.2.0",
-    "rimraf": "^2.5.4"
+    "@types/chai": "^4.2.3",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.7.11",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.1",
+    "rimraf": "^3.0.0",
+    "typescript": "^3.6.3"
   },
   "engines": {
-    "node": "6.9.5"
+    "node": "12.10.0"
   }
 }

@@ -1,13 +1,17 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
-import * as $ from "../share/constants";
 import { Queue } from "../share/queue";
+import {
+	debugTcs,
+	logInfo,
+	logFatal,
+	logError,
+} from "../Barrel";
+import { Message } from "amqplib";
+import { setTimeoutPromise } from '../Barrel/index';
 
 const routineName = "database-interface";
-
-const moment = require("moment");
-const _ = require("lodash");
-const pgp = require("pg-promise")();
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
@@ -16,6 +20,8 @@ const env = envalid.cleanEnv(process.env, {
 	DATABASE: str(),
 	DB_QUEUE: str(),
 });
+
+const pgp = require("pg-promise")();
 
 interface SmdrRecord {
 	callStart: string;
@@ -37,7 +43,7 @@ interface SmdrRecord {
 	externalTargetingCause: string;
 	externalTargeterId: string;
 	externalTargetedNumber: string;
-};
+}
 
 const connection = {
 	host: "localhost",
@@ -48,9 +54,28 @@ const connection = {
 
 const db = pgp(connection);
 
-const insertCallRecords = (smdrRecord: SmdrRecord) =>
-	db.none(`INSERT INTO SMDR (
-					CALL_TIME, 
+class DatabaseInterface {
+
+	private badRawRecords = 0;
+
+	constructor() {
+
+		process.on("SIGTERM", (): void => {
+			const msg = `${routineName}: Terminated`;
+			logFatal(msg);
+			process.exit(0);
+		});
+
+		new Queue({ queueName: env.DB_QUEUE, consumer: this.dataSink });
+	}
+
+	private insertCallRecords = async (smdrRecord: SmdrRecord): Promise<void> => {
+
+		try {
+			debugTcs({ smdrRecord });
+
+			await db.none(`INSERT INTO SMDR (
+					CALL_TIME,
 					CONNECTED_TIME,
 					RING_TIME,
 					CALLER,
@@ -70,142 +95,165 @@ const insertCallRecords = (smdrRecord: SmdrRecord) =>
 					EXTERNAL_TARGETER_ID,
 					EXTERNAL_TARGETED_NUMBER)
     			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
-		[
-			smdrRecord.callStart,
-			smdrRecord.connectedTime,
-			smdrRecord.ringTime,
-			smdrRecord.caller,
-			smdrRecord.direction,
-			smdrRecord.calledNumber,
-			smdrRecord.dialedNumber,
-			smdrRecord.isInternal,
-			smdrRecord.callId,
-			smdrRecord.continuation,
-			smdrRecord.party1Device,
-			smdrRecord.party1Name,
-			smdrRecord.party2Device,
-			smdrRecord.party2Name,
-			smdrRecord.holdTime,
-			smdrRecord.parkTime,
-			smdrRecord.externalTargetingCause,
-			smdrRecord.externalTargeterId,
-			smdrRecord.externalTargetedNumber
-		]);
+				[
+					smdrRecord.callStart,
+					smdrRecord.connectedTime,
+					smdrRecord.ringTime,
+					smdrRecord.caller,
+					smdrRecord.direction,
+					smdrRecord.calledNumber,
+					smdrRecord.dialedNumber,
+					smdrRecord.isInternal,
+					smdrRecord.callId,
+					smdrRecord.continuation,
+					smdrRecord.party1Device,
+					smdrRecord.party1Name,
+					smdrRecord.party2Device,
+					smdrRecord.party2Name,
+					smdrRecord.holdTime,
+					smdrRecord.parkTime,
+					smdrRecord.externalTargetingCause,
+					smdrRecord.externalTargeterId,
+					smdrRecord.externalTargetedNumber
+				]);
 
-console.log(`${routineName}: Started`);
 
-process.on("SIGTERM", (): void => {
-	console.log(`${routineName}: Terminated`);
-	process.exit(0);
-});
-
-let badRawRecords = 0;
-
-const dataSink = (msg): boolean => {
-	
-	let raw_call = msg.toString().split(",");
-
-	if (raw_call.length !== 30) {
-		console.log ("bad call length: ", raw_call.length);
-		++badRawRecords;
-	} else {
-
-		let callStart = raw_call[0];
-
-		// Record Connected Time in seconds
-		let temp: string[] = raw_call[1].split(":");
-		let connectedTime = String(
-			Number(temp[0]) * 60 * 60 +
-			Number(temp[1]) * 60 +
-			Number(temp[2]));
-		// console.log('Connected Time (seconds): ', connectedTime);
-
-		// Ring Time in seconds
-		let ringTime = raw_call[2];
-
-		let caller = raw_call[3];
-		// console.log('Caller: ', caller);
-
-		let direction = raw_call[4];
-		// console.log('Direction: ', direction);
-
-		let calledNumber = raw_call[5];
-		// console.log('Called Number: ', calledNumber);
-
-		let dialedNumber = raw_call[6];
-		// console.log('Dialed Number: ', dialedNumber);
-
-		let isInternal = raw_call[8];
-		// console.log('Is Internal: ', isInternal);
-
-		let callId = raw_call[9];
-		// console.log('Call ID: ', callId);
-
-		let continuation = raw_call[10];
-		// console.log('Continuation: ', continuation);
-
-		let party1Device = raw_call[11];
-		// console.log('Party 1 Device: ', party1Device);
-
-		let party1Name = raw_call[12];
-		// console.log('Party 1 Name: ', party1Name);
-
-		let party2Device = raw_call[13];
-		// console.log('Party 2 Device: ', party2Device);
-
-		let party2Name = raw_call[14];
-		// console.log('Party 2 Name: ', party2Name);
-
-		let holdTime = raw_call[15];
-		// console.log('Hold Time: ', holdTime);
-
-		let parkTime = raw_call[16];
-		// console.log('Park Time: ', parkTime);
-
-		let externalTargetingCause = raw_call[27];
-		// console.log('External Targetting Cause: ', externalTargetingCause);
-
-		let externalTargeterId = raw_call[28];
-		// console.log('External TargeterId: ', externalTargeterId);
-
-		let externalTargetedNumber = raw_call[29];
-		// console.log('External Targeted Number: ', externalTargetedNumber);
-
-		let smdrRecord: SmdrRecord = {
-			callStart: callStart,
-			connectedTime: connectedTime,
-			ringTime: ringTime,
-			caller: caller,
-			direction: direction,
-			calledNumber: calledNumber,
-			dialedNumber: dialedNumber,
-			isInternal: isInternal,
-			callId: callId,
-			continuation: continuation,
-			party1Device: party1Device,
-			party1Name: party1Name,
-			party2Device: party2Device,
-			party2Name: party2Name,
-			holdTime: holdTime,
-			parkTime: parkTime,
-			externalTargetingCause: externalTargetingCause,
-			externalTargeterId: externalTargeterId,
-			externalTargetedNumber: externalTargetedNumber
-		};
-
-		insertCallRecords(smdrRecord)
-			// If OK, then move on the next record
-			.then(() => {
-				return true;
-			})
-			.catch(err => {
-				console.log("Database Insert Failure: ", err);
-
-				// Let the process restart
-				process.exit(1);
-			});
+		} catch (err) {
+			debugTcs({ err });
+			return Promise.reject(err);
+		}
 	}
-	return true;
-};
 
-const databaseQueue = new Queue(env.DB_QUEUE, dataSink);
+	private dataSink = async (msg: Message): Promise<boolean> => {
+
+		try {
+			const raw_call = msg.content.toString().split(",");
+
+			if (raw_call.length !== 30) {
+
+				const log =
+					`Bad SMDR Record Length: ${raw_call.length}, ` +
+					`Bad SMDR Records: ${++this.badRawRecords}`;
+
+				/*
+				if (raw_call.length > 30) {
+					console.log({ raw_call });
+					process.exit(0);
+				}
+				*/
+
+				logError(log);
+				++this.badRawRecords;
+				return true;
+
+			} else {
+
+				const callStart = raw_call[0];
+
+				// Record Connected Time in seconds
+				const temp: string[] = raw_call[1].split(":");
+				const connectedTime = String(
+					Number(temp[0]) * 60 * 60 +
+					Number(temp[1]) * 60 +
+					Number(temp[2]));
+				debugTcs("Connected Time (seconds): ", connectedTime);
+
+				// Ring Time in seconds
+				const ringTime = raw_call[2];
+
+				const caller = raw_call[3];
+				// debugTcs('Caller: ', caller);
+
+				const direction = raw_call[4];
+				// debugTcs('Direction: ', direction);
+
+				const calledNumber = raw_call[5];
+				// debugTcs('Called Number: ', calledNumber);
+
+				const dialedNumber = raw_call[6];
+				// debugTcs('Dialed Number: ', dialedNumber);
+
+				const isInternal = raw_call[8];
+				// debugTcs('Is Internal: ', isInternal);
+
+				const callId = raw_call[9];
+				// debugTcs('Call ID: ', callId);
+
+				const continuation = raw_call[10];
+				// debugTcs('Continuation: ', continuation);
+
+				const party1Device = raw_call[11];
+				// debugTcs('Party 1 Device: ', party1Device);
+
+				const party1Name = raw_call[12];
+				// debugTcs('Party 1 Name: ', party1Name);
+
+				const party2Device = raw_call[13];
+				// debugTcs('Party 2 Device: ', party2Device);
+
+				const party2Name = raw_call[14];
+				// debugTcs('Party 2 Name: ', party2Name);
+
+				const holdTime = raw_call[15];
+				// debugTcs('Hold Time: ', holdTime);
+
+				const parkTime = raw_call[16];
+				// debugTcs('Park Time: ', parkTime);
+
+				const externalTargetingCause = raw_call[27];
+				// debugTcs('External Targetting Cause: ', externalTargetingCause);
+
+				const externalTargeterId = raw_call[28];
+				// debugTcs('External TargeterId: ', externalTargeterId);
+
+				const externalTargetedNumber = raw_call[29];
+				// debugTcs('External Targeted Number: ', externalTargetedNumber);
+
+				const smdrRecord: SmdrRecord = {
+					callStart,
+					connectedTime,
+					ringTime,
+					caller,
+					direction,
+					calledNumber,
+					dialedNumber,
+					isInternal,
+					callId,
+					continuation,
+					party1Device,
+					party1Name,
+					party2Device,
+					party2Name,
+					holdTime,
+					parkTime,
+					externalTargetingCause,
+					externalTargeterId,
+					externalTargetedNumber,
+				};
+
+				debugTcs("Before Insert");
+				await this.insertCallRecords(smdrRecord);
+				debugTcs("After Insert");
+				return true;
+			}
+
+		} catch (err) {
+			logError("Database Insert Failure: ", err);
+			process.exit(1);
+			return true;
+		}
+	}
+}
+
+try {
+
+	new DatabaseInterface();
+
+	const msg = `(${routineName}) Started`;
+	debugTcs(msg);
+	logInfo(msg);
+
+} catch (err) {
+	debugTcs(err.message);
+	logInfo(err);
+}

@@ -1,17 +1,27 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
-import * as $ from "../share/constants";
+import { CRLF } from "../share/constants";
 import { ServerSocket } from "../share/server-socket";
 import { Queue } from "../share/queue";
-const moment = require("moment");
-
-const fs = require("fs");
+import moment from "moment";
+import assert from "assert";
+import _ from "lodash";
+import fs from "fs";
+import { debugTcs, logError, logFatal, logInfo, logDebug } from "../Barrel";
 
 const routineName = "pbx-interface";
-console.log(`Restarting ${routineName}`);
 
-const _ = require("lodash");
-const assert = require('assert');
+process.on("uncaughtException", async (err) => {
+
+	try {
+
+		console.log("uncaughtException: ", err);
+
+	} catch (err) {
+		process.exit(106);
+	}
+});
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
@@ -23,97 +33,171 @@ const env = envalid.cleanEnv(process.env, {
 	TMS_QUEUE: str()
 });
 
-process.on("SIGTERM", () => {
-	pbxSocket.close();
-	console.log("TCS Terminated (SIGTERM)");
-});
+class PbxInterface {
 
-let tmsQueue;
-let databaseQueue;
+	private pbxSocket: ServerSocket | undefined;
+	private leftOver = Buffer.alloc(0);
+	private tmsQueue: Queue | undefined;
+	private databaseQueue: Queue | undefined;
 
-let leftOver = Buffer.alloc(0);
+	constructor() {
 
-const parseSmdrMessages = (data: Buffer) => {
+		try {
 
-	// Gather all outstanding data
-	let unprocessedData = Buffer.concat([leftOver, data], leftOver.length + data.length);
+			debugTcs(`(${routineName}) Constructor Start`);
 
-	// Isolate all smdr messages
-	let nextMsg = 0;
-	let crLfIndexOf = unprocessedData.indexOf($.CRLF, nextMsg);
+			// Setup TMS_QUEUE if the TMS is needed
+			this.tmsQueue = env.TMS_ACTIVE ?
+				new Queue({
+					queueName: env.TMS_QUEUE,
+					disconnectHandler: this.tmsQueueDisconnectHandler,
+				}) : undefined;
 
-	while (0 <= crLfIndexOf) {
+			debugTcs(`(${routineName}) TMS_QUEUE Started`);
 
-		const smdrMessage = unprocessedData.slice(nextMsg, crLfIndexOf + 2);
+			// Always need the database queue
+			this.databaseQueue = new Queue({
+				queueName: env.DB_QUEUE,
+				disconnectHandler: this.dbQueueDisconnectHandler,
+				connectHandler: this.dbQueueConnectHandler,
+			});
 
-		// Apply a sanity test on the message (first 2 chars must be '20')
-		if (smdrMessage.indexOf("20") === 0) {
+			debugTcs(`(${routineName}) DB_QUEUE Started`);
 
-			// Send to the queue without the CRLF
-			databaseQueue.sendToQueue(unprocessedData.slice(nextMsg, crLfIndexOf));
+			// And finally the server to listen for SMDR messages
+			this.pbxSocket = new ServerSocket({
+				linkName: "pbx=>tcs",
+				port: env.TCS_PORT,
+				dataSink: this.dataSink,
+				disconnectHandler: this.pbxLinkClosed
+			});
 
-			// Record a copy of each SMDR message to a file
-			fs.appendFile("/smdr-data/smdr-data-001/rw" + moment().format("YYMMDD") + ".001",
-				smdrMessage, 
-				(err) => {
-					if (err) throw err;
-				});
+			process.on("SIGTERM", () => {
+				this.pbxSocket ? this.pbxSocket.close() : _.noop;
+				logError("TCS Terminated (SIGTERM)");
+			});
+
+			debugTcs(`(${routineName}) Constructor Complete`);
+
+		} catch (err) {
+			console.log(err);
+			throw err;
 		}
-		else {
-			console.log('Corrupt message detected:\n', smdrMessage.toString());
+	}
+
+	private parseSmdrMessages = async (data: Buffer): Promise<void> => {
+
+		try {
+
+			// Gather all outstanding data
+			const unprocessedData =
+				Buffer.concat(
+					[this.leftOver, data],
+					this.leftOver.length + data.length);
+
+			// Isolate all smdr messages
+			let nextMsg = 0;
+			let crLfIndexOf = unprocessedData.indexOf(CRLF, nextMsg);
+
+			while (0 <= crLfIndexOf) {
+
+				const smdrMessage = unprocessedData.slice(nextMsg, crLfIndexOf + 2);
+
+				// Apply a sanity test on the message (first 2 chars must be '20')
+				if (smdrMessage.indexOf("20") === 0) {
+
+					// Send to the queue without the CRLF
+					this.databaseQueue ?
+						this.databaseQueue
+							.sendToQueue(
+								unprocessedData.slice(nextMsg, crLfIndexOf)) :
+						_.noop;
+
+					// Record a copy of each SMDR message to a file
+					await fs.promises.appendFile(
+						"/smdr-data/smdr-data-001/rw" + moment().format("YYMMDD") + ".001",
+						smdrMessage);
+
+				}
+				else {
+					logDebug("Corrupt message detected:\n", smdrMessage.toString());
+				}
+
+				// Move to the next message
+				nextMsg = crLfIndexOf + 2;
+				crLfIndexOf = unprocessedData.indexOf(CRLF, nextMsg);
+			}
+
+			// Maybe some left over for next time
+			if (nextMsg < unprocessedData.length) {
+				this.leftOver = Buffer.alloc(unprocessedData.length - nextMsg);
+				unprocessedData.copy(this.leftOver, 0, nextMsg);
+			}
+			else {
+				this.leftOver = Buffer.alloc(0);
+			}
+		} catch (err) {
+			return Promise.reject(err);
 		}
-
-		// Move to the next message
-		nextMsg = crLfIndexOf + 2;
-		crLfIndexOf = unprocessedData.indexOf($.CRLF, nextMsg);
 	}
 
-	// Maybe some left over for next time
-	if (nextMsg < unprocessedData.length) {
-		leftOver = Buffer.alloc(unprocessedData.length - nextMsg);
-		unprocessedData.copy(leftOver, 0, nextMsg);
+	private dataSink = async (data: Buffer): Promise<void> => {
+
+		try {
+			// Unfiltered data is queued for subsequent 
+			// transmission to the legacy TMS
+
+			this.tmsQueue ? this.tmsQueue.sendToQueue(data) : _.noop;
+
+			// However, only true SMDR data is queued for databaase archiving
+			await this.parseSmdrMessages(data);
+
+		} catch (err) {
+			logError(err.message);
+		}
 	}
-	else {
-		leftOver = Buffer.alloc(0);
+
+	private pbxLinkClosed = () => {
+		logError("pbx=>pbx-interface Link Closed");
 	}
-};
 
-const dataSink = (data: Buffer) => {
+	private tmsQueueDisconnectHandler = () => {
+		logError(`${env.TMS_QUEUE} Channel Down`);
+	}
 
-	// Unfiltered data is queued for subsequent transmission to the legacy TMS
-	env.TMS_ACTIVE ? tmsQueue.sendToQueue(data) : _.noop;
+	private dbQueueConnectHandler = () => {
 
-	// However, only true SMDR data is queued for databaase archiving
-	parseSmdrMessages(data);
-};
+		// Start listening for pbx traffic
+		debugTcs("dbQueueConnectHandler()");
 
-const pbxLinkClosed = () => {
-	console.log("pbx=>pbx-interface Link Closed");
-};
+		this.pbxSocket ? this.pbxSocket.startListening() : _.noop;
+		logError(`${env.DB_QUEUE} Channel Up`);
+	}
 
-const tmsQueueDisconnectHandler = () => {
-	console.log(`${env.TMS_QUEUE} Channel Down`);
-};
+	private dbQueueDisconnectHandler = () => {
 
-const dbQueueConnectHandler = () => {
+		// If RabbitMQ connection is lost, 
+		// then stop pbx reception immediately
+		logError(`${env.DB_QUEUE} Down`);
+		this.pbxSocket ? this.pbxSocket.close() : _.noop;
+	}
+}
 
-	// Start listening for pbx traffic
-	pbxSocket.startListening();
-	console.log(`${env.DB_QUEUE} Channel Up`);
-};
+(async () => {
 
-const dbQueueDisconnectHandler = () => {
+	try {
 
-	// If RabbitMQ connection is lost, then stop pbx reception immediately
-	console.log(`${env.DB_QUEUE} Down`);
-	pbxSocket.close();
-};
+		// Insist that a collector directory exists
+		assert(
+			(await fs.promises.stat("/smdr-data/smdr-data-001")).isDirectory(),
+			`Directory /smdr-data/smdr-data-001 Not Found`);
 
-// Setup the queue to the TMS (if needed)
-tmsQueue = env.TMS_ACTIVE ? new Queue(env.TMS_QUEUE, null, tmsQueueDisconnectHandler) : null;
+		new PbxInterface();
 
-// Always need the database queue
-databaseQueue = new Queue(env.DB_QUEUE, null, dbQueueDisconnectHandler, dbQueueConnectHandler);
+		logInfo(`(${routineName}) Started`);
 
-// And finally the server to listen for SMDR messages
-const pbxSocket = new ServerSocket("pbx=>tcs", env.TCS_PORT, dataSink, pbxLinkClosed);
+	} catch (err) {
+		logError(err.message);
+		process.exit(0);
+	}
+})().catch(err => logFatal(err));

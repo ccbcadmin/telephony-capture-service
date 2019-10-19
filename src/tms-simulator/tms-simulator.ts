@@ -1,7 +1,8 @@
 #!/usr/bin/env node
+// tslint:disable: indent
 
-import * as $ from "../share/constants";
 import { ServerSocket } from "../share/server-socket";
+import { debugTcs, logError } from "../Barrel";
 
 const routineName = "tms-simulator";
 const envalid = require("envalid");
@@ -11,16 +12,22 @@ const env = envalid.cleanEnv(process.env, {
 });
 
 process.on("SIGTERM", () => {
-    console.log(`${routineName} terminated`);
+    debugTcs(`${routineName} terminated`);
     process.exit(0);
 });
 process.on("SIGINT", () => {
-    console.log(`Ctrl-C received. ${routineName} terminated`);
+    debugTcs(`Ctrl-C received. ${routineName} terminated`);
     process.exit(0);
 });
 
 // Just discard the data
-const dataDump = (data) => {};
+const dataSink = async (data: Buffer) => { };
 
 // Start listening for incoming messages
-new ServerSocket("tcs=>tms", env.TMS_PORT, dataDump).startListening();
+new ServerSocket({
+    linkName: "tcs=>tms",
+    port: env.TMS_PORT,
+    dataSink
+}).startListening();
+
+logError (`${routineName} Started`);

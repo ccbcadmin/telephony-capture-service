@@ -1,0 +1,7 @@
+#!/bin/bash
+
+PROGNAME=$(basename $0)
+
+TMS_PORT=6544 \
+node lib/tms-simulator/tms-simulator.js
+exit $?

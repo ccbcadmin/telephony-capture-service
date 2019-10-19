@@ -1,43 +1,47 @@
+import { debugTcs } from "../Barrel";
+
+// tslint:disable: indent
+
+
+
 export class ServerSocket {
 
 	private net = require("net");
-	private linkName: string;
-	private host: string;
-	private port: number;
 	private server: any;
-	private dataSink: any; // Place to direct incoming data
-	private linkCloseHandler;
-	private connection = null;
+	private connection: any = null;
 
-	constructor(linkName, port, dataSink, linkCloseHandler = null) {
-		this.linkName = linkName;
-		this.port = port;
-		this.dataSink = dataSink;
-		this.linkCloseHandler = linkCloseHandler;
+	constructor(private params: {
+		linkName: string;
+		port: number;
+		dataSink: ((Buffer: Buffer) => Promise<void>);
+		disconnectHandler?: (() => void),
+	}) {
 
 		this.server = this.net.createServer();
 
-		if (linkCloseHandler) {
-			this.server.addListener("close", this.linkCloseHandler);
+		if (this.params.disconnectHandler) {
+			this.server.addListener("close", this.params.disconnectHandler);
 		}
 	}
 
-	private handleConnection = connection => {
+	private handleConnection = (connection: any) => {
+
+		const { dataSink, linkName } = this.params;
 
 		const remoteAddress = connection.remoteAddress + ":" + connection.remotePort;
-		console.log(`${this.linkName}: Connection Open: ${remoteAddress}`);
+		debugTcs(`${linkName}: Connection Open: ${remoteAddress}`);
 
 		const onClose = () => {
-			console.log(`${this.linkName}: Connection Closed: from ${remoteAddress}`);
-			connection.removeListener("data", this.dataSink);
+			debugTcs(`${linkName}: Connection Closed: from ${remoteAddress}`);
+			connection.removeListener("data", dataSink);
 			connection.removeListener("error", onError);
 		};
 
-		const onError = err => {
-			console.log(`${this.linkName}: Connection ${remoteAddress} error: ${err.message}`);
+		const onError = (err: Error) => {
+			debugTcs(`${this.params.linkName}: Connection ${remoteAddress} error: ${err.message}`);
 		};
 
-		connection.addListener("data", this.dataSink);
+		connection.addListener("data", dataSink);
 		connection.prependOnceListener("close", onClose);
 		connection.addListener("error", onError);
 		this.connection = connection;
@@ -45,19 +49,22 @@ export class ServerSocket {
 
 	public startListening = () => {
 
+		const { port, linkName } = this.params;
+
 		this.server.addListener("connection", this.handleConnection);
 
-		this.server.listen({
-			host: '0.0.0.0',
-			port: this.port
-		}
-			, () => {
-				console.log(`${this.linkName}: Listening on: ${this.port}`);
+		this.server.listen(
+			{
+				host: "0.0.0.0",
+				port
+			},
+			() => {
+				debugTcs(`${linkName}: Listening on: ${port}`);
 			});
 	}
 
 	public stopListening = () => {
-		console.log(`${this.linkName}: Stop Listening`);
+		debugTcs(`${this.params.linkName}: Stop Listening`);
 		this.server.removeListener("connection", this.handleConnection);
 		this.server.close();
 	}
