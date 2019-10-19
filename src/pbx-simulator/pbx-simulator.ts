@@ -21,11 +21,6 @@ const ee = new EventEmitter();
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
 const { str, num } = envalid;
-const env = envalid.cleanEnv(process.env, {
-	TCS_PORT: num(),
-	PBX_SIMULATOR_SOURCE_DIRECTORY: str(),
-	PBX_SIMULATOR_INPUT_FREQUENCY: num()
-});
 
 class PbxSimulator {
 
@@ -34,13 +29,19 @@ class PbxSimulator {
 
 	private tcsClient: ClientSocket;
 
+	private env = envalid.cleanEnv(process.env, {
+		TCS_PORT: num(),
+		PBX_SIMULATOR_SOURCE_DIRECTORY: str(),
+		PBX_SIMULATOR_INPUT_FREQUENCY: num()
+	});
+
 	constructor() {
 
 		ee.addListener("next", this.nextFile);
 		this.tcsClient = new ClientSocket({
 			linkName: "pbx=>tcs",
 			host: "localhost",
-			port: env.TCS_PORT,
+			port: this.env.TCS_PORT,
 			connectHandler: this.sendData
 		});
 	}
@@ -87,7 +88,7 @@ class PbxSimulator {
 					process.exit(1);
 				}
 			}
-		}, env.PBX_SIMULATOR_INPUT_FREQUENCY);
+		}, this.env.PBX_SIMULATOR_INPUT_FREQUENCY);
 	}
 
 	private nextFile = async () => {
@@ -104,7 +105,7 @@ class PbxSimulator {
 
 		try {
 
-			const sourceDir = `/smdr-data/${env.PBX_SIMULATOR_SOURCE_DIRECTORY}`;
+			const sourceDir = `/smdr-data/${this.env.PBX_SIMULATOR_SOURCE_DIRECTORY}`;
 
 			// Search the source directory looking for raw SMDR files
 			logInfo("sourceDir: ", sourceDir);
