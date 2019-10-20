@@ -7,19 +7,14 @@ import {
 	logInfo,
 	logFatal,
 	logError,
+	Process,
 } from "../Barrel";
 import { Message } from "amqplib";
 import { setTimeoutPromise } from '../Barrel/index';
 
-const routineName = "database-interface";
-
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
 const { str, num } = envalid;
-const env = envalid.cleanEnv(process.env, {
-	DATABASE: str(),
-	DB_QUEUE: str(),
-});
 
 const pgp = require("pg-promise")();
 
@@ -45,28 +40,28 @@ interface SmdrRecord {
 	externalTargetedNumber: string;
 }
 
-const connection = {
-	host: "localhost",
-	port: 5432,
-	database: env.DATABASE,
-	user: "postgres"
-};
-
-const db = pgp(connection);
-
-class DatabaseInterface {
+class DatabaseInterface extends Process {
 
 	private badRawRecords = 0;
+	private env = envalid.cleanEnv(process.env, {
+		DATABASE: str(),
+		DB_QUEUE: str(),
+	});
+
+	private connection = {
+		host: "localhost",
+		port: 5432,
+		database: this.env.DATABASE,
+		user: "postgres"
+	};	
+
+	private db = pgp(this.connection);
 
 	constructor() {
 
-		process.on("SIGTERM", (): void => {
-			const msg = `${routineName}: Terminated`;
-			logFatal(msg);
-			process.exit(0);
-		});
+		super ({routineName: "database-interface"});
 
-		new Queue({ queueName: env.DB_QUEUE, consumer: this.dataSink });
+		new Queue({ queueName: this.env.DB_QUEUE, consumer: this.dataSink });
 	}
 
 	private insertCallRecords = async (smdrRecord: SmdrRecord): Promise<void> => {
@@ -74,7 +69,7 @@ class DatabaseInterface {
 		try {
 			debugTcs({ smdrRecord });
 
-			await db.none(`INSERT INTO SMDR (
+			await this.db.none(`INSERT INTO SMDR (
 					CALL_TIME,
 					CONNECTED_TIME,
 					RING_TIME,
@@ -248,10 +243,6 @@ class DatabaseInterface {
 try {
 
 	new DatabaseInterface();
-
-	const msg = `(${routineName}) Started`;
-	debugTcs(msg);
-	logInfo(msg);
 
 } catch (err) {
 	debugTcs(err.message);

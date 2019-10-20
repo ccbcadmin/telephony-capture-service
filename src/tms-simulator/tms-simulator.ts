@@ -11,15 +11,6 @@ const env = envalid.cleanEnv(process.env, {
     TMS_PORT: str()
 });
 
-process.on("SIGTERM", () => {
-    debugTcs(`${routineName} terminated`);
-    process.exit(0);
-});
-process.on("SIGINT", () => {
-    debugTcs(`Ctrl-C received. ${routineName} terminated`);
-    process.exit(0);
-});
-
 // Just discard the data
 const dataSink = async (data: Buffer) => { };
 

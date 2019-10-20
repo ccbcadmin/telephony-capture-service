@@ -1,1 +1,3 @@
-SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'public' ORDER BY tablename, indexname;
+select tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = 'public' ORDER BY tablename, indexname;
+select * from smdr where call_time = '2014-10-21 12:59:09' and call_id = 1030767 and party_1_device = 'E221' and party_1_name = 'Tamara' and party_2_device = 'T9007' and party_2_name = 'Line 7.0' and continuation = '1' and connected_time;
+create unique index smdr_index_1 on smdr (call_time, call_id, party_1_device, party_1_name, party_2_device, party_2_name, continuation, connected_time, ring_time, caller, called_number, dialed_number, hold_time, park_time);

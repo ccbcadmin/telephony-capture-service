@@ -8,56 +8,48 @@ import moment from "moment";
 import assert from "assert";
 import _ from "lodash";
 import fs from "fs";
-import { debugTcs, logError, logFatal, logInfo, logDebug } from "../Barrel";
-
-const routineName = "pbx-interface";
-
-process.on("uncaughtException", async (err) => {
-
-	try {
-
-		console.log("uncaughtException: ", err);
-
-	} catch (err) {
-		process.exit(106);
-	}
-});
+import { debugTcs, logError, logFatal, logInfo, logDebug, Process } from "../Barrel";
 
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
 const { str, num } = envalid;
-const env = envalid.cleanEnv(process.env, {
-	TMS_ACTIVE: num(),
-	TCS_PORT: num(),
-	DB_QUEUE: str(),
-	TMS_QUEUE: str()
-});
 
-class PbxInterface {
+const routineName = "pbx-interface";
+
+class PbxInterface extends Process {
 
 	private pbxSocket: ServerSocket | undefined;
 	private leftOver = Buffer.alloc(0);
 	private tmsQueue: Queue | undefined;
 	private databaseQueue: Queue | undefined;
 
+	private env = envalid.cleanEnv(process.env, {
+		TMS_ACTIVE: num(),
+		TCS_PORT: num(),
+		DB_QUEUE: str(),
+		TMS_QUEUE: str()
+	});
+
 	constructor() {
+
+		super({ routineName });
 
 		try {
 
-			debugTcs(`(${routineName}) Constructor Start`);
+			const { TMS_ACTIVE, DB_QUEUE, TMS_QUEUE, TCS_PORT, } = this.env;
 
 			// Setup TMS_QUEUE if the TMS is needed
-			this.tmsQueue = env.TMS_ACTIVE ?
-				new Queue({
-					queueName: env.TMS_QUEUE,
+			!TMS_ACTIVE || (
+				this.tmsQueue = new Queue({
+					queueName: TMS_QUEUE,
 					disconnectHandler: this.tmsQueueDisconnectHandler,
-				}) : undefined;
+				}));
 
 			debugTcs(`(${routineName}) TMS_QUEUE Started`);
 
 			// Always need the database queue
 			this.databaseQueue = new Queue({
-				queueName: env.DB_QUEUE,
+				queueName: DB_QUEUE,
 				disconnectHandler: this.dbQueueDisconnectHandler,
 				connectHandler: this.dbQueueConnectHandler,
 			});
@@ -67,14 +59,9 @@ class PbxInterface {
 			// And finally the server to listen for SMDR messages
 			this.pbxSocket = new ServerSocket({
 				linkName: "pbx=>tcs",
-				port: env.TCS_PORT,
+				port: TCS_PORT,
 				dataSink: this.dataSink,
 				disconnectHandler: this.pbxLinkClosed
-			});
-
-			process.on("SIGTERM", () => {
-				this.pbxSocket ? this.pbxSocket.close() : _.noop;
-				logError("TCS Terminated (SIGTERM)");
 			});
 
 			debugTcs(`(${routineName}) Constructor Complete`);
@@ -162,7 +149,7 @@ class PbxInterface {
 	}
 
 	private tmsQueueDisconnectHandler = () => {
-		logError(`${env.TMS_QUEUE} Channel Down`);
+		logError(`${this.env.TMS_QUEUE} Channel Down`);
 	}
 
 	private dbQueueConnectHandler = () => {
@@ -171,14 +158,14 @@ class PbxInterface {
 		debugTcs("dbQueueConnectHandler()");
 
 		this.pbxSocket ? this.pbxSocket.startListening() : _.noop;
-		logError(`${env.DB_QUEUE} Channel Up`);
+		logError(`${this.env.DB_QUEUE} Channel Up`);
 	}
 
 	private dbQueueDisconnectHandler = () => {
 
 		// If RabbitMQ connection is lost, 
 		// then stop pbx reception immediately
-		logError(`${env.DB_QUEUE} Down`);
+		logError(`${this.env.DB_QUEUE} Down`);
 		this.pbxSocket ? this.pbxSocket.close() : _.noop;
 	}
 }

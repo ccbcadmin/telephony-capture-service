@@ -13,7 +13,7 @@ import {
 } from "../share/constants";
 
 import { ClientSocket } from "../share/client-socket";
-import { logFatal, logInfo } from "../Barrel";
+import { logFatal, logInfo, Process } from "../Barrel";
 
 import { EventEmitter } from "events";
 const ee = new EventEmitter();
@@ -22,7 +22,7 @@ const ee = new EventEmitter();
 const envalid = require("envalid");
 const { str, num } = envalid;
 
-class PbxSimulator {
+class PbxSimulator extends Process {
 
 	private smdrFiles: string[] = [];
 	private smdrFileNo = 0;
@@ -37,6 +37,8 @@ class PbxSimulator {
 
 	constructor() {
 
+		super ({routineName});
+		
 		ee.addListener("next", this.nextFile);
 		this.tcsClient = new ClientSocket({
 			linkName: "pbx=>tcs",
@@ -134,7 +136,6 @@ class PbxSimulator {
 
 try {
 	new PbxSimulator();
-	logInfo(`${routineName} Started`);
 
 } catch (err) {
 	logFatal(err.message);

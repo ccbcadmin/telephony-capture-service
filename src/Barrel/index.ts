@@ -1,3 +1,4 @@
+export * from "../share/process";
 export * from "../TypeScriptUtils/broker";
 export * from "../TypeScriptUtils/debug";
 export * from "../TypeScriptUtils/logger";
@@ -24,3 +25,4 @@ Logger.process = new Logger(
 import { promisify } from "util";
 // const { promisify } = require("util");
 export const setTimeoutPromise = promisify(setTimeout);
+

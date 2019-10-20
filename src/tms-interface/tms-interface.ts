@@ -7,7 +7,7 @@ import assert from "assert";
 
 import { Queue } from "../share/queue";
 import { ClientSocket } from "../share/client-socket";
-import { logError } from "../Barrel";
+import { logError, Process } from "../Barrel";
 import { Message } from "amqplib";
 
 const routineName = "tms-interface";
@@ -18,30 +18,34 @@ const linkName = "tcs=>tms";
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
 const { str, num } = envalid;
-const env = envalid.cleanEnv(process.env, {
-	TMS_PORT: num(),
-	TMS_HOST: str(),
-	TMS_QUEUE: str()
-});
 
 process.on("SIGTERM", () => {
 	logError(`${routineName}: Terminated`);
 	process.exit(0);
 });
 
-export class TmsInterface {
+export class TmsInterface extends Process {
 
 	private tmsQueue: Queue | undefined;
 	private tmsClient: ClientSocket;
 
+	private env = envalid.cleanEnv(process.env, {
+		TMS_PORT: num(),
+		TMS_HOST: str(),
+		TMS_QUEUE: str()
+	});
+
 	constructor() {
+
+		super({ routineName });
 
 		this.tmsClient = new ClientSocket({
 			linkName,
-			host: env.TMS_HOST,
-			port: env.TMS_PORT,
+			host: this.env.TMS_HOST,
+			port: this.env.TMS_PORT,
 			connectHandler: this.openQueueChannel,
-			disconnectHandler: this.closeQueueChannel});
+			disconnectHandler: this.closeQueueChannel
+		});
 	}
 
 	// Data received from the queue is immediately forward to the TMS
@@ -53,7 +57,7 @@ export class TmsInterface {
 		// When the link opens, take from the queue and forward to the TMS
 		this.tmsQueue =
 			new Queue({
-				queueName: env.TMS_QUEUE,
+				queueName: this.env.TMS_QUEUE,
 				consumer: this.dataSink,
 			});
 	}
@@ -65,7 +69,6 @@ export class TmsInterface {
 
 try {
 	new TmsInterface();
-	logError(`${routineName} Started`);
 
 } catch (err) {
 	logError(err.message);
