@@ -17,8 +17,6 @@ import { debugTcs } from "../Barrel";
 
 const pgp = require("pg-promise")();
 
-const net = require("net");
-
 const ee = new EventEmitter();
 
 // Ensure the presence of required environment variables

@@ -2,7 +2,7 @@
 
 PROGNAME=$(basename $0)
 source ./scripts/bash-functions
-USAGE='Usage: jenkins dev|qa [trace]'
+USAGE='Usage: test-tcs dev|qa [trace]'
 NO_TRACE='&> /dev/null'
 
 # 'execute-test-case' is the workhorse function to execute the various test cases
