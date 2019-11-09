@@ -1,20 +1,18 @@
 #!/usr/bin/env node
-// tslint:disable: indent
 
 import {
 	CRLF,
 	REGEXP_SMDR_FILENAME
 } from "../share/constants";
-import { debugTcs } from "../Barrel";
+import { debugTcs, ExitCode } from "../Barrel";
+import fs from "fs";
+import dir from "node-dir";
 
 const routineName = "mangle";
 
-const fs = require("fs");
-const dir = require("node-dir");
-
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
-const { str, num } = envalid;
+const { str } = envalid;
 const env = envalid.cleanEnv(process.env, {
 	SOURCE_DIRECTORY: str(),
 	TARGET_DIRECTORY: str()
@@ -29,15 +27,15 @@ const ee = new EventEmitter();
 const zeroPad = (num: number, places: number) => {
 	const zero = places - num.toString().length + 1;
 	return Array(+(zero > 0 && zero)).join("0") + num;
-};
+}
 
 let substitutePhoneNumberMap = new Map<string, string>();
 
-const substituteDummyPhoneNumber = (phoneNumber: string): string | undefined => {
+const substituteDummyPhoneNumber = (phoneNumber: string): string => {
 
 	if (phoneNumber.length === 10) {
 		if (substitutePhoneNumberMap.has(phoneNumber)) {
-			return substitutePhoneNumberMap.get(phoneNumber);
+			return substitutePhoneNumberMap.get(phoneNumber)!;
 		} else {
 			const substitutePhoneNumber = phoneNumber.slice(0, 6) + ("" + Math.random()).substring(2, 6);
 			substitutePhoneNumberMap.set(phoneNumber, substitutePhoneNumber);
@@ -46,7 +44,7 @@ const substituteDummyPhoneNumber = (phoneNumber: string): string | undefined => 
 	}
 	else if ((phoneNumber.length === 11 && phoneNumber.slice(0, 1) === "1")) {
 		if (substitutePhoneNumberMap.has(phoneNumber)) {
-			return substitutePhoneNumberMap.get(phoneNumber);
+			return substitutePhoneNumberMap.get(phoneNumber)!;
 		} else {
 			const substitutePhoneNumber = phoneNumber.slice(0, 7) + ("" + Math.random()).substring(2, 6);
 			substitutePhoneNumberMap.set(phoneNumber, substitutePhoneNumber);
@@ -60,12 +58,12 @@ const substituteDummyPhoneNumber = (phoneNumber: string): string | undefined => 
 
 process.on("SIGTERM", () => {
 	debugTcs("Telephony Capture Service: Terminated");
-	process.exit(0);
+	process.exit(ExitCode.SIGTERM_Exit);
 });
 
 process.on("SIGINT", () => {
 	debugTcs("Telephony Capture Service: Ctrl-C received. Telephony Capture Service terminating");
-	process.exit(0);
+	process.exit(ExitCode.SIGINT_Exit);
 });
 
 let smdrFiles: string[] = [];
@@ -127,21 +125,20 @@ const replicateSmdrFile = (smdrFileName: string): void => {
 
 const nextFile = () => {
 	if (smdrFileNo === smdrFiles.length) {
-		debugTcs(`That's All Folks !`);
-		process.exit(0);
+		console.log(`That's All Folks !`);
+		process.exit(ExitCode.NormalExit);
 	}
 	else {
 		replicateSmdrFile(smdrFiles[smdrFileNo]);
 	}
-};
+}
 
 ee.on("next", nextFile);
 
-// Search the current directory, if none specified
 dir.files(sourceDir, (err: Error, files: Array<string>) => {
 	if (err) {
 		debugTcs(`Source ${sourceDir} is not a directory...aborting.`);
-		process.exit(1);
+		process.exit(ExitCode.GeneralFailure);
 	}
 	files.sort();
 	for (let file of files) {
@@ -151,4 +148,4 @@ dir.files(sourceDir, (err: Error, files: Array<string>) => {
 		}
 	}
 	nextFile();
-});
+})

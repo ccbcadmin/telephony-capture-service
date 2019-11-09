@@ -3,7 +3,7 @@
 PROGNAME=$(basename $0)
 
 # Ensure the correct version of Node
-nvm use 12
+nvm use 12.13.0
 
 # Allow access to bash scripts
 export PATH=./scripts:$PATH

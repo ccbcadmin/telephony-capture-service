@@ -11,7 +11,7 @@ echo 'Building Images ... '
 source .tcs.version 
 echo 'Detail Level: ' "$DETAIL_LEVEL" 
 
-docker-compose $STORES_COMPOSE_ARGS build  || exit 1;
+docker-compose $STORES_COMPOSE_ARGS build --no-cache || exit 1;
 
 # Must be logged into docker hub to execute the following
 docker push 'ccbcadmin/tcs-image'$TCS_VERSION  || exit 1;
