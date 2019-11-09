@@ -10,13 +10,10 @@ const dir = require("node-dir");
 // Ensure the presence of required environment variables
 const envalid = require("envalid");
 const { str, num } = envalid;
-const env = envalid.cleanEnv(process.env, {
-	SOURCE_DIRECTORY: str(),
-	TARGET_DIRECTORY: str()
-});
 
-const sourceDir = `/smdr-data/${env.SOURCE_DIRECTORY}`;
-const targetDir = `/smdr-data/${env.TARGET_DIRECTORY}`;
+
+const sourceDir = `/home/smdr-data/prod/smdr-data-001`;
+const targetDir = `/home/ccadmin/tcs/sample-data/smdr-data/smdr-data-005`;
 
 const eventEmitter = require("events").EventEmitter;
 const ee = new eventEmitter;      //make an Event Emitter object
@@ -92,7 +89,7 @@ const replicateSmdrFile = (smdrFileName: string) => {
 
 		let raw_call = smdrMessage.split(",");
 
-		if (raw_call.length !== 30) {
+		if (raw_call.length < 30) {
 			++unknownRecords;
 		}
 		else {

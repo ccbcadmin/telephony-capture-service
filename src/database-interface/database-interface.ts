@@ -49,7 +49,7 @@ const connection = {
 const db = pgp(connection);
 
 const insertCallRecords = (smdrRecord: SmdrRecord) =>
-	db.none(`INSERT INTO SMDR (
+	db.none(`IfdNSERT INTO SMDR (
 					CALL_TIME, 
 					CONNECTED_TIME,
 					RING_TIME,
@@ -105,7 +105,7 @@ const dataSink = (msg): boolean => {
 	
 	let raw_call = msg.toString().split(",");
 
-	if (raw_call.length !== 30) {
+	if (raw_call.length !== 34) {
 		console.log ("bad call length: ", raw_call.length);
 		++badRawRecords;
 	} else {
