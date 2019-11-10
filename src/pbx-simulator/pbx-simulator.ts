@@ -37,8 +37,8 @@ class PbxSimulator extends Process {
 
 	constructor() {
 
-		super ({routineName});
-		
+		super({ routineName });
+
 		ee.addListener("next", this.nextFile);
 		this.tcsClient = new ClientSocket({
 			linkName: "pbx=>tcs",
