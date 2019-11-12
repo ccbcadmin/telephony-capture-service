@@ -12,3 +12,6 @@ rm $PGDATA/pg_hba.conf
 { echo; echo "host replication all 192.168.0.1/16 trust"; } | gosu postgres tee -a "$PGDATA/pg_hba.conf" > /dev/null
 { echo; echo "host all all 10.211.0.1/16 trust"; } | gosu postgres tee -a "$PGDATA/pg_hba.conf" > /dev/null
 { echo; echo "host replication all 10.211.0.1/16 trust"; } | gosu postgres tee -a "$PGDATA/pg_hba.conf" > /dev/null
+{ echo; echo "host all all 10.212.0.0/16 trust"; } | gosu postgres tee -a "$PGDATA/pg_hba.conf" > /dev/null
+{ echo; echo "host replication all 10.212.0.0/16 trust"; } | gosu postgres tee -a "$PGDATA/pg_hba.conf" > /dev/null
+

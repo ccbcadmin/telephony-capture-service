@@ -122,9 +122,12 @@ class DatabaseInterface extends Process {
 	private dataSink = async (msg: Message): Promise<boolean> => {
 
 		try {
+
+			debugTcs ({msg: msg.content.toString()});
+
 			const raw_call = msg.content.toString().split(",");
 
-			if (raw_call.length !== 30) {
+			if (raw_call.length < 30) {
 
 				const log =
 					`Bad SMDR Record Length: ${raw_call.length}, ` +
