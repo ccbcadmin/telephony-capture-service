@@ -25,10 +25,10 @@ class Backup extends Process {
 
 		try {
 
+			debugTcs(`Backup Cron Pattern: '${BACKUP_SCHEDULE}'`);
+
 			// Kick cron into life
 			exec("cron");
-
-			debugTcs(`Backup Cron Pattern: '${BACKUP_SCHEDULE}'`);
 
 			try {
 				new CronJob(
@@ -58,7 +58,7 @@ class Backup extends Process {
 	}
 
 	private barmanBackup = () => {
-		
+
 		exec(
 			`barman backup pg1`,
 			(error: Error, stdout: WindowConsole, stderr: WindowConsole) => {
