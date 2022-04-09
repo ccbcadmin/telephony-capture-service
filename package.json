@@ -45,7 +45,7 @@
     "line-by-line": "^0.1.5",
     "lodash": "^4.17.4",
     "luvely": "^0.10.3",
-    "moment": "^2.15.2",
+    "moment": "^2.29.2",
     "node-dir": "^0.1.16",
     "node-schedule": "^1.2.0",
     "pg": "^7.12.1",
